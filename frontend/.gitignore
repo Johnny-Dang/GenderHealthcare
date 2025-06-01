@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Thêm dòng này để Git bỏ qua file lock
+package-lock.json
