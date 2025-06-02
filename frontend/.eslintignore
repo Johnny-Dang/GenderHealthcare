@@ -1,5 +1,2 @@
-node_modules/
-dist/
-build/
-*.mjs
-*.cjs
+node_modules
+dist
