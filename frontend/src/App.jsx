@@ -10,8 +10,11 @@ function App() {
     <>
       <div>
         <h1>Hello xin chao cac ban</h1>
+<<<<<<< HEAD
         <h2>xin chao buoi sang </h2>
         <h3>FPT</h3>
+=======
+>>>>>>> 75143d0767bfade9a961644fdef2e8e9e0a62076
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
@@ -21,16 +24,12 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
         <p>
           Edit <code>src/App.jsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
     </>
   );
 }
