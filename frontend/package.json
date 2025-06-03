@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint:fix": "eslint \"./src/**/*.{js,jsx}\" --fix",
     "check-format": "prettier --check \"./src/**/*.{js,jsx,css,json,md}\"",
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.jsx",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "lint:fix": "eslint . --fix",
+    "prettier": "prettier --check \"src/**/(*.jsx|*.js|*.css|*.scss)\"",
+    "prettier:fix": "prettier --write \"src/**/(*.jsx|*.js|*.css|*.scss)\""
   },
   "dependencies": {
     "antd": "^5.25.4",
