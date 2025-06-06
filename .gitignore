@@ -31,10 +31,7 @@ backend/*.sln.docstates
 backend/.vs/
 
 # ASP.NET secrets (if any)
-backend/appsettings.Development.json
-backend/appsettings.Local.json
 backend/.vscode/
-
 # Others
 *.log
 .env
