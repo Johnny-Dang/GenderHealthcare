@@ -7,6 +7,10 @@ using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace backend.Application.Services
 {
@@ -23,10 +27,31 @@ namespace backend.Application.Services
             _mapper = mapper;
             _tokenGenerator = tokenGenerator;
         }
-        //public string GenerateJwt(Account user)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public string GenerateJwt(Account user)
+        {
+            var claims = new List<Claim>
+            {
+                new (ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new (ClaimTypes.Email, user.EmailAddress),
+                new (ClaimTypes.Role, user.Role.ToString()),
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+
+
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
+                signingCredentials: new SigningCredentials(
+                    key,
+                    SecurityAlgorithms.HmacSha256Signature
+                    )
+                );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
         {
@@ -64,29 +89,7 @@ namespace backend.Application.Services
         }
 
 
-        //public Account? LoginAccount(LoginAccountModel user)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public Guid RegisterAccount(CreateAccountRequest userModel)
-        //{
-        //    var user = _context.User.Any(x => x.Email == userModel.Email);
-        //    if (user) return Guid.Empty;
-        //    var result = _mapper.Map<Account>(userModel);
-
-        //    var salting = HashHelper.GenerateRamdomString(100);
-        //    var password = userModel.PasswordHash + salting;
-
-        //    result.Salting = salting;
-        //    result.PasswordHash = HashHelper.BCriptHash(password);
-
-        //    _context.User.Add(result);
-
-        //    await _context.SaveChangesAsync();
-
-        //    return result.User_Id;
-        //}
+        
         public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
         {
             var user = await _context.Accounts

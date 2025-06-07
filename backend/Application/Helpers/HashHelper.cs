@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DeployGenderSystem.Application.Helpers
@@ -21,9 +22,16 @@ namespace DeployGenderSystem.Application.Helpers
 
             for (int i = 0; i < length; i++)
             {
-                s.Append((char)ramdom.Next(1, 255));
+                s.Append((char)ramdom.Next('a', 'z'));
             }
             return s.ToString();
+        }
+
+        public static string Hash256(string input)
+        {
+            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+            string hash = Convert.ToHexString(hashBytes);
+            return hash;
         }
     }
 }
