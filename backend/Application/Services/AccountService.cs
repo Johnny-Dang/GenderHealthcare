@@ -1,7 +1,7 @@
 using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
-using backend.Infrastructure.Services;
+//using backend.Infrastructure.Services;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -19,39 +19,39 @@ namespace backend.Application.Services
 
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
-        private readonly JwtTokenGenerator _tokenGenerator;
+        //private readonly JwtTokenGenerator _tokenGenerator;
 
-        public AccountService(IApplicationDbContext context, IMapper mapper, IConfiguration config, JwtTokenGenerator tokenGenerator)
+        public AccountService(IApplicationDbContext context, IMapper mapper, IConfiguration config)
         {
             _context = context;
             _mapper = mapper;
-            _tokenGenerator = tokenGenerator;
+            //_tokenGenerator = tokenGenerator;
         }
-        public string GenerateJwt(Account user)
-        {
-            var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new (ClaimTypes.Email, user.EmailAddress),
-                new (ClaimTypes.Role, user.Role.ToString()),
-            };
+        //public string GenerateJwt(Account user)
+        //{
+        //    var claims = new List<Claim>
+        //    {
+        //        new (ClaimTypes.NameIdentifier, user.Id.ToString()),
+        //        new (ClaimTypes.Email, user.EmailAddress),
+        //        new (ClaimTypes.Role, user.Role.ToString()),
+        //    };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
 
 
-            var token = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
-                signingCredentials: new SigningCredentials(
-                    key,
-                    SecurityAlgorithms.HmacSha256Signature
-                    )
-                );
+        //    var token = new JwtSecurityToken(
+        //        issuer: _jwtSettings.Issuer,
+        //        audience: _jwtSettings.Audience,
+        //        claims: claims,
+        //        expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
+        //        signingCredentials: new SigningCredentials(
+        //            key,
+        //            SecurityAlgorithms.HmacSha256Signature
+        //            )
+        //        );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        //    return new JwtSecurityTokenHandler().WriteToken(token);
+        //}
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
         {
@@ -90,26 +90,26 @@ namespace backend.Application.Services
 
 
         
-        public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
-        {
-            var user = await _context.Accounts
-                .Include(r => r.Role)
-                .FirstOrDefaultAsync(u => u.Email == request.Email);
+        //public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
+        //{
+        //    var user = await _context.Accounts
+        //        .Include(r => r.Role)
+        //        .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null)
-                return Result<LoginResponse>.Failure("Email không tồn tại.");
+        //    if (user == null)
+        //        return Result<LoginResponse>.Failure("Email không tồn tại.");
 
-            var password = request.Password;
+        //    var password = request.Password;
 
-            var isValid = HashHelper.BCriptVerify(password, user.Password);
-            if (!isValid)
-                return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
+        //    var isValid = HashHelper.BCriptVerify(password, user.Password);
+        //    if (!isValid)
+        //        return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
 
-            //var tokenService = new JwtTokenGenerator(_config);
-            var response = _tokenGenerator.GenerateToken(user);
+        //    //var tokenService = new JwtTokenGenerator(_config);
+        //    //var response = _tokenGenerator.GenerateToken(user);
 
-            return Result<LoginResponse>.Success(response);
-        }
+        //    return Result<LoginResponse>.Success(response);
+        //}
 
         public async Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request)
         {

@@ -14,6 +14,8 @@ namespace backend.Domain.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public bool IsRevoked { get; set; } = false;
+
         public virtual Account Account { get; set; } = default!;
     }
 }

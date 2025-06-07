@@ -5,9 +5,9 @@ namespace backend.Application.Interfaces
 {
     public interface IAccountService
     {
-        public Task<Result<AccountDto>> RegisterAsync(RegisterRequest request);
+        //public Task<Result<AccountDto>> RegisterAsync(RegisterRequest request);
 
-        public Task<Result<LoginResponse>> LoginAsync(LoginRequest request);
+        //public Task<Result<LoginResponse>> LoginAsync(LoginRequest request);
 
         public Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request); // admin
         public Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request); // admin
