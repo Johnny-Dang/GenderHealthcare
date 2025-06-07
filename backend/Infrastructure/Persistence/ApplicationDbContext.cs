@@ -17,7 +17,7 @@ namespace backend.Infrastructure.Persistence
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<StaffInfo> StaffInfos { get; set; }
-        public DbSet<RefreshTokens> RefreshTokens { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //{
