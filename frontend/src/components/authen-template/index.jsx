@@ -1,11 +1,11 @@
 import React from 'react'
 import './index.css'
-import LoginForm from '../authen-form/LoginForm'
-import RegisterForm from '../authen-form/RegisterForm'
+import LoginPage from '../authen-form/LoginPage'
+import RegisterPage from '../authen-form/RegisterPage'
 function AuthenTemplate({ isLogin }) {
   return (
     <div className='authen-template'>
-      <div className='authen-template__form'>{isLogin ? <LoginForm /> : <RegisterForm />}</div>
+      <div className='authen-template__form'>{isLogin ? <LoginPage /> : <RegisterPage />}</div>
       <div className='authen-template__image'></div>
     </div>
   )
