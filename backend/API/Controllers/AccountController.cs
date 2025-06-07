@@ -1,12 +1,13 @@
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/user/accounts")]
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
@@ -15,8 +16,10 @@ namespace backend.Api.Controllers
         {
             _accountService = accountService;
         }
+
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] CreateAccountRequest request)
+        //[AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var result = await _accountService.RegisterAsync(request);
             if (!result.IsSuccess)
@@ -26,6 +29,7 @@ namespace backend.Api.Controllers
         }
 
         [HttpPost("login")]
+        //[AllowAnonymous]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var result = await _accountService.LoginAsync(request);

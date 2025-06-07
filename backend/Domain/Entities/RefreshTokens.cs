@@ -6,12 +6,14 @@ namespace backend.Domain.Entities
     {
         public Guid Id { get; set; }
 
-        public string Token { get; set; }
-
-        public DateTime ExpiryDate { get; set; }
+        public string Token { get; set; } = default!;
 
         public Guid AccountId { get; set; }
 
-        public virtual Account Account { get; set; }
+        public DateTime ExpiryDate { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual Account Account { get; set; } = default!;
     }
 }

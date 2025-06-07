@@ -2,7 +2,7 @@ using System.Text;
 
 namespace DeployGenderSystem.Application.Helpers
 {
-    public static class HashHelper
+    public class HashHelper
     {
         public static string BCriptHash(string input)
         {

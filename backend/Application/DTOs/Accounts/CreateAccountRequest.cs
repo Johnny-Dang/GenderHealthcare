@@ -1,7 +1,4 @@
-using backend.Domain.Entities;
-using DeployGenderSystem.Domain.Entity;
-
-namespace backend.Application.DTOs.Accounts
+﻿namespace backend.Application.DTOs.Accounts
 {
     public class CreateAccountRequest
     {
@@ -13,5 +10,6 @@ namespace backend.Application.DTOs.Accounts
         public string? AvatarUrl { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public bool Gender { get; set; }
+        public string RoleName { get; set; } = default!;
     }
 }

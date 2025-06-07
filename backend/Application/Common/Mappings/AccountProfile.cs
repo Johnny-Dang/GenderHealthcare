@@ -10,8 +10,12 @@ namespace backend.Application.Common.Mappings
         {
             //CreateMap<Account, AccountDto>();
 
-            CreateMap<CreateAccountRequest, Account>();
+            CreateMap<RegisterRequest, Account>();
 
+            CreateMap<Account, AccountDto>()
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
+
+            CreateMap<UpdateAccountRequest, Account>();
         }
 
     }
