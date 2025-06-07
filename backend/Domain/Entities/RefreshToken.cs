@@ -2,7 +2,7 @@ using DeployGenderSystem.Domain.Entity;
 
 namespace backend.Domain.Entities
 {
-    public class RefreshTokens
+    public class RefreshToken
     {
         public Guid Id { get; set; }
 

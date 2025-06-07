@@ -1,8 +1,7 @@
 using backend.Application.Common.Mappings;
-using backend.Application.Interfaces;
 using backend.Application.Validators;
+using backend.Infrastructure.Database;
 using backend.Infrastructure.Extensions;
-using backend.Infrastructure.Persistence;
 using backend.Infrastructure.Persistence.Configurations;
 using DeployGenderSystem.Domain.Entity;
 using FluentValidation;

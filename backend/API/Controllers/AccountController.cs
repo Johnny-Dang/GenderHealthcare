@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace backend.Api.Controllers
 {
     [ApiController]
-    [Route("api/user/accounts")]
+    [Route("[controller]")]
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
