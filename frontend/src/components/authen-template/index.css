@@ -1,22 +1,12 @@
 .authen-template {
   width: 100vw;
   height: 100vh;
-  display: flex;
 }
 
 .authen-template__form {
-  width: 30%;
   height: 100%;
   background-color: #fff;
-  display: flex;
+
   justify-content: center;
   align-items: center;
-}
-
-.authen-template__image {
-  width: 70%;
-  height: 100%;
-  background-image: url("https://yt3.googleusercontent.com/c-Z7mIlntSpG6VyQ5ZqaPggqkZRhaySr-H5ZEazFN2iR1pP4eD1UGekwu0y--c4CSVhJJ1A4QT8=s900-c-k-c0x00ffffff-no-rj");
-  background-repeat: no-repeat;
-  background-size: cover;
 }
