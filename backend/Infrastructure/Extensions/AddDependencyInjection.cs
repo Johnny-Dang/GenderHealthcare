@@ -14,6 +14,10 @@ namespace backend.Infrastructure.Extensions
         {
             serviceCollection.AddScoped<IRoleService, RoleService>();
             serviceCollection.AddScoped<IAccountService, AccountService>();
+<<<<<<< HEAD
+=======
+            
+>>>>>>> 292d8062ac651ef538500e6b65f204a94616d352
         }
     }
 }

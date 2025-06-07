@@ -17,7 +17,7 @@ namespace DeployGenderSystem.Domain.Entity
         public DateTime CreateAt { get; set; }
         public DateTime? UpdateAt { get; set; }
 
-        public virtual ICollection<RefreshTokens> RefreshToken { get; set; } = new List<RefreshTokens>();
+        public virtual ICollection<RefreshToken> RefreshToken { get; set; } = new List<RefreshToken>();
         public virtual StaffInfo? StaffInfo { get; set; }
         public virtual Role Role { get; set; } = default!;
 

@@ -1,9 +1,14 @@
 using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
+using backend.Domain.AppsettingsConfigurations;
+using backend.Domain.Entities;
+using backend.Infrastructure.Database;
+
 //using backend.Infrastructure.Services;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
+using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.Options;
@@ -19,39 +24,40 @@ namespace backend.Application.Services
 
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
-        //private readonly JwtTokenGenerator _tokenGenerator;
+        private readonly JwtSettings _jwtSettings;
 
-        public AccountService(IApplicationDbContext context, IMapper mapper, IConfiguration config)
+        public AccountService(IApplicationDbContext context, IMapper mapper, IOptions<JwtSettings> jwtSettingOptions)
         {
             _context = context;
             _mapper = mapper;
-            //_tokenGenerator = tokenGenerator;
+            _jwtSettings = jwtSettingOptions.Value;
         }
-        //public string GenerateJwt(Account user)
-        //{
-        //    var claims = new List<Claim>
-        //    {
-        //        new (ClaimTypes.NameIdentifier, user.Id.ToString()),
-        //        new (ClaimTypes.Email, user.EmailAddress),
-        //        new (ClaimTypes.Role, user.Role.ToString()),
-        //    };
 
-        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+        public string GenerateJwt(Account account)
+        {
 
+            var claims = new List<Claim>
+            {
+                new (ClaimTypes.NameIdentifier, account.User_Id.ToString()),
+                new (ClaimTypes.Email, account.Email),
+                new (ClaimTypes.Role, account.Role.ToString()),
+            };
 
-        //    var token = new JwtSecurityToken(
-        //        issuer: _jwtSettings.Issuer,
-        //        audience: _jwtSettings.Audience,
-        //        claims: claims,
-        //        expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
-        //        signingCredentials: new SigningCredentials(
-        //            key,
-        //            SecurityAlgorithms.HmacSha256Signature
-        //            )
-        //        );
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
 
-        //    return new JwtSecurityTokenHandler().WriteToken(token);
-        //}
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
+                signingCredentials: new SigningCredentials(
+                    key,
+                    SecurityAlgorithms.HmacSha256Signature
+                    )
+                );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
         {
@@ -61,8 +67,7 @@ namespace backend.Application.Services
                 return Result<AccountDto>.Failure("Email already exists.");
 
             var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
-            // Băm mật khẩu với salt bằng BCrypt
-            //var salt = BCrypt.Net.BCrypt.GenerateSalt();
+            // Băm mật khẩu bằng BCrypt
             var passwordHash = HashHelper.BCriptHash(request.Password);
 
             // Tạo thực thể Account
@@ -88,28 +93,30 @@ namespace backend.Application.Services
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }
 
+        public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
+        {
+            var user = await _context.Accounts
+                .Include(r => r.Role)
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        
-        //public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
-        //{
-        //    var user = await _context.Accounts
-        //        .Include(r => r.Role)
-        //        .FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+                return Result<LoginResponse>.Failure("Email không tồn tại.");
 
-        //    if (user == null)
-        //        return Result<LoginResponse>.Failure("Email không tồn tại.");
+            var password = request.Password;
 
-        //    var password = request.Password;
+            var isValid = HashHelper.BCriptVerify(password, user.Password);
+            if (!isValid)
+                return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
 
-        //    var isValid = HashHelper.BCriptVerify(password, user.Password);
-        //    if (!isValid)
-        //        return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
+            var response = new LoginResponse
+            {
+                AccessToken = GenerateJwt(user),
+                Email = user.Email,
+                Role = user.Role.Name,
+            };
 
-        //    //var tokenService = new JwtTokenGenerator(_config);
-        //    //var response = _tokenGenerator.GenerateToken(user);
-
-        //    return Result<LoginResponse>.Success(response);
-        //}
+            return Result<LoginResponse>.Success(response);
+        }
 
         public async Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request)
         {
@@ -187,6 +194,25 @@ namespace backend.Application.Services
             _context.Accounts.Remove(acc);
             await _context.SaveChangesAsync();
             return Result<bool>.Success(true);
+        }
+
+        public async Task<GoogleJsonWebSignature.Payload> VerifyCredential(string clientId, string credential)
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { clientId }
+            };
+
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(credential, settings);
+                return payload;
+            }
+            catch (Exception ex)
+            {
+                //Log the exception or handle it as needed
+                throw new InvalidOperationException("Failed to verify Google credential.", ex);
+            }
         }
     }
 }

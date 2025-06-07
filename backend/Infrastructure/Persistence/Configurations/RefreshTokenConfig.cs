@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Infrastructure.Persistence.Configurations
 {
-    public class RefreshTokenConfig : IEntityTypeConfiguration<RefreshTokens>
+    public class RefreshTokenConfig : IEntityTypeConfiguration<RefreshToken>
     {
-        public void Configure(EntityTypeBuilder<RefreshTokens> builder)
+        public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
             builder.HasKey(r => r.Id);
 
