@@ -1,13 +1,15 @@
 using backend.Application.DTOs.Roles;
 using backend.Application.Interfaces;
 using backend.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class RoleController : Controller
+    [Authorize]
+    public class RoleController : ControllerBase
     {
         private readonly IRoleService _service;
 

@@ -12,7 +12,7 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.HasKey(a => a.User_Id);
 
             builder.Property(a => a.Email).IsRequired().HasMaxLength(255);
-            builder.Property(a => a.Password).IsRequired();
+            builder.Property(a => a.Password);
             builder.Property(a => a.FirstName).HasMaxLength(50);
             builder.Property(a => a.LastName).HasMaxLength(50);
             builder.Property(a => a.Phone).HasMaxLength(20);

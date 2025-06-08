@@ -8,9 +8,9 @@ namespace backend.API.Controllers
 
     [Route("[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
 
-    public class AdminController : Controller
+    public class AdminController : ControllerBase
     {
         private readonly IAccountService _accountService;
 
@@ -19,7 +19,7 @@ namespace backend.API.Controllers
             _accountService = accountService;
         }
 
-        [HttpGet]
+        [HttpGet("accounts")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _accountService.GetAllAsync();
@@ -33,7 +33,7 @@ namespace backend.API.Controllers
             return result.IsSuccess ? Ok(result.Data) : NotFound(result.Error);
         }
 
-        [HttpPost]
+        [HttpPost("account")]
         public async Task<IActionResult> Create([FromBody] CreateAccountRequest request)
         {
             var result = await _accountService.CreateAsync(request);

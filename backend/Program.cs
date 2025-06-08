@@ -1,5 +1,6 @@
-using backend.Application.Common.Mappings;
+﻿using backend.Application.Common.Mappings;
 using backend.Application.Validators;
+using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.Database;
 using backend.Infrastructure.Extensions;
 using backend.Infrastructure.Persistence.Configurations;
@@ -29,9 +30,9 @@ builder.Services.AddSwaggerGen(
     {
         option.SwaggerDoc("v1", new OpenApiInfo
         {
-            Title = "StudentManagementSystem",
+            Title = "GenderHealthcareServiceManagementSystem",
             Version = "v1",
-            Description = "StudentManagementSystem API",
+            Description = "GenderHealthcareServiceManagementSystem API",
         });
         var securityScheme = new OpenApiSecurityScheme
         {
@@ -55,23 +56,29 @@ builder.Services.AddSwaggerGen(
     { securityScheme, new string[] { } }
 });
     });
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
-// JWT Auth setup
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.Configure<JwtSettings>(jwtSettings);
+
+builder.Services.AddAuthentication(option =>
+{
+    option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, option =>
+{
+    option.TokenValidationParameters = new TokenValidationParameters
     {
-        var jwt = builder.Configuration.GetSection("Jwt");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwt["Issuer"],
-            ValidAudience = jwt["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!))
-        };
-    });
+        ValidateIssuer = true,//Kiểm tra Issuer (người phát hành token) có hợp lệ không
+        ValidateAudience = true,//Kiểm tra Audience (người nhận token) có đúng không
+        ValidateLifetime = true,//	Kiểm tra token còn hạn hay không
+        ValidateIssuerSigningKey = true,//Kiểm tra chữ ký token có hợp lệ không
+        ClockSkew = TimeSpan.Zero,//Dung sai thời gian. TimeSpan.Zero nghĩa là không cho sai số, token hết hạn là hết luôn
+        IssuerSigningKey = new SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(jwtSettings["SecretKey"])),
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"]
+    };
+});
 
 builder.Services.AddAuthorization();
 
@@ -79,7 +86,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    Console.WriteLine($"Connection String: {connectionString}");
     options.UseSqlServer(connectionString);
 });
 
@@ -96,6 +102,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseAuthentication();
 
 app.UseHttpsRedirection();
 

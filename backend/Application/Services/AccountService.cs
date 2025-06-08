@@ -12,6 +12,7 @@ using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -24,39 +25,12 @@ namespace backend.Application.Services
 
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
-        private readonly JwtSettings _jwtSettings;
-
-        public AccountService(IApplicationDbContext context, IMapper mapper, IOptions<JwtSettings> jwtSettingOptions)
+        private readonly ITokenService _tokenService;
+        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService)
         {
             _context = context;
             _mapper = mapper;
-            _jwtSettings = jwtSettingOptions.Value;
-        }
-
-        public string GenerateJwt(Account account)
-        {
-
-            var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, account.User_Id.ToString()),
-                new (ClaimTypes.Email, account.Email),
-                new (ClaimTypes.Role, account.Role.ToString()),
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-
-            var token = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
-                signingCredentials: new SigningCredentials(
-                    key,
-                    SecurityAlgorithms.HmacSha256Signature
-                    )
-                );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            _tokenService = tokenService;
         }
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
@@ -108,13 +82,16 @@ namespace backend.Application.Services
             if (!isValid)
                 return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
 
+            var accountDto = _mapper.Map<AccountDto>(user);
+
             var response = new LoginResponse
             {
-                AccessToken = GenerateJwt(user),
+                AccessToken = _tokenService.GenerateJwt(accountDto),
                 Email = user.Email,
                 Role = user.Role.Name,
+                AccountId = user.User_Id
             };
-
+            
             return Result<LoginResponse>.Success(response);
         }
 
@@ -158,7 +135,7 @@ namespace backend.Application.Services
 
         public async Task<Result<List<AccountDto>>> GetAllAsync()
         {
-            var accounts = await _context.Accounts.Include(a => a.Role).ToListAsync();
+            var accounts = await _context.Accounts.Include(a => a.Role).Where(x => x.Role.Name != "Admin").ToListAsync();
             return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
         }
 
@@ -196,6 +173,7 @@ namespace backend.Application.Services
             return Result<bool>.Success(true);
         }
 
+        
         public async Task<GoogleJsonWebSignature.Payload> VerifyCredential(string clientId, string credential)
         {
             var settings = new GoogleJsonWebSignature.ValidationSettings

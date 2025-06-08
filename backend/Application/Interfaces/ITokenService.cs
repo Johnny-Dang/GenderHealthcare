@@ -1,14 +1,15 @@
-﻿using DeployGenderSystem.Domain.Entity;
+﻿using backend.Application.DTOs.Accounts;
+using DeployGenderSystem.Domain.Entity;
 
 namespace backend.Application.Interfaces
 {
     public interface ITokenService
     {
-        public string GenerateJwt(Account user);
+        public string GenerateJwt(AccountDto user);
 
-        public string GenerateRefreshToken(Guid accountId);
+        public string GenerateRefreshTokenAsync(Guid accountId);
 
-        public Account GetUserByRefreshToken(string refreshToken);
+        public AccountDto GetUserByRefreshToken(string refreshToken);
 
         public void DeleteOldRefreshToken(Guid accountId);
     }

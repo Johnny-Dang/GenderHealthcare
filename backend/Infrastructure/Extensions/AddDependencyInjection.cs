@@ -13,7 +13,7 @@ namespace backend.Infrastructure.Extensions
         {
             serviceCollection.AddScoped<IRoleService, RoleService>();
             serviceCollection.AddScoped<IAccountService, AccountService>();
-            
+            serviceCollection.AddScoped<ITokenService, TokenService>();
         }
     }
 }
