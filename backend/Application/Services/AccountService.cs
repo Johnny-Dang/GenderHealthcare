@@ -91,7 +91,7 @@ namespace backend.Application.Services
                 Role = user.Role.Name,
                 AccountId = user.User_Id
             };
-            
+
             return Result<LoginResponse>.Success(response);
         }
 
@@ -151,8 +151,6 @@ namespace backend.Application.Services
             account.DateOfBirth = request.DateOfBirth ?? account.DateOfBirth;
             account.Gender = request.Gender;
 
-            //var updateAccount = _mapper.Map<Account>(request);
-
             if (!string.IsNullOrEmpty(request.RoleName))
             {
                 var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == request.RoleName);
@@ -173,24 +171,16 @@ namespace backend.Application.Services
             return Result<bool>.Success(true);
         }
 
-        
-        public async Task<GoogleJsonWebSignature.Payload> VerifyCredential(string clientId, string credential)
+        public async Task<Result<AccountDto>> GetAccountByEmail(string email)
         {
-            var settings = new GoogleJsonWebSignature.ValidationSettings
-            {
-                Audience = new[] { clientId }
-            };
+            var account = await _context.Accounts
+                .Include(a => a.Role)
+                .FirstOrDefaultAsync(a => a.Email == email);
+            if (account == null) return Result<AccountDto>.Failure("Account not found.");
+            var accountDto = _mapper.Map<AccountDto>(account);
 
-            try
-            {
-                var payload = await GoogleJsonWebSignature.ValidateAsync(credential, settings);
-                return payload;
-            }
-            catch (Exception ex)
-            {
-                //Log the exception or handle it as needed
-                throw new InvalidOperationException("Failed to verify Google credential.", ex);
-            }
+            return Result<AccountDto>.Success(accountDto);
         }
     }
+        
 }
