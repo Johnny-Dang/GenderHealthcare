@@ -1,4 +1,4 @@
-# 💡 [Gender Healthcare Service Management System](https://genderhealthcare.vercel.app/)
+# 💡 [Gender Healthcare Service Management System](https://gender-healthcare.vercel.app/)
 
 A Fullstack Monorepo for managing gender healthcare services, built with **ReactJS (Frontend)** and **ASP.NET Core Web API (Backend)**.
 
@@ -46,7 +46,7 @@ cd GenderHealthcareServiceManagementSystem
 cd frontend
 cp .env.example .env         # Modify environment variables if needed
 npm install                  # or: yarn
-npm start                    # Start the React development server
+npm run dev                  # Start the React development server
 ```
 
 ### 3. Setup Backend
