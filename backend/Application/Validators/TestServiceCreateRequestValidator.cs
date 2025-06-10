@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace backend.Application.Validators
 {
-    public class TestServiceCreateRequestValidator: AbstractValidator<TestServiceCreateRequest>
+    public class TestServiceCreateRequestValidator: AbstractValidator<CreateTestServiceRequest>
     {
         public TestServiceCreateRequestValidator() 
         {
