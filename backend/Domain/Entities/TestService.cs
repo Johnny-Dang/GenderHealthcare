@@ -13,6 +13,6 @@
         public string Category { get; set; } = default!;
 
         // Navigation property
-        public virtual ICollection<UserServiceBooking> UserServiceBookings { get; set; } = new List<UserServiceBooking>();
+        public virtual ICollection<Appoiment> Appointments { get; set; } = new List<Appoiment>();
     }
 }

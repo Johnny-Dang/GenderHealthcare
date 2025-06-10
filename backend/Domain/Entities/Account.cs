@@ -22,7 +22,7 @@ namespace DeployGenderSystem.Domain.Entity
         public virtual Role Role { get; set; } = default!;
 
         // Navigation properties
-        public virtual ICollection<UserServiceBooking> UserServiceBookings { get; set; } = new List<UserServiceBooking>();
+        public virtual ICollection<Appoiment> UserServiceBookings { get; set; } = new List<Appoiment>();
 
     }
 }
