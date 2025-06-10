@@ -14,6 +14,5 @@
 
         // Navigation property
         public virtual ICollection<Appoiment> Appointments { get; set; } = new List<Appoiment>();
-        public virtual ICollection<UserServiceBooking> UserServiceBookings { get; set; } = new List<UserServiceBooking>();
     }
 }

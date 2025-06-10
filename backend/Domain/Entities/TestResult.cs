@@ -1,4 +1,4 @@
-﻿using DeployGenderSystem.Domain.Entity;
+using DeployGenderSystem.Domain.Entity;
 
 namespace backend.Domain.Entities
 {
