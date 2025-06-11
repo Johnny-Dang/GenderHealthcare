@@ -23,6 +23,7 @@ namespace DeployGenderSystem.Domain.Entity
 
         // Navigation properties
         public virtual ICollection<Appoiment> UserServiceBookings { get; set; } = new List<Appoiment>();
+        public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 
     }
 }
