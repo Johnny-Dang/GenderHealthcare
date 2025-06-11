@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Infrastructure.Database;
 
@@ -11,9 +12,11 @@ using backend.Infrastructure.Database;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250611031441_update table testResult")]
+    partial class updatetabletestResult
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,6 +218,9 @@ namespace backend.Migrations
                     b.Property<Guid>("StaffId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("StaffUser_Id")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -231,6 +237,8 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.HasIndex("StaffId");
+
+                    b.HasIndex("StaffUser_Id");
 
                     b.ToTable("TestResult");
                 });
@@ -339,10 +347,16 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
-                        .WithMany("TestResults")
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", null)
+                        .WithMany()
                         .HasForeignKey("StaffId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
+                        .WithMany("TestResults")
+                        .HasForeignKey("StaffUser_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Appointment");

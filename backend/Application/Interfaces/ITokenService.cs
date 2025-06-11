@@ -12,5 +12,8 @@ namespace backend.Application.Interfaces
         public AccountDto GetUserByRefreshToken(string refreshToken);
 
         public void DeleteOldRefreshToken(Guid accountId);
+
+        void BlacklistToken(string token, DateTime expiry);
+        bool IsTokenBlacklisted(string token);
     }
 }

@@ -2,7 +2,9 @@ using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace backend.Api.Controllers
 {
@@ -12,10 +14,13 @@ namespace backend.Api.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly ITokenService _tokenService;
-        public AccountController(IAccountService accountService, ITokenService tokenService)
+        private readonly IGoogleCredentialService _googleCredentialService;
+        //private readonly IMemoryCache _cache;
+        public AccountController(IAccountService accountService, ITokenService tokenService,IGoogleCredentialService googleCredentialService)
         {
             _accountService = accountService;
             _tokenService = tokenService;
+            _googleCredentialService = googleCredentialService;
         }
 
         [HttpPost("register")]
@@ -38,6 +43,7 @@ namespace backend.Api.Controllers
             {
                 return BadRequest(result.Error);
             }
+            _tokenService.DeleteOldRefreshToken(result.Data.AccountId);
             var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(result.Data.AccountId);
 
             var cookieOptions = new CookieOptions
@@ -77,7 +83,7 @@ namespace backend.Api.Controllers
                 AccessToken = accessToken,
                 Email = user.Email,
                 Role = user.RoleName,
-                AccountId = user.User_Id
+                FullName = user.FirstName + " " + user.LastName,
             };
             var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
 
@@ -91,6 +97,38 @@ namespace backend.Api.Controllers
             //set the refresh token in the cookie
             HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken, cookieOptions);
             return Ok(loginResponse);
+        }
+
+        [HttpPost("login-google")]
+        public async Task<IActionResult> LoginGoogle(GoogleLoginDto model)
+        {
+            var clientId = "1009838237823-cgfehmh9ssdblpodj2sdfcd4p76ilvfb.apps.googleusercontent.com";
+            var payload = await _googleCredentialService.VerifyCredential(clientId, model.Credential);
+
+            if(payload == null)
+            {
+                return BadRequest("Login By Google Fail");
+            }
+
+
+            //TODO: Register User if not exists
+            var response = await _googleCredentialService.LoginGoogleAsync(payload);
+
+
+            //set the refresh token in the cookie
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,//use secure cookies in production
+                Expires = DateTime.Now.AddDays(7)//SetExpiration for the cookie
+            };
+            //Delete old refresh token
+            _tokenService.DeleteOldRefreshToken(response.AccountId);
+            var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(response.AccountId);
+            HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken, cookieOptions);
+            //TODO: generate JWT token
+
+            return Ok(response);
         }
 
         [HttpPost("logout")]

@@ -1,4 +1,5 @@
-﻿using backend.Application.Common.Mappings;
+﻿using backend.API.Middleware;
+using backend.Application.Common.Mappings;
 using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.Database;
@@ -56,6 +57,11 @@ builder.Services.AddSwaggerGen(
     { securityScheme, new string[] { } }
 });
     });
+builder.Services.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
+
+
+builder.Services.AddMemoryCache();
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
 builder.Services.Configure<JwtSettings>(jwtSettings);
@@ -89,7 +95,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
-builder.Services.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
 
 builder.Services.AddAutoMapper(typeof(AccountProfile),typeof(RoleProfile));
 
@@ -102,6 +107,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//app.UseMiddleware<JwtBlacklistMiddleware>(); // Đặt trước UseAuthentication
+
 app.UseAuthentication();
 
 app.UseHttpsRedirection();
@@ -109,5 +117,12 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCors(option =>
+{
+    option.WithOrigins("http://localhost:3000")
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+});
 
 app.Run();

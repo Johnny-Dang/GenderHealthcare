@@ -1,4 +1,5 @@
-﻿using backend.Application.DTOs.Accounts;
+﻿using AutoMapper;
+using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Domain.Entities;
@@ -6,6 +7,7 @@ using backend.Infrastructure.Database;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -18,11 +20,13 @@ namespace backend.Application.Services
     {
         private readonly IApplicationDbContext _context;
         private readonly JwtSettings _jwtSettings;
+        private readonly IMemoryCache _cache;
 
-        public TokenService(IApplicationDbContext context, IOptions<JwtSettings> jwtSettingOptions)
+        public TokenService(IApplicationDbContext context, IOptions<JwtSettings> jwtSettingOptions,IMemoryCache cache)
         {
             _context = context;
             _jwtSettings = jwtSettingOptions.Value;
+            _cache = cache;
         }   
         // Implement the methods defined in ITokenService
         public string GenerateJwt(AccountDto account)
@@ -103,6 +107,21 @@ namespace backend.Application.Services
             _context.SaveChangesAsync();
 
             return hashedRefereshToken;
+        }
+
+        public void BlacklistToken(string token, DateTime expiry)
+        {
+            var options = new MemoryCacheEntryOptions
+            {
+                AbsoluteExpiration = expiry
+            };
+
+            _cache.Set(token, true, options);
+        }
+
+        public bool IsTokenBlacklisted(string token)
+        {
+            return _cache.TryGetValue(token, out _);
         }
     }
 }
