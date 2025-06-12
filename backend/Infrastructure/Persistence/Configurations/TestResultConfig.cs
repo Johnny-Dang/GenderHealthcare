@@ -32,7 +32,6 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.Property(tr => tr.Notes)
                 .HasMaxLength(1000);
 
-<<<<<<< HEAD
             builder.Property(tr => tr.StaffId)
                 .IsRequired();
 
@@ -43,8 +42,6 @@ namespace backend.Infrastructure.Persistence.Configurations
                    .HasPrincipalKey(a => a.User_Id)  
                    .OnDelete(DeleteBehavior.Restrict);
 
-=======
->>>>>>> 8e30e10 (add new entity TestResult and update Appoiment)
             // Quan hệ 1-1 với Appoiment
             builder.HasOne(tr => tr.Appointment)
                 .WithOne(a => a.TestResult)

@@ -8,6 +8,7 @@ namespace backend.Infrastructure.Database
     public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         
+        
 
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }

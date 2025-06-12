@@ -2,6 +2,7 @@ using backend.Application.Common.Mappings;
 using backend.Application.Interfaces;
 using backend.Application.Services;
 using backend.Infrastructure.Database;
+using backend.Infrastructure.Database;
 using backend.Infrastructure.Persistence;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
@@ -13,6 +14,7 @@ namespace backend.Infrastructure.Extensions
     {
         public static void AddService(this IServiceCollection serviceCollection)
         {
+            serviceCollection.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
             serviceCollection.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
             serviceCollection.AddScoped<IRoleService, RoleService>();
             serviceCollection.AddScoped<IAccountService, AccountService>();
