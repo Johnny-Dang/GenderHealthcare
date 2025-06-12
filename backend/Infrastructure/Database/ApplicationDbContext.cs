@@ -7,12 +7,23 @@ namespace backend.Infrastructure.Database
 {
     public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
+<<<<<<< HEAD
+=======
+        
+
+>>>>>>> 25398802ccaf59c8854454fadc182bac45b55c85
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<StaffInfo> StaffInfos { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+<<<<<<< HEAD
+        public DbSet<Appoiment> Appoiment { get; set; }
+        public DbSet<TestService> TestService { get; set; }
+        public DbSet<TestResult> TestResult { get; set; }
+=======
         public DbSet<TestService> TestService { get; set; }
 
+>>>>>>> 25398802ccaf59c8854454fadc182bac45b55c85
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

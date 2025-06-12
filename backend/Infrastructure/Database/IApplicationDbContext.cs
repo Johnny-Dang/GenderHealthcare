@@ -10,8 +10,11 @@ namespace backend.Infrastructure.Database
         public DbSet<Role> Roles { get; }
         public DbSet<StaffInfo> StaffInfos { get; }
         public DbSet<RefreshToken> RefreshTokens { get; }
+        public DbSet<TestService> TestService { get; }
 
-        public DbSet<TestService> TestService { get; set; }
+        public DbSet<Appoiment> Appoiment { get; set; }
+        
+        public DbSet<TestResult> TestResult { get; set; }
         public Task<int> SaveChangesAsync();
     }
 }
