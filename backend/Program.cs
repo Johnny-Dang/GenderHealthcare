@@ -96,7 +96,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(AccountProfile),typeof(RoleProfile));
+builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile));
 
 
 var app = builder.Build();
