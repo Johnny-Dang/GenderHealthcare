@@ -17,7 +17,6 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.Property(a => a.LastName).HasMaxLength(50);
             builder.Property(a => a.Phone).HasMaxLength(20);
             builder.Property(a => a.avatarUrl).HasMaxLength(500);
-            builder.Property(a => a.IsEmailVerified).IsRequired().HasDefaultValue(false);
 
             builder.HasOne(a => a.Role)
                 .WithMany(r => r.Accounts)
