@@ -21,5 +21,9 @@ namespace DeployGenderSystem.Domain.Entity
         public virtual StaffInfo? StaffInfo { get; set; }
         public virtual Role Role { get; set; } = default!;
 
+        // Navigation properties
+        public virtual ICollection<Appoiment> UserServiceBookings { get; set; } = new List<Appoiment>();
+        public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+
     }
 }

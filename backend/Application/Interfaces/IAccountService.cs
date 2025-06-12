@@ -16,6 +16,10 @@ namespace backend.Application.Interfaces
         public Task<Result<bool>> DeleteAsync(Guid id); // admin
         public Task<Result<List<AccountDto>>> GetAllAsync(); // admin
         public Task<Result<AccountDto>> GetByIdAsync(Guid id); // admin
-        public Task<Result<bool>> VerifyEmailAsync(string token);
+
+        public Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request);
+        public Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request);
+        public Task<Result<bool>> SendVerificationCodeAsync(SendVerificationCodeRequest request);
+        public Task<Result<AccountDto>> RegisterWithVerificationCodeAsync(RegisterWithVerificationCodeRequest request);
     }
 }

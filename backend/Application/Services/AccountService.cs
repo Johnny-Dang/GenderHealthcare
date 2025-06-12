@@ -27,21 +27,15 @@ namespace backend.Application.Services
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
+        private readonly IVerificationCodeService _verificationCodeService;
         private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration;
-
-        public AccountService(
-            IApplicationDbContext context, 
-            IMapper mapper, 
-            ITokenService tokenService,
-            IEmailService emailService,
-            IConfiguration configuration)
+        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
+            _verificationCodeService = verificationCodeService;
             _emailService = emailService;
-            _configuration = configuration;
         }
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
@@ -116,7 +110,8 @@ namespace backend.Application.Services
                 AccessToken = _tokenService.GenerateJwt(accountDto),
                 Email = user.Email,
                 Role = user.Role.Name,
-                AccountId = user.User_Id
+                AccountId = user.User_Id,
+                FullName = user.LastName + user.LastName
             };
 
             return Result<LoginResponse>.Success(response);
@@ -209,27 +204,84 @@ namespace backend.Application.Services
             return Result<AccountDto>.Success(accountDto);
         }
 
-        public async Task<Result<bool>> VerifyEmailAsync(string token)
+        public async Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request)
         {
-            string secretKey = _configuration["EmailVerification:SecretKey"];
-            string email = EmailVerificationHelper.ValidateEmailVerificationToken(token, secretKey);
-            
-            if (email == null)
-                return Result<bool>.Failure("Invalid or expired verification token.");
+            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            if (!emailExists)
+                return Result<bool>.Failure("Email không tồn tại.");
 
-            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Email == email);
-            if (account == null)
-                return Result<bool>.Failure("Account not found.");
+            var verificationCode = _verificationCodeService.GenerateVerificationCode(request.Email);
+            var emailSent = await _emailService.SendVerificationEmailAsync(request.Email, verificationCode);
 
-            if (account.IsEmailVerified)
-                return Result<bool>.Success(true); // Already verified, return success
+            if (!emailSent)
+                return Result<bool>.Failure("Không thể gửi mã xác thực. Vui lòng thử lại sau.");
 
-            // Update verification status
-            account.IsEmailVerified = true;
-            account.UpdateAt = DateTime.UtcNow;
+            return Result<bool>.Success(true);
+        }
+
+        public async Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var isValid = _verificationCodeService.VerifyCode(request.Email, request.VerificationCode);
+            if (!isValid)
+                return Result<bool>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+
+            var user = await _context.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email);
+            if (user == null)
+                return Result<bool>.Failure("Email không tồn tại.");
+
+            user.Password = HashHelper.BCriptHash(request.NewPassword);
             await _context.SaveChangesAsync();
 
             return Result<bool>.Success(true);
         }
+
+        public async Task<Result<bool>> SendVerificationCodeAsync(SendVerificationCodeRequest request)
+        {
+            var verificationCode = _verificationCodeService.GenerateVerificationCode(request.Email);
+            var emailSent = await _emailService.SendVerificationEmailAsync(request.Email, verificationCode);
+            if (!emailSent)
+                return Result<bool>.Failure("Không thể gửi mã xác thực. Vui lòng thử lại sau.");
+            return Result<bool>.Success(true);
+        }
+
+        public async Task<Result<AccountDto>> RegisterWithVerificationCodeAsync(RegisterWithVerificationCodeRequest request)
+        {
+            // Kiểm tra mã xác thực
+            var isValid = _verificationCodeService.VerifyCode(request.Email, request.VerificationCode);
+            if (!isValid)
+                return Result<AccountDto>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+
+            // Kiểm tra email đã tồn tại
+            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            if (emailExists)
+                return Result<AccountDto>.Failure("Email already exists.");
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
+            var passwordHash = HashHelper.BCriptHash(request.Password);
+
+            var account = new Account
+            {
+                User_Id = Guid.NewGuid(),
+                Email = request.Email,
+                Password = passwordHash,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Phone = request.Phone,
+                avatarUrl = request.AvatarUrl,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
+                RoleId = customerRole.Id,
+                CreateAt = DateTime.UtcNow
+            };
+
+            _context.Accounts.Add(account);
+            await _context.SaveChangesAsync();
+
+            // Xóa mã xác thực khỏi cache sau khi đăng ký thành công
+            _verificationCodeService.RemoveCode(request.Email);
+
+            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+        }
     }
+
 }
