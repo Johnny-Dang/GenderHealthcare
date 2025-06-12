@@ -24,7 +24,6 @@ namespace backend.Api.Controllers
         private readonly IVerificationCodeService _verificationCodeService;
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
-        //private readonly IMemoryCache _cache;
         public AccountController(IAccountService accountService, ITokenService tokenService, IGoogleCredentialService googleCredentialService, IVerificationCodeService verificationCodeService, IApplicationDbContext context, IMapper mapper)
         {
             _accountService = accountService;
@@ -36,7 +35,6 @@ namespace backend.Api.Controllers
         }
 
         [HttpPost("register")]
-        //[AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var result = await _accountService.RegisterAsync(request);
@@ -47,41 +45,28 @@ namespace backend.Api.Controllers
         }
 
         [HttpPost("login")]
-        //[EnableRateLimiting("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            _logger.LogInformation("Login attempt for user: {Email}", request.Email);
-            
             var result = await _accountService.LoginAsync(request);
             if (!result.IsSuccess)
             {
-                _logger.LogWarning("Failed login attempt for user: {Email}. Error: {Error}", 
-                    request.Email, result.Error);
                 return BadRequest(result.Error);
             }
-
-            // Kiểm tra xác thực email
-            var account = await _accountService.GetAccountByEmail(request.Email);
-            if (!account.Data.IsEmailVerified)
-            {
-                return BadRequest("Please verify your email before logging in.");
-            }
-
-            _logger.LogInformation("User {Email} logged in successfully", request.Email);
-            
             _tokenService.DeleteOldRefreshToken(result.Data.AccountId);
             var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(result.Data.AccountId);
 
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                Expires = DateTime.Now.AddDays(7)
+                Secure = true,//use secure cookies in production
+                Expires = DateTime.Now.AddDays(7)//SetExpiration for the cookie
             };
 
+            //set the refresh token in the cookie
             HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken, cookieOptions);
             return Ok(result.Data);
         }
+
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
