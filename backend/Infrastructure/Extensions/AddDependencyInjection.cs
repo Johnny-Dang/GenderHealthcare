@@ -18,6 +18,7 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<ITokenService, TokenService>();
             serviceCollection.AddScoped<IGoogleCredentialService, GoogleCredentialService>();
             serviceCollection.AddScoped<ITestService, TestService>();
+            serviceCollection.AddScoped<IBlogService, BlogService>();
         }
     }
 }

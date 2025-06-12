@@ -15,7 +15,7 @@ namespace backend.Infrastructure.Database
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<TestService> TestService { get; set; }
         public DbSet<Blog> Blogs { get; set; }
-        public DbSet<Category> Categories { get; set; }
+        public DbSet<BlogCategory> Categories { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

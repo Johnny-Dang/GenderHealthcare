@@ -12,7 +12,7 @@ namespace backend.Infrastructure.Database
         public DbSet<RefreshToken> RefreshTokens { get; }
         public DbSet<TestService> TestService { get; }
         public DbSet<Blog> Blogs { get; set; }
-        public DbSet<Category> Categories { get; set; }
+        public DbSet<BlogCategory> Categories { get; set; }
         public Task<int> SaveChangesAsync();
     }
 }
