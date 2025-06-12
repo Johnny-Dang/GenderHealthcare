@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace backend.Api.Controllers
 {
@@ -15,12 +16,14 @@ namespace backend.Api.Controllers
         private readonly IAccountService _accountService;
         private readonly ITokenService _tokenService;
         private readonly IGoogleCredentialService _googleCredentialService;
+        private readonly ILogger<AccountController> _logger;
         //private readonly IMemoryCache _cache;
-        public AccountController(IAccountService accountService, ITokenService tokenService,IGoogleCredentialService googleCredentialService)
+        public AccountController(IAccountService accountService, ITokenService tokenService,IGoogleCredentialService googleCredentialService, ILogger<AccountController> logger)
         {
             _accountService = accountService;
             _tokenService = tokenService;
             _googleCredentialService = googleCredentialService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -35,25 +38,38 @@ namespace backend.Api.Controllers
         }
 
         [HttpPost("login")]
-        //[AllowAnonymous]
+        //[EnableRateLimiting("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
+            _logger.LogInformation("Login attempt for user: {Email}", request.Email);
+            
             var result = await _accountService.LoginAsync(request);
             if (!result.IsSuccess)
             {
+                _logger.LogWarning("Failed login attempt for user: {Email}. Error: {Error}", 
+                    request.Email, result.Error);
                 return BadRequest(result.Error);
             }
+
+            // Kiểm tra xác thực email
+            var account = await _accountService.GetAccountByEmail(request.Email);
+            if (!account.Data.IsEmailVerified)
+            {
+                return BadRequest("Please verify your email before logging in.");
+            }
+
+            _logger.LogInformation("User {Email} logged in successfully", request.Email);
+            
             _tokenService.DeleteOldRefreshToken(result.Data.AccountId);
             var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(result.Data.AccountId);
 
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,//use secure cookies in production
-                Expires = DateTime.Now.AddDays(7)//SetExpiration for the cookie
+                Secure = true,
+                Expires = DateTime.Now.AddDays(7)
             };
 
-            //set the refresh token in the cookie
             HttpContext.Response.Cookies.Append("refreshToken", newRefreshToken, cookieOptions);
             return Ok(result.Data);
         }
@@ -137,6 +153,16 @@ namespace backend.Api.Controllers
             //delete the refresh token cookie
             HttpContext.Response.Cookies.Delete("refreshToken");
             return Ok("Logout successful");
+        }
+
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            var result = await _accountService.VerifyEmailAsync(token);
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
+
+            return Ok("Email verified successfully");
         }
     }
 }

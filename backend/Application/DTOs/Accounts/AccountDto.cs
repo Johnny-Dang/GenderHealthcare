@@ -12,6 +12,7 @@ namespace backend.Application.DTOs.Accounts
         public DateOnly? DateOfBirth { get; set; }
         public bool Gender { get; set; }
         public string RoleName { get; set; } = default!;
+        public bool IsEmailVerified { get; internal set; }
     }
 }
 

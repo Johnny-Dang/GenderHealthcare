@@ -46,6 +46,9 @@ namespace backend.Migrations
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -72,7 +75,7 @@ namespace backend.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
@@ -101,7 +104,7 @@ namespace backend.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.Role", b =>
@@ -122,7 +125,7 @@ namespace backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.StaffInfo", b =>
@@ -150,7 +153,7 @@ namespace backend.Migrations
 
                     b.HasKey("AccountId");
 
-                    b.ToTable("StaffInfos", (string)null);
+                    b.ToTable("StaffInfos");
                 });
 
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>

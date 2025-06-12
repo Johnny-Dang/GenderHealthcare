@@ -12,8 +12,8 @@ using backend.Infrastructure.Database;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250607090022_AddFiledToRefreshToken")]
-    partial class AddFiledToRefreshToken
+    [Migration("20250611030413_AddIsEmailVerifiedToAccount")]
+    partial class AddIsEmailVerifiedToAccount
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,6 +47,9 @@ namespace backend.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("Gender")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")

@@ -15,6 +15,7 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IAccountService, AccountService>();
             serviceCollection.AddScoped<ITokenService, TokenService>();
             serviceCollection.AddScoped<IGoogleCredentialService, GoogleCredentialService>();
+            serviceCollection.AddScoped<IEmailService, EmailService>();
         }
     }
 }
