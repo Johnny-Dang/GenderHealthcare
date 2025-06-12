@@ -1,6 +1,6 @@
 ﻿namespace backend.Domain.Entities
 {
-    public class Category
+    public class BlogCategory
     {
         public Guid CategoryId { get; set; }
         public string Name { get; set; } = string.Empty;

@@ -12,7 +12,7 @@ namespace backend.Domain.Entities
         public Guid AuthorId { get; set; }
         public Account? Author { get; set; }
         public Guid CategoryId { get; set; }
-        public Category? Category { get; set; }
+        public BlogCategory? Category { get; set; }
         public string? FeaturedImageUrl { get; set; }
         public bool IsPublished { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

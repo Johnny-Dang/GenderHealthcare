@@ -10,6 +10,10 @@ namespace backend.Infrastructure.Persistence.Configurations
         {
             // Khóa chính
             builder.HasKey(a => a.Id);
+            builder.Property(a => a.Id)
+                .IsRequired()
+                .HasColumnType("uniqueidentifier")
+                .ValueGeneratedOnAdd();
 
             // Các trường bắt buộc
             builder.Property(a => a.UserId)

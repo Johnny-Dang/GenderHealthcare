@@ -4,14 +4,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace backend.Infrastructure.Persistence.Configurations
 {
-    public class CategoryConfig : IEntityTypeConfiguration<Category>
+    public class CategoryConfig : IEntityTypeConfiguration<BlogCategory>
     {
-        public void Configure(EntityTypeBuilder<Category> builder)
+        public void Configure(EntityTypeBuilder<BlogCategory> builder)
         {
             builder.ToTable("Categories");
             builder.HasKey(x => x.CategoryId);
+
             builder.Property(x => x.CategoryId)
-                .ValueGeneratedOnAdd(); // Tự động tăng
+                .IsRequired()
+                .HasColumnType("uniqueidentifier")
+                .ValueGeneratedOnAdd();
 
             builder.Property(x => x.Name)
                 .IsRequired()

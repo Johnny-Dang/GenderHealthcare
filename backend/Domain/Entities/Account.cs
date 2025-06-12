@@ -1,4 +1,5 @@
 using backend.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace DeployGenderSystem.Domain.Entity
 {
