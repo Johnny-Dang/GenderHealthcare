@@ -29,59 +29,17 @@ namespace backend.Application.Services
         private readonly ITokenService _tokenService;
         private readonly IVerificationCodeService _verificationCodeService;
         private readonly IEmailService _emailService;
-        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService)
+        private readonly IConfiguration _configuration;
+        private readonly IGoogleCredentialService _googleCredentialService;
+        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService, IGoogleCredentialService googleCredentialService, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
             _verificationCodeService = verificationCodeService;
             _emailService = emailService;
-        }
-
-        public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
-        {
-            // Check if email already exists
-            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
-            if (emailExists)
-                return Result<AccountDto>.Failure("Email already exists.");
-
-            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
-            if (customerRole == null)
-                return Result<AccountDto>.Failure("Customer role not found. System configuration issue.");
-
-            // Hash password using BCrypt
-            var passwordHash = HashHelper.BCriptHash(request.Password);
-
-            // Create account with IsEmailVerified = false
-            var account = new Account
-            {
-                User_Id = Guid.NewGuid(),
-                Email = request.Email,
-                Password = passwordHash,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
-                DateOfBirth = request.DateOfBirth,
-                Gender = request.Gender,
-                RoleId = customerRole.Id,
-                CreateAt = DateTime.UtcNow,
-                IsEmailVerified = false // Set to false by default
-            };
-
-            // Save to database
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
-
-            // Create verification token
-            string secretKey = _configuration["EmailVerification:SecretKey"];
-            int tokenExpirationMinutes = int.Parse(_configuration["EmailVerification:TokenExpirationMinutes"] ?? "10");
-            string verificationToken = EmailVerificationHelper.GenerateEmailVerificationToken(account.Email, secretKey, tokenExpirationMinutes);
-
-            // Send verification email
-            await _emailService.SendVerificationEmailAsync(account.Email, verificationToken);
-
-            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+            _googleCredentialService = googleCredentialService;
+            _configuration = configuration;
         }
 
         public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
@@ -98,20 +56,19 @@ namespace backend.Application.Services
             var isValid = HashHelper.BCriptVerify(password, user.Password);
             if (!isValid)
                 return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
-
-            // Check if email is verified
-            if (!user.IsEmailVerified)
-                return Result<LoginResponse>.Failure("Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn.");
-
+            
             var accountDto = _mapper.Map<AccountDto>(user);
+            var accessToken = _tokenService.GenerateJwt(accountDto);
+            var refreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
 
             var response = new LoginResponse
             {
-                AccessToken = _tokenService.GenerateJwt(accountDto),
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
                 Email = user.Email,
                 Role = user.Role.Name,
                 AccountId = user.User_Id,
-                FullName = user.LastName + user.LastName
+                FullName = user.FirstName + " " + user.LastName
             };
 
             return Result<LoginResponse>.Success(response);
@@ -281,6 +238,40 @@ namespace backend.Application.Services
             _verificationCodeService.RemoveCode(request.Email);
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+        }
+
+        public async Task<Result<LoginResponse>> RefreshTokenAsync(string refreshToken)
+        {
+            var user = _tokenService.GetUserByRefreshToken(refreshToken);
+            if (user == null)
+            {
+                return Result<LoginResponse>.Failure("Refresh token is not found or invalid");
+            }
+            
+            // Delete old refresh token
+            _tokenService.DeleteOldRefreshToken(user.User_Id);
+            
+            // Generate new access token and refresh token
+            var accessToken = _tokenService.GenerateJwt(user);
+            var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
+            
+            var response = new LoginResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken,
+                Email = user.Email,
+                Role = user.RoleName,
+                AccountId = user.User_Id,
+                FullName = user.FirstName + " " + user.LastName
+            };
+            
+            return Result<LoginResponse>.Success(response);
+        }
+
+        public async Task<Result<bool>> LogoutAsync(Guid accountId)
+        {
+            _tokenService.DeleteOldRefreshToken(accountId);
+            return Result<bool>.Success(true);
         }
     }
 
