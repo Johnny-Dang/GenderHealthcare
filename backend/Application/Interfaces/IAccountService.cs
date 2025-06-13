@@ -8,8 +8,12 @@ namespace backend.Application.Interfaces
     public interface IAccountService
     {
         public Task<Result<AccountDto>> RegisterAsync(RegisterRequest request);
+        public Task<Result<AccountDto>> RegisterGoogleAccountAsync(RegisterRequest request);
 
         public Task<Result<LoginResponse>> LoginAsync(LoginRequest request);
+        public Task<Result<LoginResponse>> LoginGoogleAsync(GoogleLoginDto model);
+        public Task<Result<LoginResponse>> RefreshTokenAsync(string refreshToken);
+        public Task<Result<bool>> LogoutAsync(Guid accountId);
         public Task<Result<AccountDto>> GetAccountByEmail(string email);
         public Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request); // admin
         public Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request); // admin

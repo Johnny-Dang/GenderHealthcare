@@ -29,13 +29,17 @@ namespace backend.Application.Services
         private readonly ITokenService _tokenService;
         private readonly IVerificationCodeService _verificationCodeService;
         private readonly IEmailService _emailService;
-        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService)
+        private readonly IConfiguration _configuration;
+        private readonly IGoogleCredentialService _googleCredentialService;
+        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService, IGoogleCredentialService googleCredentialService, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
             _verificationCodeService = verificationCodeService;
             _emailService = emailService;
+            _googleCredentialService = googleCredentialService;
+            _configuration = configuration;
         }
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
@@ -66,7 +70,6 @@ namespace backend.Application.Services
                 Gender = request.Gender,
                 RoleId = customerRole.Id,
                 CreateAt = DateTime.UtcNow,
-                IsEmailVerified = false // Set to false by default
             };
 
             // Save to database
@@ -98,20 +101,19 @@ namespace backend.Application.Services
             var isValid = HashHelper.BCriptVerify(password, user.Password);
             if (!isValid)
                 return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
-
-            // Check if email is verified
-            if (!user.IsEmailVerified)
-                return Result<LoginResponse>.Failure("Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn.");
-
+            
             var accountDto = _mapper.Map<AccountDto>(user);
+            var accessToken = _tokenService.GenerateJwt(accountDto);
+            var refreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
 
             var response = new LoginResponse
             {
-                AccessToken = _tokenService.GenerateJwt(accountDto),
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
                 Email = user.Email,
                 Role = user.Role.Name,
                 AccountId = user.User_Id,
-                FullName = user.LastName + user.LastName
+                FullName = user.FirstName + " " + user.LastName
             };
 
             return Result<LoginResponse>.Success(response);
@@ -281,6 +283,162 @@ namespace backend.Application.Services
             _verificationCodeService.RemoveCode(request.Email);
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+        }
+
+        public async Task<Result<AccountDto>> RegisterGoogleAccountAsync(RegisterRequest request)
+        {
+            // Check if email already exists
+            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            if (emailExists)
+                return Result<AccountDto>.Failure("Email already exists.");
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
+            if (customerRole == null)
+                return Result<AccountDto>.Failure("Customer role not found. System configuration issue.");
+
+            // Hash password using BCrypt
+            var passwordHash = HashHelper.BCriptHash(request.Password);
+
+            // Create account with email already verified (since Google handled verification)
+            var account = new Account
+            {
+                User_Id = Guid.NewGuid(),
+                Email = request.Email,
+                Password = passwordHash,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Phone = request.Phone,
+                avatarUrl = request.AvatarUrl,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
+                RoleId = customerRole.Id,
+                CreateAt = DateTime.UtcNow,
+                // No need to send verification email - Google account is already verified
+            };
+
+            // Save to database
+            _context.Accounts.Add(account);
+            await _context.SaveChangesAsync();
+
+            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+        }
+
+        public async Task<Result<LoginResponse>> LoginGoogleAsync(GoogleLoginDto model)
+        {
+            // Get the client ID from configuration
+            var clientId = _configuration["Authentication:Google:ClientId"];
+            
+            // Check if the client ID is configured
+            if (string.IsNullOrEmpty(clientId))
+            {
+                return Result<LoginResponse>.Failure("Google Client ID is not configured in appsettings.json");
+            }
+            
+            // Verify the Google credential
+            var payload = await _googleCredentialService.VerifyCredential(clientId, model.Credential);
+            if (payload == null)
+            {
+                return Result<LoginResponse>.Failure("Login By Google Failed");
+            }
+            
+            // Get or create account
+            var account = await _context.Accounts
+                .Include(a => a.Role)
+                .FirstOrDefaultAsync(a => a.Email == payload.Email);
+                
+            // Delete old refresh token if account exists
+            if (account != null)
+            {
+                _tokenService.DeleteOldRefreshToken(account.User_Id);
+            }
+            
+            LoginResponse response;
+            
+            // If account doesn't exist, register a new one using Google-specific registration
+            if (account == null)
+            {
+                var newAccount = new RegisterRequest
+                {
+                    Email = payload.Email,
+                    AvatarUrl = payload.Picture,
+                    FirstName = payload.FamilyName,
+                    LastName = payload.GivenName,
+                    Password = Guid.NewGuid().ToString(), // Generate a random password
+                    Phone = string.Empty,
+                    DateOfBirth = null
+                };
+
+                var registerResult = await RegisterGoogleAccountAsync(newAccount);
+                if (!registerResult.IsSuccess)
+                {
+                    return Result<LoginResponse>.Failure(registerResult.Error);
+                }
+                
+                var accessToken = _tokenService.GenerateJwt(registerResult.Data);
+                var refreshToken = _tokenService.GenerateRefreshTokenAsync(registerResult.Data.User_Id);
+                
+                response = new LoginResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    Email = registerResult.Data.Email,
+                    Role = registerResult.Data.RoleName,
+                    FullName = $"{payload.FamilyName} {payload.GivenName}",
+                    AccountId = registerResult.Data.User_Id,
+                };
+            }
+            else
+            {
+                var accountDto = _mapper.Map<AccountDto>(account);
+                var accessToken = _tokenService.GenerateJwt(accountDto);
+                var refreshToken = _tokenService.GenerateRefreshTokenAsync(account.User_Id);
+                
+                response = new LoginResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    Email = account.Email,
+                    Role = account.Role.Name,
+                    FullName = $"{account.FirstName} {account.LastName}",
+                    AccountId = account.User_Id,
+                };
+            }
+            
+            return Result<LoginResponse>.Success(response);
+        }
+
+        public async Task<Result<LoginResponse>> RefreshTokenAsync(string refreshToken)
+        {
+            var user = _tokenService.GetUserByRefreshToken(refreshToken);
+            if (user == null)
+            {
+                return Result<LoginResponse>.Failure("Refresh token is not found or invalid");
+            }
+            
+            // Delete old refresh token
+            _tokenService.DeleteOldRefreshToken(user.User_Id);
+            
+            // Generate new access token and refresh token
+            var accessToken = _tokenService.GenerateJwt(user);
+            var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
+            
+            var response = new LoginResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken,
+                Email = user.Email,
+                Role = user.RoleName,
+                AccountId = user.User_Id,
+                FullName = user.FirstName + " " + user.LastName
+            };
+            
+            return Result<LoginResponse>.Success(response);
+        }
+
+        public async Task<Result<bool>> LogoutAsync(Guid accountId)
+        {
+            _tokenService.DeleteOldRefreshToken(accountId);
+            return Result<bool>.Success(true);
         }
     }
 
