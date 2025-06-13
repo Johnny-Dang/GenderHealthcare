@@ -1,5 +1,4 @@
-﻿using backend.API.Middleware;
-using backend.Application.Common.Mappings;
+﻿using backend.Application.Common.Mappings;
 using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.Database;

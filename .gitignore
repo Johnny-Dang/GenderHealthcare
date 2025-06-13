@@ -29,8 +29,7 @@ backend/*.suo
 backend/*.userosscache
 backend/*.sln.docstates
 backend/.vs/
-
-# ASP.NET secrets and settings
+# ASP.NET secrets (if any)
 backend/.vscode/
 backend/appsettings.json
 backend/appsettings.Development.json

@@ -29,5 +29,17 @@
         "Google": {
             "ClientId": "YOUR_GOOGLE_CLIENT_ID"
         }
-    }
+    },
+
+    "VnPay": {
+        "TmnCode": "Your_Code",
+        "HashSecret": "Your_HashSecret_Code",
+        "BaseUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+        "PaymentBackReturnUrl": "http://localhost:5173/payment-result",
+        "Command": "pay",
+        "CurrCode": "VND",
+        "Version": "2.1.0",
+        "Locale": "vn"
+    },
+    "TimeZoneId": "SE Asia Standard Time" // If do not us Windown OS change it to: Asia/Bangkok
 }

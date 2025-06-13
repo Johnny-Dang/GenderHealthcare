@@ -13,7 +13,7 @@ namespace backend.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         // Navigation properties
-        public virtual Appoiment Appointment { get; set; } = default!;
+        public virtual Booking Appointment { get; set; } = default!;
         public virtual Account Staff { get; set; } = default!; // Staff who uploaded the result
     }
 }

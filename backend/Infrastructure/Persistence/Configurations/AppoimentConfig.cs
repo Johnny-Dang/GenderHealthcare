@@ -4,12 +4,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace backend.Infrastructure.Persistence.Configurations
 {
-    public class AppoimentConfig : IEntityTypeConfiguration<Appoiment>
+    public class AppoimentConfig : IEntityTypeConfiguration<Booking>
     {
-        public void Configure(EntityTypeBuilder<Appoiment> builder)
+        public void Configure(EntityTypeBuilder<Booking> builder)
         {
             // Khóa chính
             builder.HasKey(a => a.Id);
+            builder.Property(a => a.Id)
+                .IsRequired()
+                .HasColumnType("uniqueidentifier")
+                .ValueGeneratedOnAdd();
 
             // Các trường bắt buộc
             builder.Property(a => a.UserId)

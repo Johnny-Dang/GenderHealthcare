@@ -1,4 +1,5 @@
 using backend.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace DeployGenderSystem.Domain.Entity
 {
@@ -22,7 +23,7 @@ namespace DeployGenderSystem.Domain.Entity
         public virtual Role Role { get; set; } = default!;
 
         // Navigation properties
-        public virtual ICollection<Appoiment> UserServiceBookings { get; set; } = new List<Appoiment>();
+        public virtual ICollection<Booking> UserServiceBookings { get; set; } = new List<Booking>();
         public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 
     }

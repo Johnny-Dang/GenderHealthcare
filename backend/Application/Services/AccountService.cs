@@ -1,6 +1,7 @@
 using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
+using backend.Application.Services;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Domain.Entities;
 using backend.Infrastructure.Database;
@@ -10,6 +11,7 @@ using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
@@ -22,53 +24,22 @@ namespace backend.Application.Services
 {
     public class AccountService : IAccountService
     {
-
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
         private readonly IVerificationCodeService _verificationCodeService;
         private readonly IEmailService _emailService;
-        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService)
+        private readonly IConfiguration _configuration;
+        private readonly IGoogleCredentialService _googleCredentialService;
+        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService, IGoogleCredentialService googleCredentialService, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
             _verificationCodeService = verificationCodeService;
             _emailService = emailService;
-        }
-
-        public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
-        {
-            // Kiểm tra email đã tồn tại
-            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
-            if (emailExists)
-                return Result<AccountDto>.Failure("Email already exists.");
-
-            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
-            // Băm mật khẩu bằng BCrypt
-            var passwordHash = HashHelper.BCriptHash(request.Password);
-
-            // Tạo thực thể Account
-            var account = new Account
-            {
-                User_Id = Guid.NewGuid(),
-                Email = request.Email,
-                Password = passwordHash,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
-                DateOfBirth = request.DateOfBirth,
-                Gender = request.Gender,
-                RoleId = customerRole.Id,
-                CreateAt = DateTime.UtcNow
-            };
-
-            // Lưu vào database
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
-
-            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+            _googleCredentialService = googleCredentialService;
+            _configuration = configuration;
         }
 
         public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
@@ -85,16 +56,19 @@ namespace backend.Application.Services
             var isValid = HashHelper.BCriptVerify(password, user.Password);
             if (!isValid)
                 return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
-
+            
             var accountDto = _mapper.Map<AccountDto>(user);
+            var accessToken = _tokenService.GenerateJwt(accountDto);
+            var refreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
 
             var response = new LoginResponse
             {
-                AccessToken = _tokenService.GenerateJwt(accountDto),
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
                 Email = user.Email,
                 Role = user.Role.Name,
                 AccountId = user.User_Id,
-                FullName = user.LastName + user.LastName
+                FullName = user.FirstName + " " + user.LastName
             };
 
             return Result<LoginResponse>.Success(response);
@@ -264,6 +238,40 @@ namespace backend.Application.Services
             _verificationCodeService.RemoveCode(request.Email);
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+        }
+
+        public async Task<Result<LoginResponse>> RefreshTokenAsync(string refreshToken)
+        {
+            var user = _tokenService.GetUserByRefreshToken(refreshToken);
+            if (user == null)
+            {
+                return Result<LoginResponse>.Failure("Refresh token is not found or invalid");
+            }
+            
+            // Delete old refresh token
+            _tokenService.DeleteOldRefreshToken(user.User_Id);
+            
+            // Generate new access token and refresh token
+            var accessToken = _tokenService.GenerateJwt(user);
+            var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
+            
+            var response = new LoginResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken,
+                Email = user.Email,
+                Role = user.RoleName,
+                AccountId = user.User_Id,
+                FullName = user.FirstName + " " + user.LastName
+            };
+            
+            return Result<LoginResponse>.Success(response);
+        }
+
+        public async Task<Result<bool>> LogoutAsync(Guid accountId)
+        {
+            _tokenService.DeleteOldRefreshToken(accountId);
+            return Result<bool>.Success(true);
         }
     }
 

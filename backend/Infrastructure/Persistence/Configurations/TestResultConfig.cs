@@ -9,8 +9,14 @@ namespace backend.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<TestResult> builder)
         {
+            // Đặt tên bảng
+            builder.ToTable("TestResults");
             // Khóa chính
             builder.HasKey(tr => tr.ResultId);
+            builder.Property(tr => tr.ResultId)
+                .IsRequired()
+                .HasColumnType("uniqueidentifier")
+                .ValueGeneratedOnAdd();
 
             // Các trường bắt buộc
             builder.Property(tr => tr.AppointmentId)
