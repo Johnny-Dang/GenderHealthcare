@@ -21,19 +21,12 @@ namespace backend.Api.Controllers
         private readonly IAccountService _accountService;
         private readonly ITokenService _tokenService;
         private readonly IGoogleCredentialService _googleCredentialService;
-        private readonly IVerificationCodeService _verificationCodeService;
-        private readonly IApplicationDbContext _context;
-        private readonly IMapper _mapper;
-        public AccountController(IAccountService accountService, ITokenService tokenService, IGoogleCredentialService googleCredentialService, IVerificationCodeService verificationCodeService, IApplicationDbContext context, IMapper mapper)
+        public AccountController(IAccountService accountService, ITokenService tokenService, IGoogleCredentialService googleCredentialService)
         {
             _accountService = accountService;
             _tokenService = tokenService;
             _googleCredentialService = googleCredentialService;
-            _verificationCodeService = verificationCodeService;
-            _context = context;
-            _mapper = mapper;
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
@@ -87,7 +80,7 @@ namespace backend.Api.Controllers
         [HttpPost("login-google")]
         public async Task<IActionResult> LoginGoogle(GoogleLoginDto model)
         {
-            var result = await _accountService.LoginGoogleAsync(model);
+            var result = await _googleCredentialService.LoginGoogleAsync(model);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.Error);

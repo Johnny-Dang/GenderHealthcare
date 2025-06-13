@@ -7,6 +7,7 @@ namespace backend.Application.Interfaces
     {
         public Task<GoogleJsonWebSignature.Payload> VerifyCredential(string clientId, string credential);
 
-        public Task<LoginResponse> LoginGoogleAsync(GoogleJsonWebSignature.Payload userGoogle);
+        public Task<Result<LoginResponse>> LoginGoogleAsync(GoogleLoginDto userGoogle);
+        public Task<Result<AccountDto>> RegisterGoogleAccountAsync(RegisterRequest request);
     }
 }
