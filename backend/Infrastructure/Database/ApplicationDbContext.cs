@@ -18,6 +18,8 @@ namespace backend.Infrastructure.Database
         public DbSet<TestService> TestService { get; set; }
         public DbSet<TestResult> TestResult { get; set; }
 
+        public DbSet<Blog> Blogs { get; set; }
+        public DbSet<BlogCategory> Categories { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

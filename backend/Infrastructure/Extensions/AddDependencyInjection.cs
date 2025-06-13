@@ -23,6 +23,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IEmailService, SendGridEmailService>();
             serviceCollection.AddScoped<IVerificationCodeService, VerificationCodeService>();
             serviceCollection.AddScoped<ITestService, TestService>();
+            serviceCollection.AddScoped<IBlogService, BlogService>();
+            serviceCollection.AddScoped<IBlogCategoryService, BlogCategoryService>();
         }
     }
 }
