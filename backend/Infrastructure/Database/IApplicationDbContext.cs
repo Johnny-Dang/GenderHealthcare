@@ -15,6 +15,8 @@ namespace backend.Infrastructure.Database
         public DbSet<Appoiment> Appoiment { get; set; }
         
         public DbSet<TestResult> TestResult { get; set; }
+        public DbSet<Blog> Blogs { get; set; }
+        public DbSet<BlogCategory> Categories { get; set; }
         public Task<int> SaveChangesAsync();
     }
 }
