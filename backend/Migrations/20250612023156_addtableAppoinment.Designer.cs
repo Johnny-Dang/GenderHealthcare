@@ -12,8 +12,8 @@ using backend.Infrastructure.Database;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250607090022_AddFiledToRefreshToken")]
-    partial class AddFiledToRefreshToken
+    [Migration("20250612023156_addtableAppoinment")]
+    partial class addtableAppoinment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -76,6 +76,42 @@ namespace backend.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.Appoiment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("BookingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreateAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Appoiments");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
@@ -156,6 +192,96 @@ namespace backend.Migrations
                     b.ToTable("StaffInfos");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.TestResult", b =>
+                {
+                    b.Property<Guid>("ResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ResultFilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ResultId");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("TestResult");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.TestService", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Duration")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TestService");
+                });
+
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
                 {
                     b.HasOne("backend.Domain.Entities.Role", "Role")
@@ -165,6 +291,25 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.Appoiment", b =>
+                {
+                    b.HasOne("backend.Domain.Entities.TestService", "Service")
+                        .WithMany("Appointments")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "User")
+                        .WithMany("UserServiceBookings")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
@@ -189,16 +334,50 @@ namespace backend.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.TestResult", b =>
+                {
+                    b.HasOne("backend.Domain.Entities.Appoiment", "Appointment")
+                        .WithOne("TestResult")
+                        .HasForeignKey("backend.Domain.Entities.TestResult", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
+                        .WithMany("TestResults")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Staff");
+                });
+
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
                 {
                     b.Navigation("RefreshToken");
 
                     b.Navigation("StaffInfo");
+
+                    b.Navigation("TestResults");
+
+                    b.Navigation("UserServiceBookings");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.Appoiment", b =>
+                {
+                    b.Navigation("TestResult")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.Role", b =>
                 {
                     b.Navigation("Accounts");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.TestService", b =>
+                {
+                    b.Navigation("Appointments");
                 });
 #pragma warning restore 612, 618
         }

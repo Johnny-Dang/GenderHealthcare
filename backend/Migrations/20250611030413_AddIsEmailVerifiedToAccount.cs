@@ -5,14 +5,14 @@
 namespace backend.Migrations
 {
     /// <inheritdoc />
-    public partial class AddFiledToRefreshToken : Migration
+    public partial class AddIsEmailVerifiedToAccount : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
-                name: "IsRevoked",
-                table: "RefreshTokens",
+                name: "IsEmailVerified",
+                table: "Accounts",
                 type: "bit",
                 nullable: false,
                 defaultValue: false);
@@ -22,8 +22,8 @@ namespace backend.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "IsRevoked",
-                table: "RefreshTokens");
+                name: "IsEmailVerified",
+                table: "Accounts");
         }
     }
 }

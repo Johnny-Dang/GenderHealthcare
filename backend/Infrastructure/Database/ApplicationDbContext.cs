@@ -8,12 +8,16 @@ namespace backend.Infrastructure.Database
     public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         
+        
 
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<StaffInfo> StaffInfos { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Appoiment> Appoiment { get; set; }
         public DbSet<TestService> TestService { get; set; }
+        public DbSet<TestResult> TestResult { get; set; }
+
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<BlogCategory> Categories { get; set; }
 

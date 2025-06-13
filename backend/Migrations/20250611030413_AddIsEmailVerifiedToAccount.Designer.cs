@@ -12,8 +12,8 @@ using backend.Infrastructure.Database;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250606084344_updateTableRefreshToken")]
-    partial class updateTableRefreshToken
+    [Migration("20250611030413_AddIsEmailVerifiedToAccount")]
+    partial class AddIsEmailVerifiedToAccount
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,6 +49,9 @@ namespace backend.Migrations
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -78,7 +81,7 @@ namespace backend.Migrations
                     b.ToTable("Accounts");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.RefreshTokens", b =>
+            modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -92,6 +95,9 @@ namespace backend.Migrations
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -164,7 +170,7 @@ namespace backend.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.RefreshTokens", b =>
+            modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Account")
                         .WithMany("RefreshToken")

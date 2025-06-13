@@ -1,6 +1,7 @@
 using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
+using backend.Application.Services;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Domain.Entities;
 using backend.Infrastructure.Database;
@@ -10,6 +11,7 @@ using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
@@ -22,29 +24,35 @@ namespace backend.Application.Services
 {
     public class AccountService : IAccountService
     {
-
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService)
+        private readonly IVerificationCodeService _verificationCodeService;
+        private readonly IEmailService _emailService;
+        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService)
         {
             _context = context;
             _mapper = mapper;
             _tokenService = tokenService;
+            _verificationCodeService = verificationCodeService;
+            _emailService = emailService;
         }
 
         public async Task<Result<AccountDto>> RegisterAsync(RegisterRequest request)
         {
-            // Kiểm tra email đã tồn tại
+            // Check if email already exists
             bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
             if (emailExists)
                 return Result<AccountDto>.Failure("Email already exists.");
 
             var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
-            // Băm mật khẩu bằng BCrypt
+            if (customerRole == null)
+                return Result<AccountDto>.Failure("Customer role not found. System configuration issue.");
+
+            // Hash password using BCrypt
             var passwordHash = HashHelper.BCriptHash(request.Password);
 
-            // Tạo thực thể Account
+            // Create account with IsEmailVerified = false
             var account = new Account
             {
                 User_Id = Guid.NewGuid(),
@@ -57,12 +65,21 @@ namespace backend.Application.Services
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
                 RoleId = customerRole.Id,
-                CreateAt = DateTime.UtcNow
+                CreateAt = DateTime.UtcNow,
+                IsEmailVerified = false // Set to false by default
             };
 
-            // Lưu vào database
+            // Save to database
             _context.Accounts.Add(account);
             await _context.SaveChangesAsync();
+
+            // Create verification token
+            string secretKey = _configuration["EmailVerification:SecretKey"];
+            int tokenExpirationMinutes = int.Parse(_configuration["EmailVerification:TokenExpirationMinutes"] ?? "10");
+            string verificationToken = EmailVerificationHelper.GenerateEmailVerificationToken(account.Email, secretKey, tokenExpirationMinutes);
+
+            // Send verification email
+            await _emailService.SendVerificationEmailAsync(account.Email, verificationToken);
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }
@@ -82,6 +99,10 @@ namespace backend.Application.Services
             if (!isValid)
                 return Result<LoginResponse>.Failure("Mật khẩu không đúng.");
 
+            // Check if email is verified
+            if (!user.IsEmailVerified)
+                return Result<LoginResponse>.Failure("Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn.");
+
             var accountDto = _mapper.Map<AccountDto>(user);
 
             var response = new LoginResponse
@@ -89,7 +110,8 @@ namespace backend.Application.Services
                 AccessToken = _tokenService.GenerateJwt(accountDto),
                 Email = user.Email,
                 Role = user.Role.Name,
-                AccountId = user.User_Id
+                AccountId = user.User_Id,
+                FullName = user.LastName + user.LastName
             };
 
             return Result<LoginResponse>.Success(response);
@@ -181,6 +203,85 @@ namespace backend.Application.Services
 
             return Result<AccountDto>.Success(accountDto);
         }
+
+        public async Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request)
+        {
+            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            if (!emailExists)
+                return Result<bool>.Failure("Email không tồn tại.");
+
+            var verificationCode = _verificationCodeService.GenerateVerificationCode(request.Email);
+            var emailSent = await _emailService.SendVerificationEmailAsync(request.Email, verificationCode);
+
+            if (!emailSent)
+                return Result<bool>.Failure("Không thể gửi mã xác thực. Vui lòng thử lại sau.");
+
+            return Result<bool>.Success(true);
+        }
+
+        public async Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var isValid = _verificationCodeService.VerifyCode(request.Email, request.VerificationCode);
+            if (!isValid)
+                return Result<bool>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+
+            var user = await _context.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email);
+            if (user == null)
+                return Result<bool>.Failure("Email không tồn tại.");
+
+            user.Password = HashHelper.BCriptHash(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Result<bool>.Success(true);
+        }
+
+        public async Task<Result<bool>> SendVerificationCodeAsync(SendVerificationCodeRequest request)
+        {
+            var verificationCode = _verificationCodeService.GenerateVerificationCode(request.Email);
+            var emailSent = await _emailService.SendVerificationEmailAsync(request.Email, verificationCode);
+            if (!emailSent)
+                return Result<bool>.Failure("Không thể gửi mã xác thực. Vui lòng thử lại sau.");
+            return Result<bool>.Success(true);
+        }
+
+        public async Task<Result<AccountDto>> RegisterWithVerificationCodeAsync(RegisterWithVerificationCodeRequest request)
+        {
+            // Kiểm tra mã xác thực
+            var isValid = _verificationCodeService.VerifyCode(request.Email, request.VerificationCode);
+            if (!isValid)
+                return Result<AccountDto>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+
+            // Kiểm tra email đã tồn tại
+            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            if (emailExists)
+                return Result<AccountDto>.Failure("Email already exists.");
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
+            var passwordHash = HashHelper.BCriptHash(request.Password);
+
+            var account = new Account
+            {
+                User_Id = Guid.NewGuid(),
+                Email = request.Email,
+                Password = passwordHash,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Phone = request.Phone,
+                avatarUrl = request.AvatarUrl,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
+                RoleId = customerRole.Id,
+                CreateAt = DateTime.UtcNow
+            };
+
+            _context.Accounts.Add(account);
+            await _context.SaveChangesAsync();
+
+            // Xóa mã xác thực khỏi cache sau khi đăng ký thành công
+            _verificationCodeService.RemoveCode(request.Email);
+
+            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
+        }
     }
-        
+
 }
