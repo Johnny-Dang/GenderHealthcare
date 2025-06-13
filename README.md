@@ -165,3 +165,75 @@ To ensure clarity and consistency, follow this structured format for commit mess
 - Do not end the subject line with a period
 
 ---
+
+---
+
+## 🧹 Reset Entity Framework Core Migrations (PowerShell)
+
+Hướng dẫn xóa toàn bộ migration và tạo lại từ đầu trong ASP.NET Core sử dụng Entity Framework Core (dành riêng cho PowerShell).
+
+### ✅ Bước 1: Xóa thư mục `Migrations`
+
+```powershell
+Remove-Item -Recurse -Force .\Migrations
+```
+
+> Lưu ý: Thư mục này nằm trong thư mục chứa project backend có `*.csproj`.
+
+---
+
+### ✅ Bước 2 (Tùy chọn): Xóa database hiện tại
+
+```powershell
+dotnet ef database drop --force
+```
+
+> ⚠️ Dùng `--force` để tránh bị hỏi lại xác nhận khi xóa database. Chỉ nên làm khi bạn muốn reset toàn bộ dữ liệu.
+
+---
+
+### ✅ Bước 3: Tạo migration mới
+
+```powershell
+dotnet ef migrations add InitialCreate
+```
+
+> Bạn có thể thay `InitialCreate` bằng tên khác tùy mục đích.
+
+---
+
+### ✅ Bước 4: Áp dụng migration vào database
+
+```powershell
+dotnet ef database update
+```
+
+---
+
+### 🔁 Tóm tắt nhanh các lệnh
+
+```powershell
+# Xóa thư mục migrations
+Remove-Item -Recurse -Force .\Migrations
+
+# Xóa database cũ (nếu cần)
+dotnet ef database drop --force
+
+# Tạo lại migration
+dotnet ef migrations add InitialCreate
+
+# Cập nhật lại database
+dotnet ef database update
+```
+
+---
+
+### 📌 Ghi chú
+
+- Đảm bảo đang ở đúng thư mục chứa file `.csproj` khi chạy lệnh.
+- Đảm bảo cài các package cần thiết:
+  - `Microsoft.EntityFrameworkCore.Tools`
+  - `Microsoft.EntityFrameworkCore.Design`
+- Nếu dùng nhiều project con, cần chỉ định project chứa `DbContext` với các flag `--project` hoặc `--startup-project`.
+
+---
