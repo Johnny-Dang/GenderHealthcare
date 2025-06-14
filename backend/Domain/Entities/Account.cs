@@ -26,5 +26,8 @@ namespace DeployGenderSystem.Domain.Entity
         public virtual ICollection<Appoiment> UserServiceBookings { get; set; } = new List<Appoiment>();
         public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
 
+        public virtual ICollection<ConsultantBooking> CustomerBookings { get; set; } = new List<ConsultantBooking>();
+        public virtual ICollection<ConsultantBooking> StaffBookings { get; set; } = new List<ConsultantBooking>();
+
     }
 }
