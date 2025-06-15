@@ -183,13 +183,11 @@ namespace backend.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.ConsultantBooking", b =>
+            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
                 {
-                    b.Property<int>("BookingId")
+                    b.Property<Guid>("BookingId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BookingId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -211,11 +209,6 @@ namespace backend.Migrations
 
                     b.Property<string>("Message")
                         .HasColumnType("text");
-
-                    b.Property<bool>("PhoneConfirmed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
 
                     b.Property<DateTime>("ScheduledAt")
                         .HasColumnType("datetime2");
@@ -239,7 +232,7 @@ namespace backend.Migrations
 
                     b.HasIndex("StaffId");
 
-                    b.ToTable("ConsultantBookings", (string)null);
+                    b.ToTable("ConsultationBookings", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
@@ -459,7 +452,7 @@ namespace backend.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.ConsultantBooking", b =>
+            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
                 {
                     b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Customer")
                         .WithMany("CustomerBookings")

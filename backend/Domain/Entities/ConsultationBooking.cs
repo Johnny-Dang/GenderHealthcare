@@ -15,14 +15,10 @@ namespace backend.Domain.Entities
         public string? GuestName { get; set; }
         public string? GuestEmail { get; set; }
         public string? GuestPhone { get; set; }
-
         public Guid StaffId { get; set; }
         public Account Staff { get; set; }
-
         public DateTime ScheduledAt { get; set; } // mong muốn gọi lúc nào
-
         public string Status { get; set; } = "pending"; // pending/confirmed/cancelled
-
         public string? Message { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
