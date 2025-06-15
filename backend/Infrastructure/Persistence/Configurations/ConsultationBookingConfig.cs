@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace backend.Infrastructure.Persistence.Configurations
 {
-    public class ConsultantBookingConfig : IEntityTypeConfiguration<ConsultantBooking>
+    public class ConsultationBookingConfig : IEntityTypeConfiguration<ConsultationBooking>
     {
-        public void Configure(EntityTypeBuilder<ConsultantBooking> builder)
+        public void Configure(EntityTypeBuilder<ConsultationBooking> builder)
         {
             // Configure the table name
-            builder.ToTable("ConsultantBookings");
+            builder.ToTable("ConsultationBookings");
             builder.HasKey(x => x.BookingId);
 
             builder.Property(x => x.GuestName)
@@ -28,9 +28,6 @@ namespace backend.Infrastructure.Persistence.Configurations
 
             builder.Property(x => x.Message)
                 .HasColumnType("text");
-
-            builder.Property(x => x.PhoneConfirmed)
-                .HasDefaultValue(false);
 
             builder.Property(x => x.CreatedAt)
                 .IsRequired();

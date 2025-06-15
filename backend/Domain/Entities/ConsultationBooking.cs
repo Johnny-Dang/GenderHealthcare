@@ -3,9 +3,9 @@ using DeployGenderSystem.Domain.Entity;
 
 namespace backend.Domain.Entities
 {
-    public class ConsultantBooking
+    public class ConsultationBooking
     {
-        public int BookingId { get; set; }
+        public Guid BookingId { get; set; }
 
         // Nullable nếu là guest
         public Guid? CustomerId { get; set; }
@@ -19,13 +19,11 @@ namespace backend.Domain.Entities
         public Guid StaffId { get; set; }
         public Account Staff { get; set; }
 
-        public DateTime ScheduledAt { get; set; }
+        public DateTime ScheduledAt { get; set; } // mong muốn gọi lúc nào
 
         public string Status { get; set; } = "pending"; // pending/confirmed/cancelled
 
         public string? Message { get; set; }
-
-        public bool PhoneConfirmed { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
