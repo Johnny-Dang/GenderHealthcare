@@ -17,7 +17,7 @@ namespace backend.Application.Services
         }
         public async Task<IEnumerable<BlogResponse>> GetPublishedBlogsAsync()
         {
-            return await _context.Blogs
+            return await _context.Blog
                 .Include(b => b.Author)
                 .Include(b => b.Category)
                 .Where(b => b.IsPublished)
@@ -39,7 +39,7 @@ namespace backend.Application.Services
 
         public async Task<BlogResponse?> GetBlogBySlugAsync(string slug)
         {
-            var blog = await _context.Blogs
+            var blog = await _context.Blog
                  .Include(b => b.Author)
                  .Include(b => b.Category)
                  .FirstOrDefaultAsync(b => b.Slug == slug && b.IsPublished);
@@ -64,18 +64,18 @@ namespace backend.Application.Services
 
         public async Task<Blog> CreateBlogAsync(CreateBlogRequest request)
         {
-            var author = await _context.Accounts.FirstOrDefaultAsync(user => user.User_Id == request.AuthorId);
+            var author = await _context.Account.FirstOrDefaultAsync(user => user.AccountId == request.AuthorId);
             if (author == null)
                 throw new ArgumentException("Invalid AuthorId");
 
-            if (!await _context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId))
+            if (!await _context.Categorie.AnyAsync(c => c.CategoryId == request.CategoryId))
                 throw new ArgumentException("Invalid CategoryId");
 
             // Tạo slug
             var slug = GenerateSlug(request.Title);
             int suffix = 1;
             var originalSlug = slug;
-            while (await _context.Blogs.AnyAsync(b => b.Slug == slug))
+            while (await _context.Blog.AnyAsync(b => b.Slug == slug))
             {
                 slug = $"{originalSlug}-{suffix}";
                 suffix++;
@@ -95,31 +95,31 @@ namespace backend.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Blogs.Add(blog);
+            _context.Blog.Add(blog);
             await _context.SaveChangesAsync();
             return blog;
         }
 
         public async Task<bool> UpdateBlogAsync(Guid id, UpdateBlogRequest request)
         {
-            var blog = await _context.Blogs.FindAsync(id);
+            var blog = await _context.Blog.FindAsync(id);
             if (blog == null)
                 return false;
 
             // Chỉ kiểm tra author tồn tại
-            var author = await _context.Accounts.FirstOrDefaultAsync(user => user.User_Id == request.AuthorId);
+            var author = await _context.Account.FirstOrDefaultAsync(user => user.AccountId == request.AuthorId);
             if (author == null)
                 throw new ArgumentException("Invalid AuthorId");
 
             // Kiểm tra category tồn tại
-            if (!await _context.Categories.AnyAsync(c => c.CategoryId == request.CategoryId))
+            if (!await _context.Categorie.AnyAsync(c => c.CategoryId == request.CategoryId))
                 throw new ArgumentException("Invalid CategoryId");
 
             // Tạo slug
             var slug = GenerateSlug(request.Title);
             int suffix = 1;
             var originalSlug = slug;
-            while (await _context.Blogs.AnyAsync(b => b.Slug == slug && b.BlogId != id))
+            while (await _context.Blog.AnyAsync(b => b.Slug == slug && b.BlogId != id))
             {
                 slug = $"{originalSlug}-{suffix}";
                 suffix++;
@@ -140,11 +140,11 @@ namespace backend.Application.Services
 
         public async Task<bool> DeleteBlogAsync(Guid id)
         {
-            var blog = await _context.Blogs.FindAsync(id);
+            var blog = await _context.Blog.FindAsync(id);
             if (blog == null)
                 return false;
 
-            _context.Blogs.Remove(blog);
+            _context.Blog.Remove(blog);
             await _context.SaveChangesAsync();
             return true;
         }

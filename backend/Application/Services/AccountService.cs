@@ -44,7 +44,7 @@ namespace backend.Application.Services
 
         public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await _context.Accounts
+            var user = await _context.Account
                 .Include(r => r.Role)
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
@@ -59,7 +59,7 @@ namespace backend.Application.Services
             
             var accountDto = _mapper.Map<AccountDto>(user);
             var accessToken = _tokenService.GenerateJwt(accountDto);
-            var refreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
+            var refreshToken = _tokenService.GenerateRefreshTokenAsync(user.AccountId);
 
             var response = new LoginResponse
             {
@@ -67,7 +67,7 @@ namespace backend.Application.Services
                 RefreshToken = refreshToken,
                 Email = user.Email,
                 Role = user.Role.Name,
-                AccountId = user.User_Id,
+                AccountId = user.AccountId,
                 FullName = user.FirstName + " " + user.LastName
             };
 
@@ -76,17 +76,17 @@ namespace backend.Application.Services
 
         public async Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request)
         {
-            if (await _context.Accounts.AnyAsync(a => a.Email == request.Email))
+            if (await _context.Account.AnyAsync(a => a.Email == request.Email))
                 return Result<AccountDto>.Failure("Email already exists.");
 
-            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == request.RoleName);
+            var role = await _context.Role.FirstOrDefaultAsync(r => r.Name == request.RoleName);
             if (role == null) return Result<AccountDto>.Failure("Role not found.");
 
             var password = HashHelper.BCriptHash(request.Password);
 
             var account = new Account
             {
-                User_Id = Guid.NewGuid(),
+                AccountId = Guid.NewGuid(),
                 Email = request.Email,
                 Password = password,
                 FirstName = request.FirstName,
@@ -95,11 +95,11 @@ namespace backend.Application.Services
                 avatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
-                RoleId = role.Id,
+                RoleId = role.RoleId,
                 CreateAt = DateTime.UtcNow
             };
 
-            _context.Accounts.Add(account);
+            _context.Account.Add(account);
             await _context.SaveChangesAsync();
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
@@ -107,20 +107,20 @@ namespace backend.Application.Services
 
         public async Task<Result<AccountDto>> GetByIdAsync(Guid id)
         {
-            var acc = await _context.Accounts.Include(a => a.Role).FirstOrDefaultAsync(a => a.User_Id == id);
+            var acc = await _context.Account.Include(a => a.Role).FirstOrDefaultAsync(a => a.AccountId == id);
             if (acc == null) return Result<AccountDto>.Failure("Not found");
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(acc));
         }
 
         public async Task<Result<List<AccountDto>>> GetAllAsync()
         {
-            var accounts = await _context.Accounts.Include(a => a.Role).Where(x => x.Role.Name != "Admin").ToListAsync();
+            var accounts = await _context.Account.Include(a => a.Role).Where(x => x.Role.Name != "Admin").ToListAsync();
             return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
         }
 
         public async Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request)
         {
-            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.User_Id == id);
+            var account = await _context.Account.FirstOrDefaultAsync(a => a.AccountId == id);
             if (account == null) return Result<AccountDto>.Failure("Not found");
 
             account.FirstName = request.FirstName ?? account.FirstName;
@@ -132,8 +132,8 @@ namespace backend.Application.Services
 
             if (!string.IsNullOrEmpty(request.RoleName))
             {
-                var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == request.RoleName);
-                if (role != null) account.RoleId = role.Id;
+                var role = await _context.Role.FirstOrDefaultAsync(r => r.Name == request.RoleName);
+                if (role != null) account.RoleId = role.RoleId;
             }
 
             account.UpdateAt = DateTime.UtcNow;
@@ -143,16 +143,16 @@ namespace backend.Application.Services
 
         public async Task<Result<bool>> DeleteAsync(Guid id)
         {
-            var acc = await _context.Accounts.FindAsync(id);
+            var acc = await _context.Account.FindAsync(id);
             if (acc == null) return Result<bool>.Failure("Not found");
-            _context.Accounts.Remove(acc);
+            _context.Account.Remove(acc);
             await _context.SaveChangesAsync();
             return Result<bool>.Success(true);
         }
 
         public async Task<Result<AccountDto>> GetAccountByEmail(string email)
         {
-            var account = await _context.Accounts
+            var account = await _context.Account
                 .Include(a => a.Role)
                 .FirstOrDefaultAsync(a => a.Email == email);
             if (account == null) return Result<AccountDto>.Failure("Account not found.");
@@ -163,7 +163,7 @@ namespace backend.Application.Services
 
         public async Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request)
         {
-            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            bool emailExists = await _context.Account.AnyAsync(a => a.Email == request.Email);
             if (!emailExists)
                 return Result<bool>.Failure("Email không tồn tại.");
 
@@ -182,7 +182,7 @@ namespace backend.Application.Services
             if (!isValid)
                 return Result<bool>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
 
-            var user = await _context.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email);
+            var user = await _context.Account.FirstOrDefaultAsync(a => a.Email == request.Email);
             if (user == null)
                 return Result<bool>.Failure("Email không tồn tại.");
 
@@ -209,16 +209,16 @@ namespace backend.Application.Services
                 return Result<AccountDto>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
 
             // Kiểm tra email đã tồn tại
-            bool emailExists = await _context.Accounts.AnyAsync(a => a.Email == request.Email);
+            bool emailExists = await _context.Account.AnyAsync(a => a.Email == request.Email);
             if (emailExists)
                 return Result<AccountDto>.Failure("Email already exists.");
 
-            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
+            var customerRole = await _context.Role.FirstOrDefaultAsync(r => r.Name == "Customer");
             var passwordHash = HashHelper.BCriptHash(request.Password);
 
             var account = new Account
             {
-                User_Id = Guid.NewGuid(),
+                AccountId = Guid.NewGuid(),
                 Email = request.Email,
                 Password = passwordHash,
                 FirstName = request.FirstName,
@@ -227,11 +227,11 @@ namespace backend.Application.Services
                 avatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
-                RoleId = customerRole.Id,
+                RoleId = customerRole.RoleId,
                 CreateAt = DateTime.UtcNow
             };
 
-            _context.Accounts.Add(account);
+            _context.Account.Add(account);
             await _context.SaveChangesAsync();
 
             // Xóa mã xác thực khỏi cache sau khi đăng ký thành công

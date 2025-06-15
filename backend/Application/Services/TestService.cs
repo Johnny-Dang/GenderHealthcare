@@ -16,11 +16,10 @@ namespace backend.Application.Services
         {
             var testService = new Domain.Entities.TestService
             {
-                Id = Guid.NewGuid(),
+                ServiceId = Guid.NewGuid(),
                 ServiceName = testDto.ServiceName,
                 Description = testDto.Description,
                 Price = testDto.Price,
-                Duration = testDto.Duration,
                 Category = testDto.Category
             };
 
@@ -49,11 +48,10 @@ namespace backend.Application.Services
 
             return testServices.Select(ts => new TestServiceResponse
             {
-                Id = ts.Id,
+                ServiceId = ts.ServiceId,
                 ServiceName = ts.ServiceName,
                 Description = ts.Description,
                 Price = ts.Price,
-                Duration = ts.Duration,
                 Category = ts.Category
             });
         }
@@ -67,11 +65,10 @@ namespace backend.Application.Services
 
             return new TestServiceResponse
             {
-                Id = testService.Id,
+                ServiceId = testService.ServiceId,
                 ServiceName = testService.ServiceName,
                 Description = testService.Description,
                 Price = testService.Price,
-                Duration = testService.Duration,
                 Category = testService.Category
             };
         }
@@ -86,7 +83,6 @@ namespace backend.Application.Services
             testService.ServiceName = testDto.ServiceName;
             testService.Description = testDto.Description;
             testService.Price = testDto.Price;
-            testService.Duration = testDto.Duration;
             testService.Category = testDto.Category;
 
             await _context.SaveChangesAsync();

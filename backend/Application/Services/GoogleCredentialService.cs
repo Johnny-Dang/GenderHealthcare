@@ -62,14 +62,14 @@ namespace backend.Application.Services
             }
 
             // Get or create account
-            var account = await _context.Accounts
+            var account = await _context.Account
                 .Include(a => a.Role)
                 .FirstOrDefaultAsync(a => a.Email == payload.Email);
 
             // Delete old refresh token if account exists
             if (account != null)
             {
-                _tokenService.DeleteOldRefreshToken(account.User_Id);
+                _tokenService.DeleteOldRefreshToken(account.AccountId);
             }
 
             LoginResponse response;
@@ -111,7 +111,7 @@ namespace backend.Application.Services
             {
                 var accountDto = _mapper.Map<AccountDto>(account);
                 var accessToken = _tokenService.GenerateJwt(accountDto);
-                var refreshToken = _tokenService.GenerateRefreshTokenAsync(account.User_Id);
+                var refreshToken = _tokenService.GenerateRefreshTokenAsync(account.AccountId);
 
                 response = new LoginResponse
                 {
@@ -120,7 +120,7 @@ namespace backend.Application.Services
                     Email = account.Email,
                     Role = account.Role.Name,
                     FullName = $"{account.FirstName} {account.LastName}",
-                    AccountId = account.User_Id,
+                    AccountId = account.AccountId,
                 };
             }
 
@@ -129,7 +129,7 @@ namespace backend.Application.Services
 
         public async Task<Result<AccountDto>> RegisterGoogleAccountAsync(RegisterRequest request)
         {
-            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
+            var customerRole = await _context.Role.FirstOrDefaultAsync(r => r.Name == "Customer");
             if (customerRole == null)
                 return Result<AccountDto>.Failure("Customer role not found. System configuration issue.");
 
@@ -139,7 +139,7 @@ namespace backend.Application.Services
             // Create account with email already verified (since Google handled verification)
             var account = new Account
             {
-                User_Id = Guid.NewGuid(),
+                AccountId = Guid.NewGuid(),
                 Email = request.Email,
                 Password = passwordHash,
                 FirstName = request.FirstName,
@@ -148,13 +148,13 @@ namespace backend.Application.Services
                 avatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
-                RoleId = customerRole.Id,
+                RoleId = customerRole.RoleId,
                 CreateAt = DateTime.UtcNow,
                 // No need to send verification email - Google account is already verified
             };
 
             // Save to database
-            _context.Accounts.Add(account);
+            _context.Account.Add(account);
             await _context.SaveChangesAsync();
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));

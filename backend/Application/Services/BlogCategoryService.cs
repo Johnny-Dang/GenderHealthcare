@@ -19,7 +19,7 @@ namespace backend.Application.Services
 
         public async Task<IEnumerable<CategoryResponse>> GetAllCategoriesAsync()
         {
-            return await _context.Categories
+            return await _context.Categorie
                 .Select(c => new CategoryResponse
                 {
                     CategoryId = c.CategoryId,
@@ -38,7 +38,7 @@ namespace backend.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Categories.Add(category);
+            _context.Categorie.Add(category);
             await _context.SaveChangesAsync();
 
             return new CategoryResponse
@@ -50,11 +50,11 @@ namespace backend.Application.Services
 
         public async Task<bool> DeleteCategoryAsync(Guid categoryId)
         {
-            var category = await _context.Categories.FindAsync(categoryId);
+            var category = await _context.Categorie.FindAsync(categoryId);
             if (category == null)
                 return false;
 
-            _context.Categories.Remove(category);
+            _context.Categorie.Remove(category);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -63,7 +63,7 @@ namespace backend.Application.Services
 
         public async Task<CategoryResponse?> UpdateCategoryAsync(Guid categoryId, UpdateCategoryRequest request)
         {
-            var category = await _context.Categories.FindAsync(categoryId);
+            var category = await _context.Categorie.FindAsync(categoryId);
             if (category == null)
                 return null;
 

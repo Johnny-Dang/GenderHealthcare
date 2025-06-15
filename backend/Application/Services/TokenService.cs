@@ -55,18 +55,18 @@ namespace backend.Application.Services
         }
         public void DeleteOldRefreshToken(Guid userId)
         {
-            var entity = _context.RefreshTokens.Where(x => x.AccountId == userId).ToList();
+            var entity = _context.RefreshToken.Where(x => x.AccountId == userId).ToList();
 
             if (entity == null)
             {
                 return;
             }
-            _context.RefreshTokens.RemoveRange(entity);
+            _context.RefreshToken.RemoveRange(entity);
             _context.SaveChangesAsync();
         }
         public AccountDto GetUserByRefreshToken(string refreshToken)
         {
-            var user = _context.RefreshTokens
+            var user = _context.RefreshToken
                 .Include(rt => rt.Account)
                 .ThenInclude(acc => acc.Role)
                 .Where(rt => rt.Token == refreshToken
@@ -75,7 +75,7 @@ namespace backend.Application.Services
                 .Select(rt =>
                 new AccountDto
                 {
-                    User_Id = rt.Account.User_Id,
+                    User_Id = rt.Account.AccountId,
                     Email = rt.Account.Email,
                     FirstName = rt.Account.FirstName,
                     LastName = rt.Account.LastName,
@@ -102,7 +102,7 @@ namespace backend.Application.Services
                 IsRevoked = false
             };
 
-            _context.RefreshTokens.Add(data);
+            _context.RefreshToken.Add(data);
 
             _context.SaveChangesAsync();
 
