@@ -2,17 +2,17 @@
 {
     public class TestService
     {
-        public Guid Id { get; set; }
-        public string ServiceName { get; set; }
-        public string Description { get; set; }
+        public Guid ServiceId { get; set; }
+        public string ServiceName { get; set; } = default!;
+        public string Description { get; set; } = default!;
         public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
-        public string Duration { get; set; } = default!; 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public string Category { get; set; } = default!;
 
-        // Navigation property
-        public virtual ICollection<Booking> Appointments { get; set; } = new List<Booking>();
+        public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
+
+        public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
     }
 }

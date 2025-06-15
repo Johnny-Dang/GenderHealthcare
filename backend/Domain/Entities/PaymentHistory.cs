@@ -4,7 +4,7 @@ namespace backend.Domain.Entities
 {
     public class PaymentHistory
     {
-        public Guid PaymentId { get; set; }
+        public Guid BookingId { get; set; }
 
         public Guid TransactionId { get; set; }
 
@@ -14,7 +14,7 @@ namespace backend.Domain.Entities
 
         public DateTime? ExpiredAt { get; set; }
 
-        public Booking Appoiment { get; set; } = default!;
+        public virtual Booking Booking { get; set; } = default!;
 
     }
 }
