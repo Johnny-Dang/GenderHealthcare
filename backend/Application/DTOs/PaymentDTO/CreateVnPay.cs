@@ -2,6 +2,5 @@
 {
     public class CreateVnPay
     {
-        public string Order
     }
 }
