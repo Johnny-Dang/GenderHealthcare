@@ -126,7 +126,7 @@ namespace backend.Api.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
                 
-            return CreatedAtAction(nameof(RegisterWithVerificationCodeAsync), new { id = result.Data!.User_Id }, result.Data);
+            return Ok(new { message = "Register successfully." });
         }
         [HttpPost("forgot-password/send-code")]
         public async Task<IActionResult> SendForgotPasswordCode([FromBody] SendVerificationCodeRequest request)
