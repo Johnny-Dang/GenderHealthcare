@@ -34,8 +34,8 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(a => a.Bookings)
-                .WithOne(b => b.User)
-                .HasForeignKey(b => b.UserId)
+                .WithOne(b => b.Account)
+                .HasForeignKey(b => b.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(a => a.Feedbacks)
