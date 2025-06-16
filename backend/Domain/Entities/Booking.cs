@@ -6,13 +6,13 @@ namespace backend.Domain.Entities
     {
         public Guid BookingId { get; set; }
 
-        public Guid UserId { get; set; }
+        public Guid AccountId { get; set; }
 
         public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdateAt { get; set; }
 
-        public virtual Account User { get; set; } = default!;
+        public virtual Account Account { get; set; } = default!;
 
         public virtual PaymentHistory PaymentHistory { get; set; } = default!;
 
