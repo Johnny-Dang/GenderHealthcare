@@ -15,7 +15,6 @@ namespace backend.Infrastructure.Extensions
         public static void AddService(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
-            serviceCollection.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
             serviceCollection.AddScoped<IRoleService, RoleService>();
             serviceCollection.AddScoped<IAccountService, AccountService>();
             serviceCollection.AddScoped<ITokenService, TokenService>();
