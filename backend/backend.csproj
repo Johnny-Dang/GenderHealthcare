@@ -24,4 +24,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="Application\DTOs\BookingDTO\" />
+    <Folder Include="Application\DTOs\BookingDetailDTO\" />
+  </ItemGroup>
+
 </Project>
