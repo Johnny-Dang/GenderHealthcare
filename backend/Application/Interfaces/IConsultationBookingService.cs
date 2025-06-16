@@ -1,4 +1,5 @@
-﻿using backend.Application.DTOs.ConsultationBookingDTO;
+﻿using backend.Application.DTOs.ConsultantDTO;
+using backend.Application.DTOs.ConsultationBookingDTO;
 
 namespace backend.Application.Interfaces
 {
