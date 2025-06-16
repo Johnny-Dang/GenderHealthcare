@@ -9,7 +9,7 @@ namespace backend.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<ConsultationBooking> builder)
         {
             // Configure the table name
-            builder.ToTable("ConsultationBookings");
+            builder.ToTable("ConsultationBooking");
             builder.HasKey(x => x.BookingId);
 
             builder.Property(x => x.GuestName)

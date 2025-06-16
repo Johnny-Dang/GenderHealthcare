@@ -1,5 +1,6 @@
 ﻿using backend.Application.DTOs.ConsultationBookingDTO;
 using backend.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.API.Controllers
@@ -14,8 +15,10 @@ namespace backend.API.Controllers
             _bookingService = bookingService;
         }
 
+        
         // api tạo booking tư vấn
         [HttpPost("book")]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateBooking([FromBody] CreateConsultationBookingRequest request)
         {
             if (request == null)
@@ -28,6 +31,18 @@ namespace backend.API.Controllers
                 return Ok(result.Data);
             }
             return BadRequest(result.Error); 
+        }
+
+        //GET /api/ConsultationBooking/{customerId}
+        [HttpGet("{customerId}")]
+        public async Task<IActionResult> GetBooKingsByCustomerId(Guid customerId)
+        {
+            var result = await _bookingService.GetBookingsByCustomerIdAsync(customerId);
+            if (result.IsSuccess)
+            {
+                return Ok(result.Data);
+            }
+            return NotFound(result.Error);
         }
 
         // api giúp cập nhật trạng thái booking

@@ -118,6 +118,36 @@ namespace backend.Application.Services
             return Result<List<ConsultationBookingResponse>>.Success(bookings);
         }
 
+        public async Task<Result<List<ConsultationBookingResponse>>> GetBookingsByCustomerIdAsync(Guid customerId)
+        {
+            // Nếu customerId là Guid.Empty thì coi như không hợp lệ (guest không có id)
+            if (customerId == Guid.Empty)
+                return Result<List<ConsultationBookingResponse>>.Failure("Guest users do not have booking history.");
+
+            var bookings = await _context.ConsultationBookings
+                .Where(b => b.CustomerId == customerId)
+                .Include(b => b.Customer)
+                .Include(b => b.Staff)
+                .Select(booking => new ConsultationBookingResponse
+                {
+                    BookingId = booking.BookingId,
+                    CustomerId = booking.CustomerId,
+                    CustomerName = booking.Customer != null ? $"{booking.Customer.FirstName} {booking.Customer.LastName}".Trim() : null,
+                    CustomerEmail = booking.Customer != null ? booking.Customer.Email : null,
+                    CustomerPhone = booking.Customer != null ? booking.Customer.Phone : null, 
+                    GuestName = booking.GuestName,
+                    GuestEmail = booking.GuestEmail,
+                    GuestPhone = booking.GuestPhone,
+                    StaffId = booking.StaffId,
+                    StaffName = booking.Staff != null ? $"{booking.Staff.FirstName} {booking.Staff.LastName}".Trim() : null,
+                    ScheduledAt = booking.ScheduledAt,
+                    Status = booking.Status,
+                    Message = booking.Message,
+                })
+                .ToListAsync();
+
+            return Result<List<ConsultationBookingResponse>>.Success(bookings);
+        }
 
         public async Task<Result<List<ConsultationBookingResponse>>> GetBookingsByStaffIdAsync(Guid staffId)
         {
