@@ -26,7 +26,7 @@ export const useChatBot = () => {
 
     try {
       // TODO: Thay YOUR_GEMINI_API_KEY bằng API key thật của bạn
-      const GEMINI_API_KEY = 'AIzaSyCzO2mmtMf347Q_d56LuqvDMDVg5OvDVEo'
+      const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY'
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
