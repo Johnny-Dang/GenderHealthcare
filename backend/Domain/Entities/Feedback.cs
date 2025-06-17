@@ -16,7 +16,7 @@ namespace backend.Domain.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public virtual TestService TestService { get; set; } = default!;
+        public virtual Service TestService { get; set; } = default!;
 
         public virtual Account Account { get; set; } = default!;
     }

@@ -27,7 +27,6 @@
 
   <ItemGroup>
     <Folder Include="Application\DTOs\BookingDTO\" />
-    <Folder Include="Application\DTOs\BookingDetailDTO\" />
   </ItemGroup>
 
 </Project>

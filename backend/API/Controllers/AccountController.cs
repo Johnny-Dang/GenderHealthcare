@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace backend.Api.Controllers
 {
@@ -36,8 +37,6 @@ namespace backend.Api.Controllers
             {
                 return BadRequest(result.Error);
             }
-            _tokenService.DeleteOldRefreshToken(result.Data.AccountId);
-            var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(result.Data.AccountId);
 
             var cookieOptions = new CookieOptions
             {
@@ -98,9 +97,44 @@ namespace backend.Api.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout(Guid accountId)
+        [Authorize]
+        public async Task<IActionResult> Logout()
         {
-            var result = await _accountService.LogoutAsync(accountId);
+            // Get user ID from claims
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return BadRequest("Invalid user identification");
+            }
+
+            // Get the access token from the Authorization header
+            string accessToken = null;
+            if (Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                var authHeaderValue = authHeader.FirstOrDefault();
+                if (!string.IsNullOrEmpty(authHeaderValue) && authHeaderValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    accessToken = authHeaderValue.Substring("Bearer ".Length).Trim();
+                }
+            }
+
+            // Blacklist the access token if available
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                try
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(accessToken);
+                    var expiry = token.ValidTo;
+                    _tokenService.BlacklistToken(accessToken, expiry);
+                }
+                catch
+                {
+                    // Continue even if token parsing fails
+                }
+            }
+
+            var result = await _accountService.LogoutAsync(userId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.Error);

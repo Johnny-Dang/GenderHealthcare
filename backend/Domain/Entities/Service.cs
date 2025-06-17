@@ -1,6 +1,6 @@
 ﻿namespace backend.Domain.Entities
 {
-    public class TestService
+    public class Service
     {
         public Guid ServiceId { get; set; }
         public string ServiceName { get; set; } = default!;

@@ -1,32 +1,31 @@
 ﻿using AutoMapper;
 using backend.Application.DTOs.Roles;
 using backend.Application.Interfaces;
+using backend.Application.Repositories;
 using backend.Domain.Entities;
-using backend.Infrastructure.Database;
-using Microsoft.EntityFrameworkCore;
 
-namespace backend.Application.Services
+namespace backend.Infrastructure.Services
 {
     public class RoleService : IRoleService
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IRoleRepository _roleRepository;
         private readonly IMapper _mapper;
 
-        public RoleService(IApplicationDbContext context, IMapper mapper)
+        public RoleService(IRoleRepository roleRepository, IMapper mapper)
         {
-            _context = context;
+            _roleRepository = roleRepository;
             _mapper = mapper;
         }
 
         public async Task<List<RoleDto>> GetAllAsync()
         {
-            var roles = await _context.Role.ToListAsync();
+            var roles = await _roleRepository.GetAllAsync();
             return _mapper.Map<List<RoleDto>>(roles);
         }
 
         public async Task<RoleDto?> GetByIdAsync(Guid id)
         {
-            var role = await _context.Role.FindAsync(id);
+            var role = await _roleRepository.GetByIdAsync(id);
             return role == null ? null : _mapper.Map<RoleDto>(role);
         }
 
@@ -39,32 +38,24 @@ namespace backend.Application.Services
                 Description = request.Description
             };
 
-            _context.Role.Add(role);
-            await _context.SaveChangesAsync();
-
+            await _roleRepository.CreateAsync(role);
             return _mapper.Map<RoleDto>(role);
         }
 
         public async Task<bool> UpdateAsync(UpdateRoleRequest request)
         {
-            var role = await _context.Role.FindAsync(request.Id);
+            var role = await _roleRepository.GetByIdAsync(request.Id);
             if (role == null) return false;
 
             role.Name = request.Name;
             role.Description = request.Description;
 
-            await _context.SaveChangesAsync();
-            return true;
+            return await _roleRepository.UpdateAsync(role);
         }
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var role = await _context.Role.FindAsync(id);
-            if (role == null) return false;
-
-            _context.Role.Remove(role);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _roleRepository.DeleteAsync(id);
         }
     }
 }

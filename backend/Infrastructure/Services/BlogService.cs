@@ -1,48 +1,41 @@
-﻿using Azure.Core;
-using backend.Application.DTOs.BlogDTO;
+﻿using backend.Application.DTOs.BlogDTO;
 using backend.Application.Interfaces;
+using backend.Application.Repositories;
 using backend.Domain.Entities;
-using backend.Infrastructure.Database;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
-namespace backend.Application.Services
+namespace backend.Infrastructure.Services
 {
     public class BlogService : IBlogService
     {
-        private readonly IApplicationDbContext _context;
-        public BlogService(IApplicationDbContext context)
+        private readonly IBlogRepository _blogRepository;
+        
+        public BlogService(IBlogRepository blogRepository)
         {
-            _context = context;
+            _blogRepository = blogRepository;
         }
+        
         public async Task<IEnumerable<BlogResponse>> GetPublishedBlogsAsync()
         {
-            return await _context.Blog
-                .Include(b => b.Author)
-                .Include(b => b.Category)
-                .Where(b => b.IsPublished)
-                .Select(b => new BlogResponse
-                {
-                    BlogId = b.BlogId,
-                    Title = b.Title,
-                    Slug = b.Slug,
-                    Content = b.Content,
-                    Excerpt = b.Excerpt,
-                    AuthorName = (b.Author!.FirstName ?? "") + " " + (b.Author!.LastName ?? ""),
-                    CategoryName = b.Category!.Name,
-                    FeaturedImageUrl = b.FeaturedImageUrl,
-                    IsPublished = b.IsPublished,
-                    CreatedAt = b.CreatedAt,
-                })
-                .ToListAsync();
+            var blogs = await _blogRepository.GetPublishedBlogsAsync();
+            
+            return blogs.Select(b => new BlogResponse
+            {
+                BlogId = b.BlogId,
+                Title = b.Title,
+                Slug = b.Slug,
+                Content = b.Content,
+                Excerpt = b.Excerpt,
+                AuthorName = (b.Author!.FirstName ?? "") + " " + (b.Author!.LastName ?? ""),
+                CategoryName = b.Category!.Name,
+                FeaturedImageUrl = b.FeaturedImageUrl,
+                IsPublished = b.IsPublished,
+                CreatedAt = b.CreatedAt,
+            });
         }
 
         public async Task<BlogResponse?> GetBlogBySlugAsync(string slug)
         {
-            var blog = await _context.Blog
-                 .Include(b => b.Author)
-                 .Include(b => b.Category)
-                 .FirstOrDefaultAsync(b => b.Slug == slug && b.IsPublished);
+            var blog = await _blogRepository.GetBlogBySlugAsync(slug);
 
             if (blog == null)
                 return null;
@@ -64,18 +57,17 @@ namespace backend.Application.Services
 
         public async Task<Blog> CreateBlogAsync(CreateBlogRequest request)
         {
-            var author = await _context.Account.FirstOrDefaultAsync(user => user.AccountId == request.AuthorId);
-            if (author == null)
+            if (!await _blogRepository.AuthorExistsAsync(request.AuthorId))
                 throw new ArgumentException("Invalid AuthorId");
 
-            if (!await _context.Categorie.AnyAsync(c => c.CategoryId == request.CategoryId))
+            if (!await _blogRepository.CategoryExistsAsync(request.CategoryId))
                 throw new ArgumentException("Invalid CategoryId");
 
-            // Tạo slug
+            // Generate slug
             var slug = GenerateSlug(request.Title);
             int suffix = 1;
             var originalSlug = slug;
-            while (await _context.Blog.AnyAsync(b => b.Slug == slug))
+            while (await _blogRepository.SlugExistsAsync(slug))
             {
                 slug = $"{originalSlug}-{suffix}";
                 suffix++;
@@ -95,31 +87,26 @@ namespace backend.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Blog.Add(blog);
-            await _context.SaveChangesAsync();
-            return blog;
+            return await _blogRepository.CreateBlogAsync(blog);
         }
 
         public async Task<bool> UpdateBlogAsync(Guid id, UpdateBlogRequest request)
         {
-            var blog = await _context.Blog.FindAsync(id);
+            var blog = await _blogRepository.GetBlogByIdAsync(id);
             if (blog == null)
                 return false;
 
-            // Chỉ kiểm tra author tồn tại
-            var author = await _context.Account.FirstOrDefaultAsync(user => user.AccountId == request.AuthorId);
-            if (author == null)
+            if (!await _blogRepository.AuthorExistsAsync(request.AuthorId))
                 throw new ArgumentException("Invalid AuthorId");
 
-            // Kiểm tra category tồn tại
-            if (!await _context.Categorie.AnyAsync(c => c.CategoryId == request.CategoryId))
+            if (!await _blogRepository.CategoryExistsAsync(request.CategoryId))
                 throw new ArgumentException("Invalid CategoryId");
 
-            // Tạo slug
+            // Generate slug
             var slug = GenerateSlug(request.Title);
             int suffix = 1;
             var originalSlug = slug;
-            while (await _context.Blog.AnyAsync(b => b.Slug == slug && b.BlogId != id))
+            while (await _blogRepository.SlugExistsExceptCurrentAsync(slug, id))
             {
                 slug = $"{originalSlug}-{suffix}";
                 suffix++;
@@ -134,19 +121,12 @@ namespace backend.Application.Services
             blog.FeaturedImageUrl = request.FeaturedImageUrl;
             blog.IsPublished = request.IsPublished;
 
-            await _context.SaveChangesAsync();
-            return true;
+            return await _blogRepository.UpdateBlogAsync(blog);
         }
 
         public async Task<bool> DeleteBlogAsync(Guid id)
         {
-            var blog = await _context.Blog.FindAsync(id);
-            if (blog == null)
-                return false;
-
-            _context.Blog.Remove(blog);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _blogRepository.DeleteBlogAsync(id);
         }
 
         // Helper method to generate a unique slug for the blog
@@ -177,5 +157,4 @@ namespace backend.Application.Services
             return slug.Trim('-');
         }
     }
-
 }

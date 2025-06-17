@@ -1,4 +1,5 @@
-﻿using backend.Application.Common.Mappings;
+﻿using backend.API.Middleware;
+using backend.Application.Common.Mappings;
 using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.Database;
@@ -107,7 +108,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseMiddleware<JwtBlacklistMiddleware>(); // Đặt trước UseAuthentication
+app.UseJwtMiddleware(); // Add the JWT blacklist middleware
 
 app.UseAuthentication();
 

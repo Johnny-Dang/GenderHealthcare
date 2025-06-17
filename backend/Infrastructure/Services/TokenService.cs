@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
+using backend.Application.Repositories;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Domain.Entities;
-using backend.Infrastructure.Database;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -14,17 +14,17 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace backend.Application.Services
+namespace backend.Infrastructure.Services
 {
     public class TokenService : ITokenService
     {
-        private readonly IApplicationDbContext _context;
+        private readonly ITokenRepository _tokenRepository;
         private readonly JwtSettings _jwtSettings;
         private readonly IMemoryCache _cache;
 
-        public TokenService(IApplicationDbContext context, IOptions<JwtSettings> jwtSettingOptions,IMemoryCache cache)
+        public TokenService(ITokenRepository tokenRepository, IOptions<JwtSettings> jwtSettingOptions, IMemoryCache cache)
         {
-            _context = context;
+            _tokenRepository = tokenRepository;
             _jwtSettings = jwtSettingOptions.Value;
             _cache = cache;
         }   
@@ -53,60 +53,36 @@ namespace backend.Application.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        public void DeleteOldRefreshToken(Guid userId)
+        public async Task DeleteOldRefreshToken(Guid userId)
         {
-            var entity = _context.RefreshToken.Where(x => x.AccountId == userId).ToList();
-
-            if (entity == null)
+            var tokens = await _tokenRepository.GetRefreshTokensByUserIdAsync(userId);
+            
+            if (tokens == null || !tokens.Any())
             {
                 return;
             }
-            _context.RefreshToken.RemoveRange(entity);
-            _context.SaveChangesAsync();
+            
+            await _tokenRepository.RemoveRefreshTokensAsync(tokens);
         }
-        public AccountDto GetUserByRefreshToken(string refreshToken)
+        public async Task<AccountDto> GetUserByRefreshToken(string refreshToken)
         {
-            var user = _context.RefreshToken
-                .Include(rt => rt.Account)
-                .ThenInclude(acc => acc.Role)
-                .Where(rt => rt.Token == refreshToken
-                     && !rt.IsRevoked
-                     && rt.ExpiryDate > DateTime.UtcNow)
-                .Select(rt =>
-                new AccountDto
-                {
-                    User_Id = rt.Account.AccountId,
-                    Email = rt.Account.Email,
-                    FirstName = rt.Account.FirstName,
-                    LastName = rt.Account.LastName,
-                    Phone = rt.Account.Phone,
-                    DateOfBirth = rt.Account.DateOfBirth,
-                    RoleName = rt.Account.Role.Name // Quan trọng để truyền vào GenerateJwt
-                })
-                .FirstOrDefault();
-            return user;
+            return await _tokenRepository.GetUserByRefreshTokenAsync(refreshToken);
         }
 
-        public string GenerateRefreshTokenAsync(Guid accountId)
+        public async Task<string> GenerateRefreshTokenAsync(Guid accountId)
         {
-            // This method is not implemented in the original code, so we throw a NotImplementedException.
             string refreshToken = HashHelper.GenerateRamdomString(64);
-
-            string hashedRefereshToken = HashHelper.BCriptHash(refreshToken);
+            string hashedRefreshToken = HashHelper.BCriptHash(refreshToken);
 
             var data = new RefreshToken
             {
                 AccountId = accountId,
-                Token = hashedRefereshToken,
+                Token = hashedRefreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(7), // Refresh token valid for 7 days
                 IsRevoked = false
             };
 
-            _context.RefreshToken.Add(data);
-
-            _context.SaveChangesAsync();
-
-            return hashedRefereshToken;
+            return await _tokenRepository.CreateRefreshTokenAsync(data);
         }
 
         public void BlacklistToken(string token, DateTime expiry)

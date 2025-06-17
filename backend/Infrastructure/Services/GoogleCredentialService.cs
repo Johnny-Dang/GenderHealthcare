@@ -1,24 +1,27 @@
 ﻿using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
-using backend.Infrastructure.Database;
+using backend.Application.Repositories;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Google.Apis.Auth;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Principal;
 
-namespace backend.Application.Services
+namespace backend.Infrastructure.Services
 {
     public class GoogleCredentialService : IGoogleCredentialService
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IGoogleCredentialRepository _repository;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
-        public GoogleCredentialService(IApplicationDbContext context,ITokenService tokenService,IMapper mapper,IConfiguration configuration)
+        
+        public GoogleCredentialService(
+            IGoogleCredentialRepository repository,
+            ITokenService tokenService,
+            IMapper mapper,
+            IConfiguration configuration)
         {
-            _context = context;
+            _repository = repository;
             _mapper = mapper;
             _tokenService = tokenService;
             _configuration = configuration;
@@ -62,9 +65,7 @@ namespace backend.Application.Services
             }
 
             // Get or create account
-            var account = await _context.Account
-                .Include(a => a.Role)
-                .FirstOrDefaultAsync(a => a.Email == payload.Email);
+            var account = await _repository.GetAccountByEmailAsync(payload.Email);
 
             // Delete old refresh token if account exists
             if (account != null)
@@ -95,7 +96,7 @@ namespace backend.Application.Services
                 }
 
                 var accessToken = _tokenService.GenerateJwt(registerResult.Data);
-                var refreshToken = _tokenService.GenerateRefreshTokenAsync(registerResult.Data.User_Id);
+                var refreshToken = await _tokenService.GenerateRefreshTokenAsync(registerResult.Data.User_Id);
 
                 response = new LoginResponse
                 {
@@ -111,7 +112,7 @@ namespace backend.Application.Services
             {
                 var accountDto = _mapper.Map<AccountDto>(account);
                 var accessToken = _tokenService.GenerateJwt(accountDto);
-                var refreshToken = _tokenService.GenerateRefreshTokenAsync(account.AccountId);
+                var refreshToken = await _tokenService.GenerateRefreshTokenAsync(account.AccountId);
 
                 response = new LoginResponse
                 {
@@ -129,7 +130,8 @@ namespace backend.Application.Services
 
         public async Task<Result<AccountDto>> RegisterGoogleAccountAsync(RegisterRequest request)
         {
-            var customerRole = await _context.Role.FirstOrDefaultAsync(r => r.Name == "Customer");
+            var customerRole = await _repository.GetRoleByNameAsync("Customer");
+
             if (customerRole == null)
                 return Result<AccountDto>.Failure("Customer role not found. System configuration issue.");
 
@@ -153,9 +155,8 @@ namespace backend.Application.Services
                 // No need to send verification email - Google account is already verified
             };
 
-            // Save to database
-            _context.Account.Add(account);
-            await _context.SaveChangesAsync();
+            // Save to database using repository
+            await _repository.CreateAccountAsync(account);
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }

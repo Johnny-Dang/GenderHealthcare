@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace backend.Infrastructure.Persistence.Configurations
 {
-    public class TestServiceConfig : IEntityTypeConfiguration<TestService>
+    public class TestServiceConfig : IEntityTypeConfiguration<Service>
     {
-        public void Configure(EntityTypeBuilder<TestService> builder)
+        public void Configure(EntityTypeBuilder<Service> builder)
         {
             builder.HasKey(ts => ts.ServiceId);
 

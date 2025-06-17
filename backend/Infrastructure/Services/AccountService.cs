@@ -1,52 +1,39 @@
 using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
-using backend.Application.Services;
-using backend.Domain.AppsettingsConfigurations;
-using backend.Domain.Entities;
-using backend.Infrastructure.Database;
-
-//using backend.Infrastructure.Services;
+using backend.Application.Repositories;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
-using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.UserSecrets;
-using Microsoft.Extensions.Options;
-using Microsoft.Identity.Client;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
-namespace backend.Application.Services
+namespace backend.Infrastructure.Services
 {
     public class AccountService : IAccountService
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAccountRepository _accountRepository;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
         private readonly IVerificationCodeService _verificationCodeService;
         private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration;
-        private readonly IGoogleCredentialService _googleCredentialService;
-        public AccountService(IApplicationDbContext context, IMapper mapper, ITokenService tokenService, IVerificationCodeService verificationCodeService, IEmailService emailService, IGoogleCredentialService googleCredentialService, IConfiguration configuration)
+        
+        public AccountService(
+            IAccountRepository accountRepository, 
+            IMapper mapper, 
+            ITokenService tokenService, 
+            IVerificationCodeService verificationCodeService, 
+            IEmailService emailService)
         {
-            _context = context;
+            _accountRepository = accountRepository;
             _mapper = mapper;
             _tokenService = tokenService;
             _verificationCodeService = verificationCodeService;
             _emailService = emailService;
-            _googleCredentialService = googleCredentialService;
-            _configuration = configuration;
         }
 
         public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await _context.Account
-                .Include(r => r.Role)
-                .FirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await _accountRepository.GetAccountByEmailWithRoleAsync(request.Email);
 
             if (user == null)
                 return Result<LoginResponse>.Failure("Email không tồn tại.");
@@ -59,7 +46,8 @@ namespace backend.Application.Services
             
             var accountDto = _mapper.Map<AccountDto>(user);
             var accessToken = _tokenService.GenerateJwt(accountDto);
-            var refreshToken = _tokenService.GenerateRefreshTokenAsync(user.AccountId);
+            await _tokenService.DeleteOldRefreshToken(user.AccountId);
+            var refreshToken = await _tokenService.GenerateRefreshTokenAsync(user.AccountId);
 
             var response = new LoginResponse
             {
@@ -76,10 +64,10 @@ namespace backend.Application.Services
 
         public async Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request)
         {
-            if (await _context.Account.AnyAsync(a => a.Email == request.Email))
+            if (await _accountRepository.EmailExistsAsync(request.Email))
                 return Result<AccountDto>.Failure("Email already exists.");
 
-            var role = await _context.Role.FirstOrDefaultAsync(r => r.Name == request.RoleName);
+            var role = await _accountRepository.GetRoleByNameAsync(request.RoleName);
             if (role == null) return Result<AccountDto>.Failure("Role not found.");
 
             var password = HashHelper.BCriptHash(request.Password);
@@ -99,28 +87,27 @@ namespace backend.Application.Services
                 CreateAt = DateTime.UtcNow
             };
 
-            _context.Account.Add(account);
-            await _context.SaveChangesAsync();
+            await _accountRepository.CreateAccountAsync(account);
 
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }
 
         public async Task<Result<AccountDto>> GetByIdAsync(Guid id)
         {
-            var acc = await _context.Account.Include(a => a.Role).FirstOrDefaultAsync(a => a.AccountId == id);
+            var acc = await _accountRepository.GetAccountByIdWithRoleAsync(id);
             if (acc == null) return Result<AccountDto>.Failure("Not found");
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(acc));
         }
 
         public async Task<Result<List<AccountDto>>> GetAllAsync()
         {
-            var accounts = await _context.Account.Include(a => a.Role).Where(x => x.Role.Name != "Admin").ToListAsync();
+            var accounts = await _accountRepository.GetAllAccountsAsync();
             return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
         }
 
         public async Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request)
         {
-            var account = await _context.Account.FirstOrDefaultAsync(a => a.AccountId == id);
+            var account = await _accountRepository.GetAccountByIdAsync(id);
             if (account == null) return Result<AccountDto>.Failure("Not found");
 
             account.FirstName = request.FirstName ?? account.FirstName;
@@ -132,29 +119,25 @@ namespace backend.Application.Services
 
             if (!string.IsNullOrEmpty(request.RoleName))
             {
-                var role = await _context.Role.FirstOrDefaultAsync(r => r.Name == request.RoleName);
+                var role = await _accountRepository.GetRoleByNameAsync(request.RoleName);
                 if (role != null) account.RoleId = role.RoleId;
             }
 
             account.UpdateAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await _accountRepository.UpdateAccountAsync(account);
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }
 
         public async Task<Result<bool>> DeleteAsync(Guid id)
         {
-            var acc = await _context.Account.FindAsync(id);
-            if (acc == null) return Result<bool>.Failure("Not found");
-            _context.Account.Remove(acc);
-            await _context.SaveChangesAsync();
+            var success = await _accountRepository.DeleteAccountAsync(id);
+            if (!success) return Result<bool>.Failure("Not found");
             return Result<bool>.Success(true);
         }
 
         public async Task<Result<AccountDto>> GetAccountByEmail(string email)
         {
-            var account = await _context.Account
-                .Include(a => a.Role)
-                .FirstOrDefaultAsync(a => a.Email == email);
+            var account = await _accountRepository.GetAccountByEmailWithRoleAsync(email);
             if (account == null) return Result<AccountDto>.Failure("Account not found.");
             var accountDto = _mapper.Map<AccountDto>(account);
 
@@ -163,7 +146,7 @@ namespace backend.Application.Services
 
         public async Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request)
         {
-            bool emailExists = await _context.Account.AnyAsync(a => a.Email == request.Email);
+            bool emailExists = await _accountRepository.EmailExistsAsync(request.Email);
             if (!emailExists)
                 return Result<bool>.Failure("Email không tồn tại.");
 
@@ -182,12 +165,12 @@ namespace backend.Application.Services
             if (!isValid)
                 return Result<bool>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
 
-            var user = await _context.Account.FirstOrDefaultAsync(a => a.Email == request.Email);
+            var user = await _accountRepository.GetAccountByEmailAsync(request.Email);
             if (user == null)
                 return Result<bool>.Failure("Email không tồn tại.");
 
             user.Password = HashHelper.BCriptHash(request.NewPassword);
-            await _context.SaveChangesAsync();
+            await _accountRepository.UpdateAccountAsync(user);
 
             return Result<bool>.Success(true);
         }
@@ -209,11 +192,11 @@ namespace backend.Application.Services
                 return Result<AccountDto>.Failure("Mã xác thực không hợp lệ hoặc đã hết hạn.");
 
             // Kiểm tra email đã tồn tại
-            bool emailExists = await _context.Account.AnyAsync(a => a.Email == request.Email);
+            bool emailExists = await _accountRepository.EmailExistsAsync(request.Email);
             if (emailExists)
                 return Result<AccountDto>.Failure("Email already exists.");
 
-            var customerRole = await _context.Role.FirstOrDefaultAsync(r => r.Name == "Customer");
+            var customerRole = await _accountRepository.GetRoleByNameAsync("Customer");
             var passwordHash = HashHelper.BCriptHash(request.Password);
 
             var account = new Account
@@ -231,8 +214,7 @@ namespace backend.Application.Services
                 CreateAt = DateTime.UtcNow
             };
 
-            _context.Account.Add(account);
-            await _context.SaveChangesAsync();
+            await _accountRepository.CreateAccountAsync(account);
 
             // Xóa mã xác thực khỏi cache sau khi đăng ký thành công
             _verificationCodeService.RemoveCode(request.Email);
@@ -242,18 +224,18 @@ namespace backend.Application.Services
 
         public async Task<Result<LoginResponse>> RefreshTokenAsync(string refreshToken)
         {
-            var user = _tokenService.GetUserByRefreshToken(refreshToken);
+            var user = await _tokenService.GetUserByRefreshToken(refreshToken);
             if (user == null)
             {
                 return Result<LoginResponse>.Failure("Refresh token is not found or invalid");
             }
             
             // Delete old refresh token
-            _tokenService.DeleteOldRefreshToken(user.User_Id);
+            await _tokenService.DeleteOldRefreshToken(user.User_Id);
             
             // Generate new access token and refresh token
             var accessToken = _tokenService.GenerateJwt(user);
-            var newRefreshToken = _tokenService.GenerateRefreshTokenAsync(user.User_Id);
+            var newRefreshToken = await _tokenService.GenerateRefreshTokenAsync(user.User_Id);
             
             var response = new LoginResponse
             {
@@ -270,9 +252,31 @@ namespace backend.Application.Services
 
         public async Task<Result<bool>> LogoutAsync(Guid accountId)
         {
-            _tokenService.DeleteOldRefreshToken(accountId);
+            // Get the JWT token from the Authorization header
+            var authHeader = System.Threading.Thread.CurrentPrincipal?.Identity as System.Security.Claims.ClaimsIdentity;
+            var jwtToken = authHeader?.FindFirst("access_token")?.Value;
+
+            if (!string.IsNullOrEmpty(jwtToken))
+            {
+                try
+                {
+                    // Read the token to get its expiration time
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var token = tokenHandler.ReadJwtToken(jwtToken);
+                    var expiry = token.ValidTo;
+
+                    // Add the token to the blacklist
+                    _tokenService.BlacklistToken(jwtToken, expiry);
+                }
+                catch
+                {
+                    // If we can't read the token, just continue with refresh token deletion
+                }
+            }
+
+            // Delete refresh tokens
+            await _tokenService.DeleteOldRefreshToken(accountId);
             return Result<bool>.Success(true);
         }
     }
-
 }
