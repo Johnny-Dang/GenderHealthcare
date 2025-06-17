@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import api from '../configs/axios'
 
 export const useChatBot = () => {
   const [messages, setMessages] = useState([
@@ -25,47 +26,16 @@ export const useChatBot = () => {
     setIsLoading(true)
 
     try {
-      // TODO: Thay YOUR_GEMINI_API_KEY bằng API key thật của bạn
-      const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY'
+      const response = await api.post('api/Gemini/chat', {
+        prompt: content
+      })
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Bạn là trợ lý AI của WellCare - trung tâm chăm sóc sức khỏe giới tính. Hãy trả lời câu hỏi sau một cách chuyên nghiệp, tư vấn về sức khỏe giới tính, xét nghiệm STD, và các dịch vụ liên quan. Trả lời ngắn gọn, không sử dụng markdown formatting, chỉ trả lời bằng văn bản thuần túy bằng tiếng Việt: ${content}`
-                  }
-                ]
-              }
-            ]
-          })
-        }
-      )
+      // console.log('Gemini API response:', response)
 
-      const data = await response.json()
-
-      if (data.candidates && data.candidates[0]) {
-        let aiResponse = data.candidates[0].content.parts[0].text
-
-        // Xử lý loại bỏ markdown formatting
-        aiResponse = aiResponse
-          .replace(/\*\*(.*?)\*\*/g, '$1') // Loại bỏ **bold**
-          .replace(/\*(.*?)\*/g, '$1') // Loại bỏ *italic*
-          .replace(/`(.*?)`/g, '$1') // Loại bỏ `code`
-          .replace(/#{1,6}\s/g, '') // Loại bỏ headers
-          .replace(/\n\s*\n/g, '\n') // Loại bỏ dòng trống thừa
-          .trim()
-
+      if (response.data) {
         const aiMessage = {
           id: (Date.now() + 1).toString(),
-          content: aiResponse,
+          content: response.data,
           isUser: false,
           timestamp: new Date()
         }

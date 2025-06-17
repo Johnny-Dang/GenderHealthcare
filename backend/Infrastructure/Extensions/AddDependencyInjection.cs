@@ -27,6 +27,11 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IBlogCategoryService, BlogCategoryService>();
             serviceCollection.AddScoped<IConsultationBookingService, ConsultationBookingService>();
             serviceCollection.AddScoped<IConsultantService, ConsultantService>();
+            serviceCollection.AddScoped<IGeminiService, GeminiService>();
+            serviceCollection.AddHttpClient<IGeminiService, GeminiService>(client =>
+            {
+                client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/v1beta/");
+            });
         }
     }
 }
