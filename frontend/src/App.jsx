@@ -5,6 +5,7 @@ import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
 import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
   const router = createBrowserRouter([
@@ -28,6 +29,7 @@ function App() {
   return (
     <div>
       <AuthProvider>
+        <ToastContainer />
         <RouterProvider router={router} />
       </AuthProvider>
     </div>
