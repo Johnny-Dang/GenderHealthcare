@@ -15,7 +15,7 @@ namespace backend.Infrastructure.Database
         public DbSet<StaffInfo> StaffInfo { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
         public DbSet<Booking> Booking { get; set; }
-        public DbSet<Service> Service { get; set; }
+        public DbSet<TestService> TestService { get; set; }
         public DbSet<TestResult> TestResult { get; set; }
 
         public DbSet<Blog> Blog { get; set; }
@@ -24,7 +24,7 @@ namespace backend.Infrastructure.Database
         public DbSet<BookingDetail> BookingDetail { get ; set ; }
         public DbSet<Feedback> Feedback { get ; set; }
 
-        public DbSet<ConsultationBooking> ConsultationBookings { get; set; }
+        public DbSet<ConsultationBooking> ConsultationBooking { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

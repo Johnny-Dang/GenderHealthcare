@@ -21,7 +21,7 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IGoogleCredentialService, GoogleCredentialService>();
             serviceCollection.AddScoped<IEmailService, SendGridEmailService>();
             serviceCollection.AddScoped<IVerificationCodeService, VerificationCodeService>();
-            serviceCollection.AddScoped<IServicesService, ServicesService>();
+            serviceCollection.AddScoped<ITestServiceService, ServicesService>();
             serviceCollection.AddScoped<IBlogService, BlogService>();
             serviceCollection.AddScoped<IBlogCategoryService, BlogCategoryService>();
             serviceCollection.AddScoped<IConsultationBookingService, ConsultationBookingService>();
@@ -29,7 +29,7 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IBookingService, BookingService>();
             
             // Repositories
-            serviceCollection.AddScoped<IServicesServiceRepository, ServicesRepository>();
+            serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
             serviceCollection.AddScoped<IBookingRepository, BookingRepository>();
             serviceCollection.AddScoped<IBlogRepository, BlogRepository>();
             serviceCollection.AddScoped<IBlogCategoryRepository, BlogCategoryRepository>();
@@ -38,6 +38,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IBookingDetailRepository, BookingDetailRepository>();
             serviceCollection.AddScoped<ITokenRepository, TokenRepository>();
             serviceCollection.AddScoped<IGoogleCredentialRepository, GoogleCredentialRepository>();
+            serviceCollection.AddScoped<IConsultantRepository, ConsultantRepository>();
+            serviceCollection.AddScoped<IConsultationBookingRepository, ConsultationBookingRepository>();
         }
     }
 }

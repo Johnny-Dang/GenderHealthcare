@@ -7,47 +7,47 @@ using System.Linq.Expressions;
 
 namespace backend.Infrastructure.Repositories
 {
-    public class ServicesRepository : IServicesServiceRepository
+    public class TestServiceRepository : ITestServiceRepository
     {
         private readonly IApplicationDbContext _context;
-        private readonly IServicesServiceRepository _testServiceRepository;
-        public ServicesRepository(IApplicationDbContext context)
+        private readonly ITestServiceRepository _testServiceRepository;
+        public TestServiceRepository(IApplicationDbContext context)
         {
             _context = context;
         }
 
         // Create
-        public async Task<Service> AddAsync(Service testService)
+        public async Task<TestService> AddAsync(TestService testService)
         {
             testService.ServiceId = Guid.NewGuid();
             testService.CreatedAt = DateTime.UtcNow;
-            _context.Service.Add(testService);
+            _context.TestService.Add(testService);
             await _context.SaveChangesAsync();
             return testService;
         }
 
         // Read
-        public async Task<List<Service>> GetAllAsync()
+        public async Task<List<TestService>> GetAllAsync()
         {
-            return await _context.Service.ToListAsync();
+            return await _context.TestService.ToListAsync();
         }
 
-        public async Task<Service> GetByIdAsync(Guid id)
+        public async Task<TestService> GetByIdAsync(Guid id)
         {
-            return await _context.Service.FindAsync(id);
+            return await _context.TestService.FindAsync(id);
         }
 
-        public async Task<List<Service>> GetByCategoryAsync(string category)
+        public async Task<List<TestService>> GetByCategoryAsync(string category)
         {
-            return await _context.Service
+            return await _context.TestService
                 .Where(s => s.Category == category)
                 .ToListAsync();
         }
 
         // Update
-        public async Task<Service> UpdateAsync(Service testService)
+        public async Task<TestService> UpdateAsync(TestService testService)
         {
-            var existingService = await _context.Service.FindAsync(testService.ServiceId);
+            var existingService = await _context.TestService.FindAsync(testService.ServiceId);
             
             if (existingService == null)
                 return null;
@@ -67,12 +67,12 @@ namespace backend.Infrastructure.Repositories
         // Delete
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var service = await _context.Service.FindAsync(id);
+            var service = await _context.TestService.FindAsync(id);
             
             if (service == null)
                 return false;
 
-            _context.Service.Remove(service);
+            _context.TestService.Remove(service);
             await _context.SaveChangesAsync();
             
             return true;
@@ -81,12 +81,12 @@ namespace backend.Infrastructure.Repositories
         // Additional methods
         public async Task<bool> ExistsAsync(Guid id)
         {
-            return await _context.Service.AnyAsync(s => s.ServiceId == id);
+            return await _context.TestService.AnyAsync(s => s.ServiceId == id);
         }
 
         public async Task<int> CountAsync()
         {
-            return await _context.Service.CountAsync();
+            return await _context.TestService.CountAsync();
         }
     }
 }

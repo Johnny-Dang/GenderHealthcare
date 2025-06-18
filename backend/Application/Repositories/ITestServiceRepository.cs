@@ -2,18 +2,18 @@
 
 namespace backend.Application.Repositories
 {
-    public interface IServicesServiceRepository
+    public interface ITestServiceRepository
     {
         // Create
-        Task<Service> AddAsync(Service testService);
+        Task<TestService> AddAsync(TestService testService);
         
         // Read
-        Task<List<Service>> GetAllAsync();
-        Task<Service> GetByIdAsync(Guid id);
-        Task<List<Service>> GetByCategoryAsync(string category);
+        Task<List<TestService>> GetAllAsync();
+        Task<TestService> GetByIdAsync(Guid id);
+        Task<List<TestService>> GetByCategoryAsync(string category);
         
         // Update
-        Task<Service> UpdateAsync(Service testService);
+        Task<TestService> UpdateAsync(TestService testService);
         
         // Delete
         Task<bool> DeleteAsync(Guid id);

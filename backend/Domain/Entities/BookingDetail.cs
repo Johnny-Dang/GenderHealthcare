@@ -22,6 +22,6 @@
 
         public TestResult TestResult { get; set; } = default!;
 
-        public Service TestService { get; set; } = default!;
+        public TestService TestService { get; set; } = default!;
     }
 }

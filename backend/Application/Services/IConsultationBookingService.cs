@@ -1,7 +1,7 @@
 ﻿using backend.Application.DTOs.ConsultantDTO;
 using backend.Application.DTOs.ConsultationBookingDTO;
 
-namespace backend.Application.Interfaces
+namespace backend.Application.Services
 {
     public interface IConsultationBookingService 
     {

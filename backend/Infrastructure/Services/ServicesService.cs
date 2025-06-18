@@ -7,18 +7,18 @@ using SendGrid.Helpers.Mail;
 
 namespace backend.Infrastructure.Services
 {
-    public class ServicesService : IServicesService
+    public class ServicesService : ITestServiceService
     {
-        private readonly IServicesServiceRepository _testServiceRepository;
+        private readonly ITestServiceRepository _testServiceRepository;
         
-        public ServicesService(IServicesServiceRepository testServiceRepository)
+        public ServicesService(ITestServiceRepository testServiceRepository)
         {
             _testServiceRepository = testServiceRepository;
         }
         
         public async Task<TestServiceResponse> CreateAsync(CreateTestServiceRequest request)
         {
-            var service = new Service
+            var service = new TestService
             {
                 ServiceId = Guid.NewGuid(),
                 ServiceName = request.ServiceName,
@@ -81,7 +81,7 @@ namespace backend.Infrastructure.Services
         }
         
         // Helper method to map Service to TestServiceResponse
-        private TestServiceResponse MapToResponse(Service service)
+        private TestServiceResponse MapToResponse(TestService service)
         {
             return new TestServiceResponse
             {

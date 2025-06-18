@@ -8,11 +8,11 @@ namespace backend.API.Controllers
 {
     [ApiController]
     [Route("api/services")]
-    public class ServicesServiceController : ControllerBase
+    public class TestServiceController : ControllerBase
     {
-        private readonly IServicesService _service;
+        private readonly ITestServiceService _service;
 
-        public ServicesServiceController(IServicesService service)
+        public TestServiceController(ITestServiceService service)
         {
             _service = service;
         }

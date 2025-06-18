@@ -1,6 +1,6 @@
 ﻿using backend.Application.DTOs.ConsultantDTO;
 
-namespace backend.Application.Interfaces
+namespace backend.Application.Services
 {
     public interface IConsultantService
     {

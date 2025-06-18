@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Application.Services
 {
-    public interface IServicesService
+    public interface ITestServiceService
     {
         Task<TestServiceResponse> CreateAsync(CreateTestServiceRequest request);
         Task<List<TestServiceResponse>> GetAllAsync();

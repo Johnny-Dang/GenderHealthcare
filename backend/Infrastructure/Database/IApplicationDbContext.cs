@@ -11,7 +11,7 @@ namespace backend.Infrastructure.Database
         public DbSet<StaffInfo> StaffInfo { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
         public DbSet<Booking> Booking { get; set; }
-        public DbSet<Service> Service { get; set; }
+        public DbSet<TestService> TestService { get; set; }
         public DbSet<TestResult> TestResult { get; set; }
         public DbSet<ConsultationBooking> ConsultationBooking { get; set; }
 
