@@ -10,9 +10,14 @@ import { useToast } from '@/hooks/use-toast'
 import { PlusCircle, Edit, Trash2, Eye, FileText, X, Filter, RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
+// Constants
+const API_BASE_URL = 'https://localhost:7195'
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop'
+const DEFAULT_AUTHOR_ID = 'E37EB746-045B-475E-80DF-0C0B2A38C772'
+
 // Cấu hình axios với baseURL và headers mặc định
 const api = axios.create({
-  baseURL: 'https://localhost:7195', // Thay đổi URL này theo API của bạn
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -44,6 +49,61 @@ const BlogManagement = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedCategoryName, setSelectedCategoryName] = useState('')
 
+  // Helper functions
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-')
+  }
+
+  const createExcerpt = (content, existingExcerpt) => {
+    return existingExcerpt || content.substring(0, 150) + '...'
+  }
+
+  const getCategoryName = (categoryId) => {
+    return categories.find((c) => c.categoryId === categoryId)?.name || 'Không xác định'
+  }
+
+  const validateForm = () => {
+    if (!formData.title.trim() || !formData.content.trim()) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng điền đầy đủ tiêu đề và nội dung',
+        variant: 'destructive'
+      })
+      return false
+    }
+
+    if (!formData.categoryId) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng chọn danh mục',
+        variant: 'destructive'
+      })
+      return false
+    }
+
+    return true
+  }
+
+  const handleApiError = (error, actionMessage) => {
+    console.error(`Error ${actionMessage}:`, error)
+
+    let errorDetails = error.message
+    if (error.response && error.response.data) {
+      errorDetails = error.response.data.message || errorDetails
+    }
+
+    toast({
+      title: 'Lỗi',
+      description: `Không thể ${actionMessage}: ${errorDetails}`,
+      variant: 'destructive'
+    })
+  }
+
   // Use useMemo to filter blog posts based on selectedCategoryName
   const filteredBlogPosts = useMemo(() => {
     if (!selectedCategoryName) {
@@ -64,7 +124,6 @@ const BlogManagement = () => {
     try {
       setIsFetchingBlogs(true)
       const response = await api.get('/api/Blog/published')
-      console.log('Published blogs from API:', response.data)
 
       // Transform the API response to match our blogPosts structure
       const formattedPosts = response.data.map((blog) => ({
@@ -82,12 +141,7 @@ const BlogManagement = () => {
 
       setBlogPosts(formattedPosts)
     } catch (error) {
-      console.error('Error fetching published blogs:', error)
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải danh sách bài viết',
-        variant: 'destructive'
-      })
+      handleApiError(error, 'tải danh sách bài viết')
     } finally {
       setIsFetchingBlogs(false)
     }
@@ -98,8 +152,6 @@ const BlogManagement = () => {
     try {
       setIsLoading(true)
       const response = await api.get('/api/BlogCategory')
-      console.log('Categories from API:', response.data)
-
       setCategories(response.data)
 
       // Nếu có danh mục, set categoryId mặc định là danh mục đầu tiên
@@ -110,12 +162,7 @@ const BlogManagement = () => {
         }))
       }
     } catch (error) {
-      console.error('Error fetching categories:', error)
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể lấy danh sách danh mục',
-        variant: 'destructive'
-      })
+      handleApiError(error, 'lấy danh sách danh mục')
     } finally {
       setIsLoading(false)
     }
@@ -134,67 +181,54 @@ const BlogManagement = () => {
     setShowEditModal(false)
   }
 
-  async function handleCreatePost(isDraft = false) {
-    if (!formData.title.trim() || !formData.content.trim()) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng điền đầy đủ tiêu đề và nội dung',
-        variant: 'destructive'
-      })
-      return
+  // Prepare blog post data for API
+  const preparePostData = (isUpdate = false, isDraft = false) => {
+    const slug = generateSlug(formData.title)
+    const excerpt = createExcerpt(formData.content, formData.excerpt)
+
+    const postData = {
+      title: formData.title,
+      slug: slug,
+      content: formData.content,
+      excerpt: excerpt,
+      authorId: DEFAULT_AUTHOR_ID,
+      categoryId: formData.categoryId,
+      featuredImageUrl: formData.image || DEFAULT_IMAGE,
+      isPublished: !isDraft
     }
 
-    if (!formData.categoryId) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng chọn danh mục',
-        variant: 'destructive'
-      })
-      return
+    if (isUpdate && editingPost) {
+      postData.blogId = editingPost.id
     }
+
+    return postData
+  }
+
+  // Format post data for local state
+  const formatPostForState = (postData, responseData = {}, isDraft = false) => {
+    return {
+      id: responseData.blogId || Date.now(),
+      title: postData.title,
+      excerpt: postData.excerpt,
+      content: postData.content,
+      image: postData.featuredImageUrl,
+      status: isDraft ? 'draft' : 'published',
+      author: 'Staff',
+      date: new Date().toISOString().split('T')[0],
+      categoryId: postData.categoryId,
+      categoryName: getCategoryName(postData.categoryId)
+    }
+  }
+
+  async function handleCreatePost(isDraft = false) {
+    if (!validateForm()) return
 
     setIsLoading(true)
     try {
-      // Tạo slug từ title
-      const slug = formData.title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-')
+      const postData = preparePostData(false, isDraft)
 
-      // Chuẩn bị dữ liệu để gửi lên API
-      const postData = {
-        title: formData.title,
-        slug: slug,
-        content: formData.content,
-        excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
-        authorId: 'E37EB746-045B-475E-80DF-0C0B2A38C772', // AuthorId đã xác nhận hợp lệ
-        categoryId: formData.categoryId,
-        featuredImageUrl:
-          formData.image || 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop',
-        isPublished: !isDraft
-      }
-
-      console.log('Sending data to API:', postData)
-
-      // Gọi API để tạo bài viết mới
       const response = await api.post('/api/Blog', postData)
-      console.log('API response:', response.data)
-
-      // Cập nhật state với bài viết mới
-      const newPost = {
-        id: response.data.blogId || Date.now(),
-        title: formData.title,
-        excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
-        content: formData.content,
-        image: formData.image || 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop',
-        status: isDraft ? 'draft' : 'published',
-        author: 'Staff',
-        date: new Date().toISOString().split('T')[0],
-        categoryId: formData.categoryId,
-        categoryName: categories.find((c) => c.categoryId === formData.categoryId)?.name || 'Không xác định'
-      }
+      const newPost = formatPostForState(postData, response.data, isDraft)
 
       setBlogPosts((prev) => [newPost, ...prev])
 
@@ -205,88 +239,25 @@ const BlogManagement = () => {
 
       resetForm()
     } catch (error) {
-      console.error('Error creating post:', error)
-
-      if (error.response && error.response.data) {
-        console.error('Response data:', error.response.data)
-        console.error('Response status:', error.response.status)
-      }
-
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tạo bài viết: ' + (error.response?.data?.message || error.message),
-        variant: 'destructive'
-      })
+      handleApiError(error, 'tạo bài viết')
     } finally {
       setIsLoading(false)
     }
   }
 
   async function handleUpdatePost(isDraft = false) {
-    if (!editingPost || !formData.title.trim() || !formData.content.trim()) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng điền đầy đủ thông tin',
-        variant: 'destructive'
-      })
-      return
-    }
-
-    if (!formData.categoryId) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng chọn danh mục',
-        variant: 'destructive'
-      })
-      return
-    }
+    if (!editingPost || !validateForm()) return
 
     setIsLoading(true)
     try {
-      // Tạo slug từ title
-      const slug = formData.title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-')
+      const postData = preparePostData(true, isDraft)
 
-      // Chuẩn bị dữ liệu để gửi lên API
-      const postData = {
-        blogId: editingPost.id,
-        title: formData.title,
-        slug: slug,
-        content: formData.content,
-        excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
-        authorId: 'E37EB746-045B-475E-80DF-0C0B2A38C772',
-        categoryId: formData.categoryId,
-        featuredImageUrl:
-          formData.image || 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop',
-        isPublished: !isDraft
-      }
-
-      console.log('Sending update data to API:', postData)
-
-      // Gọi API để cập nhật bài viết
-      const response = await api.put(`/api/Blog/${editingPost.id}`, postData)
-      console.log('Update API response:', response.data)
+      await api.put(`/api/Blog/${editingPost.id}`, postData)
 
       // Cập nhật state
       setBlogPosts((prev) =>
         prev.map((post) =>
-          post.id === editingPost.id
-            ? {
-                ...post,
-                title: formData.title,
-                excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
-                content: formData.content,
-                image:
-                  formData.image || 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop',
-                status: isDraft ? 'draft' : 'published',
-                categoryId: formData.categoryId,
-                categoryName: categories.find((c) => c.categoryId === formData.categoryId)?.name || 'Không xác định'
-              }
-            : post
+          post.id === editingPost.id ? formatPostForState(postData, { blogId: post.id }, isDraft) : post
         )
       )
 
@@ -297,19 +268,7 @@ const BlogManagement = () => {
 
       resetForm()
     } catch (error) {
-      console.error('Error updating post:', error)
-
-      if (error.response && error.response.data) {
-        console.error('Response data:', error.response.data)
-        console.error('Response status:', error.response.status)
-        console.error('Response headers:', error.response.headers)
-      }
-
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể cập nhật bài viết: ' + (error.response?.data?.message || error.message),
-        variant: 'destructive'
-      })
+      handleApiError(error, 'cập nhật bài viết')
     } finally {
       setIsLoading(false)
     }
@@ -335,11 +294,7 @@ const BlogManagement = () => {
 
     setIsLoading(true)
     try {
-      console.log(`Deleting blog post with ID: ${id}`)
-
-      // Gọi API để xóa bài viết
-      const response = await api.delete(`/api/Blog/${id}`)
-      console.log('Delete API response:', response.data)
+      await api.delete(`/api/Blog/${id}`)
 
       // Cập nhật state để xóa bài viết khỏi danh sách
       setBlogPosts((prev) => prev.filter((post) => post.id !== id))
@@ -354,19 +309,7 @@ const BlogManagement = () => {
         resetForm()
       }
     } catch (error) {
-      console.error('Error deleting post:', error)
-
-      if (error.response && error.response.data) {
-        console.error('Response data:', error.response.data)
-        console.error('Response status:', error.response.status)
-        console.error('Response headers:', error.response.headers)
-      }
-
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể xóa bài viết: ' + (error.response?.data?.message || error.message),
-        variant: 'destructive'
-      })
+      handleApiError(error, 'xóa bài viết')
     } finally {
       setIsLoading(false)
     }
@@ -390,8 +333,6 @@ const BlogManagement = () => {
 
   // Function to handle category filter change
   function handleCategoryFilter(categoryId) {
-    console.log('Lọc theo danh mục ID:', categoryId)
-
     if (!categoryId) {
       clearFilter()
       return
@@ -399,15 +340,10 @@ const BlogManagement = () => {
 
     // Tìm category tương ứng để lấy tên
     const selectedCategory = categories.find((cat) => String(cat.categoryId) === String(categoryId))
-    console.log('Danh mục đã chọn:', selectedCategory)
 
     if (selectedCategory) {
       setSelectedCategoryId(categoryId)
       setSelectedCategoryName(selectedCategory.name)
-
-      // Kiểm tra có bao nhiêu bài viết khớp với danh mục này
-      const matchingPosts = blogPosts.filter((post) => post.categoryName === selectedCategory.name)
-      console.log('Số bài viết tìm thấy theo tên:', matchingPosts.length)
     } else {
       clearFilter()
     }
