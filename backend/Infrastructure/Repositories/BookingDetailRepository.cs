@@ -56,7 +56,6 @@ namespace backend.Infrastructure.Repositories
             existingDetail.ServiceId = bookingDetail.ServiceId;
             existingDetail.FirstName = bookingDetail.FirstName;
             existingDetail.LastName = bookingDetail.LastName;
-            existingDetail.Phone = bookingDetail.Phone;
             existingDetail.DateOfBirth = bookingDetail.DateOfBirth;
             existingDetail.Gender = bookingDetail.Gender;
             
@@ -88,6 +87,29 @@ namespace backend.Infrastructure.Repositories
         public async Task<bool> ExistsBookingAsync(Guid bookingId)
         {
             return await _context.Booking.AnyAsync(b => b.BookingId == bookingId);
+        }
+        
+        // Calculate total amount for a booking
+        public async Task<decimal> CalculateTotalAmountByBookingIdAsync(Guid bookingId)
+        {
+            // Get all booking details for the specified booking ID
+            var bookingDetails = await _context.BookingDetail
+                .Include(bd => bd.TestService)
+                .Where(bd => bd.BookingId == bookingId)
+                .ToListAsync();
+                
+            // Calculate the total amount by summing the prices of all services
+            decimal totalAmount = 0;
+            
+            foreach (var detail in bookingDetails)
+            {
+                if (detail.TestService != null)
+                {
+                    totalAmount += detail.TestService.Price;
+                }
+            }
+            
+            return totalAmount;
         }
     }
 }

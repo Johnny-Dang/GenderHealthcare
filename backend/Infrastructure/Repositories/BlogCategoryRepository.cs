@@ -16,35 +16,35 @@ namespace backend.Infrastructure.Repositories
 
         public async Task<IEnumerable<BlogCategory>> GetAllCategoriesAsync()
         {
-            return await _context.Categorie.ToListAsync();
+            return await _context.BlogCategory.ToListAsync();
         }
 
         public async Task<BlogCategory> CreateCategoryAsync(BlogCategory category)
         {
-            _context.Categorie.Add(category);
+            _context.BlogCategory.Add(category);
             await _context.SaveChangesAsync();
             return category;
         }
 
         public async Task<BlogCategory?> GetCategoryByIdAsync(Guid categoryId)
         {
-            return await _context.Categorie.FindAsync(categoryId);
+            return await _context.BlogCategory.FindAsync(categoryId);
         }
 
         public async Task<bool> UpdateCategoryAsync(BlogCategory category)
         {
-            _context.Categorie.Update(category);
+            _context.BlogCategory.Update(category);
             await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<bool> DeleteCategoryAsync(Guid categoryId)
         {
-            var category = await _context.Categorie.FindAsync(categoryId);
+            var category = await _context.BlogCategory.FindAsync(categoryId);
             if (category == null)
                 return false;
 
-            _context.Categorie.Remove(category);
+            _context.BlogCategory.Remove(category);
             await _context.SaveChangesAsync();
             return true;
         }

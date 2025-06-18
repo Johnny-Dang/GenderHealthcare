@@ -20,7 +20,7 @@ namespace backend.Infrastructure.Persistence.Configurations
 
             builder.HasOne(b => b.PaymentHistory)
                 .WithOne(p => p.Booking)
-                .HasForeignKey<PaymentHistory>(p => p.BookingId)
+                .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(b => b.BookingDetails)

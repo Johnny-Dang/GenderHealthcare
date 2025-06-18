@@ -8,8 +8,6 @@ namespace backend.Infrastructure.Database
     public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         
-        
-
         public DbSet<Account> Account { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<StaffInfo> StaffInfo { get; set; }
@@ -19,8 +17,8 @@ namespace backend.Infrastructure.Database
         public DbSet<TestResult> TestResult { get; set; }
 
         public DbSet<Blog> Blog { get; set; }
-        public DbSet<BlogCategory> Categorie { get; set; }
-        public DbSet<PaymentHistory> PaymentHistory { get; set; }
+        public DbSet<BlogCategory> BlogCategory { get; set; }
+        public DbSet<Payment> Payment { get; set; }
         public DbSet<BookingDetail> BookingDetail { get ; set ; }
         public DbSet<Feedback> Feedback { get ; set; }
 

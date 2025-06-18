@@ -2,7 +2,7 @@
 
 namespace backend.Domain.Entities
 {
-    public class PaymentHistory
+    public class Payment
     {
         public Guid BookingId { get; set; }
 
@@ -12,9 +12,8 @@ namespace backend.Domain.Entities
 
         public decimal Amount { get; set; }
 
-        public DateTime? ExpiredAt { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
 
         public virtual Booking Booking { get; set; } = default!;
-
     }
 }

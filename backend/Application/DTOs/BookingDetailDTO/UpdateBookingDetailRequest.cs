@@ -20,10 +20,6 @@ namespace backend.Application.DTOs.BookingDetailDTO
         public string LastName { get; set; } = string.Empty;
         
         [Required]
-        [Phone]
-        public string Phone { get; set; } = string.Empty;
-        
-        [Required]
         public DateOnly DateOfBirth { get; set; }
         
         public bool Gender { get; set; } = false;

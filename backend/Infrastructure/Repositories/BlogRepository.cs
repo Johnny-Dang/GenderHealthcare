@@ -78,7 +78,7 @@ namespace backend.Infrastructure.Repositories
 
         public async Task<bool> CategoryExistsAsync(Guid categoryId)
         {
-            return await _context.Categorie.AnyAsync(c => c.CategoryId == categoryId);
+            return await _context.BlogCategory.AnyAsync(c => c.CategoryId == categoryId);
         }
     }
 }

@@ -12,7 +12,6 @@ namespace backend.Infrastructure.Persistence.Configurations
 
             builder.Property(bd => bd.FirstName).IsRequired();
             builder.Property(bd => bd.LastName).IsRequired();
-            builder.Property(bd => bd.Phone).IsRequired();
             builder.Property(bd => bd.DateOfBirth).IsRequired();
             builder.Property(bd => bd.Gender).IsRequired();
 

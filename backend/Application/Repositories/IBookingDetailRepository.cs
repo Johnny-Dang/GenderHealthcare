@@ -23,5 +23,8 @@ namespace backend.Application.Repositories
         // Additional methods
         Task<bool> ExistsAsync(Guid id);
         Task<bool> ExistsBookingAsync(Guid bookingId);
+        
+        // Calculate total amount for a booking
+        Task<decimal> CalculateTotalAmountByBookingIdAsync(Guid bookingId);
     }
 }

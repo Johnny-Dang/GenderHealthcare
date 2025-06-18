@@ -25,8 +25,6 @@ namespace DeployGenderSystem.Domain.Entity
         public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
         // Navigation properties
-        public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
-
         public virtual ICollection<ConsultationBooking> CustomerBookings { get; set; } = new List<ConsultationBooking>();
         public virtual ICollection<ConsultationBooking> StaffBookings { get; set; } = new List<ConsultationBooking>();
 

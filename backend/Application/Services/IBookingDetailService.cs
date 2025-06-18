@@ -19,5 +19,8 @@ namespace backend.Application.Services
         
         // Delete
         Task<bool> DeleteAsync(Guid id);
+        
+        // Calculate total amount for a booking
+        Task<BookingTotalAmountResponse> CalculateTotalAmountByBookingIdAsync(Guid bookingId);
     }
 }

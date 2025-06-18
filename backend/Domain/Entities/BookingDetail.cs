@@ -12,8 +12,6 @@
 
         public string LastName { get; set; } = default!;
 
-        public string Phone { get; set; } = default!;   
-
         public DateOnly DateOfBirth {  get; set; }  
 
         public bool Gender { get; set; } = false;

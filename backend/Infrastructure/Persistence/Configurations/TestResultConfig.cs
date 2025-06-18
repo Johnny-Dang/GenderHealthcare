@@ -11,7 +11,7 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.HasKey(tr => tr.ResultId);
 
             builder.Property(tr => tr.BookingDetailId).IsRequired();
-            builder.Property(tr => tr.ResultFilePath).HasMaxLength(500);
+            builder.Property(tr => tr.Result).HasMaxLength(500);
             builder.Property(tr => tr.CreatedAt).IsRequired();
             builder.Property(tr => tr.Status);
 

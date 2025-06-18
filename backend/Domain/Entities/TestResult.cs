@@ -6,7 +6,7 @@ namespace backend.Domain.Entities
     {
         public Guid ResultId { get; set; }
         public Guid BookingDetailId { get; set; }
-        public string? ResultFilePath { get; set; } = string.Empty;
+        public string? Result { get; set; } = string.Empty;
         public bool? Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

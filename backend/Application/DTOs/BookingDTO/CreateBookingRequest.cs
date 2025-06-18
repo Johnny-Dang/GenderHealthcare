@@ -7,5 +7,6 @@ namespace backend.Application.DTOs.BookingDTO
     {
         [Required]
         public Guid AccountId { get; set; }
+        
     }
 } 

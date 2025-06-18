@@ -96,12 +96,27 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(AccountProfile),typeof(RoleProfile));
+builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile));
 
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // domain React
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// CORS middleware should be called early in the pipeline
+app.UseCors("AllowFrontend");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -117,12 +132,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseCors(option =>
-{
-    option.WithOrigins("http://localhost:3000")
-    .AllowAnyMethod()
-    .AllowAnyHeader();
-});
 
 app.Run();

@@ -56,6 +56,19 @@ namespace backend.API.Controllers
             return Ok(bookingDetails);
         }
         
+        // GET: api/booking-details/booking/{bookingId}/total
+        [HttpGet("booking/{bookingId}/total")]
+        [Authorize]
+        public async Task<IActionResult> GetTotalAmountByBookingId(Guid bookingId)
+        {
+            var totalAmount = await _bookingDetailService.CalculateTotalAmountByBookingIdAsync(bookingId);
+            
+            if (totalAmount == null)
+                return NotFound("Booking not found");
+                
+            return Ok(totalAmount);
+        }
+        
         // PUT: api/booking-details
         [HttpPut]
         [Authorize]

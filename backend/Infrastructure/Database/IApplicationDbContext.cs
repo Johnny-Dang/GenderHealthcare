@@ -17,8 +17,8 @@ namespace backend.Infrastructure.Database
 
 
         public DbSet<Blog> Blog { get; set; }
-        public DbSet<BlogCategory> Categorie { get; set; }
-        public DbSet<PaymentHistory> PaymentHistory { get; set; }
+        public DbSet<BlogCategory> BlogCategory { get; set; }
+        public DbSet<Payment> Payment { get; set; }
         public DbSet<BookingDetail> BookingDetail { get; set; }
         public DbSet<Feedback> Feedback { get; set; }
         public Task<int> SaveChangesAsync();

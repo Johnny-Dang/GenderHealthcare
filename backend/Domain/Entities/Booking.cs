@@ -14,7 +14,7 @@ namespace backend.Domain.Entities
 
         public virtual Account Account { get; set; } = default!;
 
-        public virtual PaymentHistory PaymentHistory { get; set; } = default!;
+        public virtual Payment PaymentHistory { get; set; } = default!;
 
         public virtual ICollection<BookingDetail> BookingDetails {get ;set; } = new List<BookingDetail>();
     }

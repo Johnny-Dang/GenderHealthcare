@@ -21,12 +21,16 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IGoogleCredentialService, GoogleCredentialService>();
             serviceCollection.AddScoped<IEmailService, SendGridEmailService>();
             serviceCollection.AddScoped<IVerificationCodeService, VerificationCodeService>();
-            serviceCollection.AddScoped<ITestServiceService, ServicesService>();
+            serviceCollection.AddScoped<ITestServiceService, TestService>();
             serviceCollection.AddScoped<IBlogService, BlogService>();
             serviceCollection.AddScoped<IBlogCategoryService, BlogCategoryService>();
             serviceCollection.AddScoped<IConsultationBookingService, ConsultationBookingService>();
             serviceCollection.AddScoped<IConsultantService, ConsultantService>();
             serviceCollection.AddScoped<IBookingService, BookingService>();
+            serviceCollection.AddScoped<ITestResultService, TestResultService>();
+            serviceCollection.AddScoped<IBookingDetailService, BookingDetailService>();
+            serviceCollection.AddScoped<IPaymentService, PaymentService>();
+            serviceCollection.AddScoped<IFeedbackService, FeedbackService>();
             
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
@@ -40,6 +44,9 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IGoogleCredentialRepository, GoogleCredentialRepository>();
             serviceCollection.AddScoped<IConsultantRepository, ConsultantRepository>();
             serviceCollection.AddScoped<IConsultationBookingRepository, ConsultationBookingRepository>();
+            serviceCollection.AddScoped<ITestResultRepository, TestResultRepository>();
+            serviceCollection.AddScoped<IPaymentRepository, PaymentRepository>();
+            serviceCollection.AddScoped<IFeedbackRepository, FeedbackRepository>();
         }
     }
 }
