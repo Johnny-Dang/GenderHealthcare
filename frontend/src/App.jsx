@@ -6,6 +6,8 @@ import RegisterPage from './pages/register'
 import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
 import BlogManagement from './pages/blog/BlogManagement'
+import BlogPage from './pages/blog/BlogPage'
+import BlogDetailPage from './pages/blog/BlogDetailPage'
 
 function App() {
   const router = createBrowserRouter([
@@ -21,15 +23,15 @@ function App() {
       path: '/register',
       element: <RegisterPage />
     },
-    // Blog
-    // {
-    //   path: '/blog',
-    //   element: <BlogPage />
-    // },
-    // {
-    //   path: '/blog/:id',
-    //   element: <BlogDetailPage />
-    // },
+    //* Blog
+    {
+      path: '/blog',
+      element: <BlogPage />
+    },
+    {
+      path: '/blog/:id',
+      element: <BlogDetailPage />
+    },
     // Role: Staff
     // {
     //   path: '/staff',
