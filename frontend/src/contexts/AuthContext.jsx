@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true)
 
     try {
-      const response = await api.post('/Account/login', {
+      const response = await api.post('Account/login', {
         email,
         password
       })
@@ -83,7 +83,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token')
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {
