@@ -21,6 +21,8 @@ namespace backend.Infrastructure.Database
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<BlogCategory> Categories { get; set; }
 
+        public DbSet<ConsultationBooking> ConsultationBookings { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
