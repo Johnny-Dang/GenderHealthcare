@@ -9,7 +9,7 @@ namespace backend.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<StaffInfo> builder)
         {
             builder.HasKey(s => s.AccountId);
-            builder.Property(s => s.DepartmentId).IsRequired().HasMaxLength(50);
+            builder.Property(s => s.Department).IsRequired().HasMaxLength(50);
             builder.Property(s => s.Degree).IsRequired().HasMaxLength(100);
             builder.Property(s => s.Biography).HasMaxLength(1000);
         }

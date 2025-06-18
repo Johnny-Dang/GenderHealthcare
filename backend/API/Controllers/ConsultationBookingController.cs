@@ -1,5 +1,5 @@
 ﻿using backend.Application.DTOs.ConsultationBookingDTO;
-using backend.Application.Interfaces;
+using backend.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
