@@ -24,6 +24,8 @@ namespace backend.Infrastructure.Database
         public DbSet<BookingDetail> BookingDetail { get ; set ; }
         public DbSet<Feedback> Feedback { get ; set; }
 
+        public DbSet<ConsultationBooking> ConsultationBookings { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

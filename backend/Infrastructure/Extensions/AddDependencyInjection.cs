@@ -24,6 +24,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IServicesService, ServicesService>();
             serviceCollection.AddScoped<IBlogService, BlogService>();
             serviceCollection.AddScoped<IBlogCategoryService, BlogCategoryService>();
+            serviceCollection.AddScoped<IConsultationBookingService, ConsultationBookingService>();
+            serviceCollection.AddScoped<IConsultantService, ConsultantService>();
             serviceCollection.AddScoped<IBookingService, BookingService>();
             
             // Repositories

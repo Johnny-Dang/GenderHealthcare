@@ -262,6 +262,58 @@ namespace backend.Migrations
                     b.ToTable("PaymentHistory");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
+                {
+                    b.Property<Guid>("BookingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("GuestEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("GuestName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("GuestPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("pending");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("BookingId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("ConsultationBookings", (string)null);
+                });
+
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("RefreshTokenId")
@@ -445,6 +497,24 @@ namespace backend.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
+                {
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Customer")
+                        .WithMany("CustomerBookings")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
+                        .WithMany("StaffBookings")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Staff");
+                });
+
             modelBuilder.Entity("backend.Domain.Entities.Booking", b =>
                 {
                     b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Account")
@@ -540,6 +610,11 @@ namespace backend.Migrations
 
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
                 {
+                    b.Navigation("CustomerBookings");
+
+                    b.Navigation("RefreshToken");
+
+                    b.Navigation("StaffBookings");
                     b.Navigation("Bookings");
 
                     b.Navigation("Feedbacks");

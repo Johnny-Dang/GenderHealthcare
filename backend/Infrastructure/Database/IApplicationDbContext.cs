@@ -13,6 +13,8 @@ namespace backend.Infrastructure.Database
         public DbSet<Booking> Booking { get; set; }
         public DbSet<Service> Service { get; set; }
         public DbSet<TestResult> TestResult { get; set; }
+        public DbSet<ConsultationBooking> ConsultationBooking { get; set; }
+
 
         public DbSet<Blog> Blog { get; set; }
         public DbSet<BlogCategory> Categorie { get; set; }
