@@ -7,6 +7,7 @@ import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
 import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
 import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -38,9 +39,12 @@ function App() {
   ])
 
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <div>
+      <AuthProvider>
+        <ToastContainer />
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </div>
   )
 }
 

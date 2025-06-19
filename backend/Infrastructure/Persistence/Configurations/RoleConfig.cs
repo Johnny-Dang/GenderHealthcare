@@ -8,7 +8,7 @@ namespace backend.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Role> builder)
         {
-            builder.HasKey(r => r.Id);
+            builder.HasKey(r => r.RoleId);
             builder.Property(r => r.Name).IsRequired().HasMaxLength(100);
             builder.Property(r => r.Description).HasMaxLength(500);
             builder.HasMany(r => r.Accounts)

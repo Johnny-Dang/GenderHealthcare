@@ -4,7 +4,7 @@ namespace backend.Domain.Entities
 {
     public class RefreshToken
     {
-        public Guid Id { get; set; }
+        public Guid RefreshTokenId { get; set; }
 
         public string Token { get; set; } = default!;
 
