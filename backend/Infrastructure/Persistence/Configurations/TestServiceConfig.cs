@@ -26,7 +26,9 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .HasMaxLength(1000);
 
             builder.Property(x => x.Price)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
+
 
             builder.Property(x => x.Duration)
                 .IsRequired()
