@@ -23,10 +23,6 @@ namespace backend.Application.Validators
                 .Must(url => string.IsNullOrEmpty(url) || Uri.IsWellFormedUriString(url, UriKind.Absolute))
                 .WithMessage("ImageUrl phải là một đường dẫn hợp lệ.");
 
-            RuleFor(x => x.Duration)
-                .NotEmpty().WithMessage("Thời lượng không được để trống.")
-                .MaximumLength(50);
-
             RuleFor(x => x.Category)
                 .NotEmpty().WithMessage("Danh mục không được để trống.")
                 .MaximumLength(100);

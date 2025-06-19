@@ -6,15 +6,19 @@ namespace backend.Domain.Entities
     {
         public Guid AccountId { get; set; }
 
-        public string DepartmentId { get; set; }
+        public string Department { get; set; } = default!;
 
-        public string Degree { get; set; }
+        public string Degree { get; set; } = default!;
 
         public int YearOfExperience { get; set; }
 
-        public string Biography { get; set; }
+        public string Biography { get; set; } = default!;
 
-        public virtual Account Account { get; set; }
+        public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdateAt { get; set; } 
+
+        public virtual Account Account { get; set; } = default!;
 
     }
 }

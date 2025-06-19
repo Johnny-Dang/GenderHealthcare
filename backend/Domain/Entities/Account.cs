@@ -5,7 +5,7 @@ namespace DeployGenderSystem.Domain.Entity
 {
     public class Account
     {
-        public Guid User_Id { get; set; }
+        public Guid AccountId { get; set; }
         public Guid RoleId { get; set; }
         public string Email { get; set; } = default!;
         public string Password { get; set; } = default!;
@@ -18,14 +18,13 @@ namespace DeployGenderSystem.Domain.Entity
         public DateTime CreateAt { get; set; }
         public DateTime? UpdateAt { get; set; }
 
-        public virtual ICollection<RefreshToken> RefreshToken { get; set; } = new List<RefreshToken>();
+        public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public virtual StaffInfo? StaffInfo { get; set; }
         public virtual Role Role { get; set; } = default!;
+        public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
         // Navigation properties
-        public virtual ICollection<Appoiment> UserServiceBookings { get; set; } = new List<Appoiment>();
-        public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
-
         public virtual ICollection<ConsultationBooking> CustomerBookings { get; set; } = new List<ConsultationBooking>();
         public virtual ICollection<ConsultationBooking> StaffBookings { get; set; } = new List<ConsultationBooking>();
 

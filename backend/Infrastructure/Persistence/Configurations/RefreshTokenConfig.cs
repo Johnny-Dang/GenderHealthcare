@@ -8,7 +8,7 @@ namespace backend.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
-            builder.HasKey(r => r.Id);
+            builder.HasKey(r => r.RefreshTokenId);
 
             builder.Property(r => r.Token)
                 .IsRequired();
@@ -20,7 +20,7 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.HasOne(r => r.Account)
-                .WithMany(a => a.RefreshToken)
+                .WithMany(a => a.RefreshTokens)
                 .HasForeignKey(r => r.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

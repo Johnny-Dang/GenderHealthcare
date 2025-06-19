@@ -8,7 +8,6 @@ namespace backend.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Blog> builder)
         {
-            builder.ToTable("Blogs");
             builder.HasKey(x => x.BlogId);
 
             builder.Property(x => x.BlogId)
