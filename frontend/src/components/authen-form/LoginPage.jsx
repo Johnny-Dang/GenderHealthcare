@@ -1,159 +1,192 @@
-import React, { useState, useRef, useEffect } from 'react'
-import ReCAPTCHA from 'react-google-recaptcha'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { useAuth } from '@/contexts/AuthContext'
+import { Heart, AlertCircle } from 'lucide-react'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import GoogleLoginButton from '../GoogleLoginButton'
 
-// CaptchaComponent giữ nguyên
-const CaptchaComponent = ({
-  onChange,
-  sitekey = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
-  theme = 'light',
-  size = 'normal',
-  tabindex = 0
-}) => {
-  const recaptchaRef = useRef(null)
-
-  useEffect(() => {
-    if (recaptchaRef.current) {
-      recaptchaRef.current.reset()
-    }
-  }, [])
-
-  const handleChange = (token) => {
-    if (onChange) onChange(token)
-  }
-
-  return (
-    <div className='recaptcha-container my-4'>
-      <ReCAPTCHA
-        ref={recaptchaRef}
-        sitekey={sitekey}
-        onChange={handleChange}
-        theme={theme}
-        size={size}
-        tabindex={tabindex}
-      />
-    </div>
-  )
-}
-
-const LoginPage = () => {
+const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState({})
-  const [captchaVerified, setCaptchaVerified] = useState(false)
-  const [serverError, setServerError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-
-  const validate = () => {
-    const newErrors = {}
-    if (!email) newErrors.email = 'Username / Email / Phone is required'
-    if (!password) newErrors.password = 'Password is required'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
+  const [error, setError] = useState('')
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
+  const { login, loginWithGoogle, isLoading } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setServerError('')
-    if (!validate()) return
+    setError('')
 
-    if (!captchaVerified) {
-      setServerError("Please verify that you're not a robot.")
-      return
+    const success = await login(email, password)
+
+    if (success) {
+      toast.success('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
+
+      const userData = JSON.parse(localStorage.getItem('wellcare_user') || '{}')
+
+      switch (userData.role) {
+        case 'admin':
+          navigate('/admin/dashboard')
+          break
+        case 'staff':
+          navigate('/staff/dashboard')
+          break
+        case 'consultant':
+          navigate('/consultant/dashboard')
+          break
+        case 'manager':
+          navigate('/manager/dashboard')
+          break
+        case 'user':
+          navigate('/user/dashboard')
+          break
+        default:
+          navigate('/')
+      }
+    } else {
+      toast.error('Email hoặc mật khẩu không đúng')
+      setError('Email hoặc mật khẩu không đúng')
     }
+  }
 
-    try {
-      const res = await fetch('http://14.225.210.212:8080/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password })
-      })
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    console.log('Forgot password for:', forgotPasswordEmail)
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Login failed')
+    toast.success('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.')
 
-      localStorage.setItem('token', data.token)
-      navigate('/')
-    } catch (err) {
-      setServerError(err.message)
-    }
+    setIsForgotPasswordOpen(false)
+    setForgotPasswordEmail('')
   }
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-pink-50 px-4'>
-      <div className='w-full max-w-md bg-white rounded-2xl shadow-lg p-8'>
-        <h1 className='text-3xl font-bold text-pink-600 mb-6 text-center'>Login</h1>
-
-        <form onSubmit={handleLogin} className='space-y-4'>
-          {/* Username */}
-          <div>
-            <label className='block text-sm font-medium mb-1 text-gray-700'>Username / Email</label>
-            <input
-              type='text'
-              className={`w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 ${
-                errors.email ? 'border-red-500 focus:ring-red-300' : 'border-gray-300 focus:ring-pink-400'
-              }`}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {errors.email && <p className='text-red-500 text-sm mt-1'>{errors.email}</p>}
-          </div>
-
-          {/* Password with eye icon */}
-          <div>
-            <label className='block text-sm font-medium mb-1 text-gray-700'>Password</label>
-            <div className='relative'>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className={`w-full border px-4 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 ${
-                  errors.password ? 'border-red-500 focus:ring-red-300' : 'border-gray-300 focus:ring-pink-400'
-                }`}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type='button'
-                onClick={() => setShowPassword(!showPassword)}
-                className='absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-pink-500'
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+    <div className='min-h-screen bg-gradient-soft flex items-center justify-center p-4'>
+      <div className='w-full max-w-md'>
+        <div className='text-center mb-8'>
+          <Link to='/' className='flex items-center justify-center space-x-2 mb-4'>
+            <div className='w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center'>
+              <Heart className='h-6 w-6 text-white' />
             </div>
-            {errors.password && <p className='text-red-500 text-sm mt-1'>{errors.password}</p>}
-          </div>
-
-          {/* Captcha */}
-          <CaptchaComponent onChange={() => setCaptchaVerified(true)} />
-
-          {/* Button */}
-          <button
-            type='submit'
-            disabled={!captchaVerified}
-            className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
-              captchaVerified
-                ? 'bg-pink-500 text-white hover:bg-pink-600'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Login
-          </button>
-
-          {/* Server error */}
-          {serverError && <p className='text-red-500 text-sm text-center mt-2'>{serverError}</p>}
-        </form>
-
-        <p className='text-sm text-center text-gray-600 mt-6'>
-          Don’t have an account?{' '}
-          <Link to='/register' className='text-pink-600 font-medium hover:underline'>
-            Register here
+            <span className='text-2xl font-bold gradient-text'>WellCare</span>
           </Link>
-        </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Đăng nhập</CardTitle>
+            <CardDescription>Đăng nhập vào tài khoản của bạn để tiếp tục</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='email'>Email</Label>
+                <Input
+                  id='email'
+                  type='email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder='Nhập email của bạn'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor='password'>Mật khẩu</Label>
+                  <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+                    <DialogTrigger asChild>
+                      <button type='button' className='text-sm text-primary-500 hover:underline'>
+                        Quên mật khẩu?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className='sm:max-w-[400px]'>
+                      <DialogHeader>
+                        <DialogTitle>Khôi phục mật khẩu</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleForgotPassword} className='space-y-4'>
+                        <div>
+                          <Label htmlFor='forgotEmail'>Email khôi phục</Label>
+                          <Input
+                            id='forgotEmail'
+                            type='email'
+                            value={forgotPasswordEmail}
+                            onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                            required
+                            placeholder='Nhập email của bạn'
+                          />
+                        </div>
+                        <Button type='submit' className='w-full bg-gradient-primary'>
+                          Gửi email khôi phục
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <Input
+                  id='password'
+                  type='password'
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder='Nhập mật khẩu'
+                />
+              </div>
+
+              {error && (
+                <div className='flex items-center space-x-2 text-red-600 text-sm'>
+                  <AlertCircle className='h-4 w-4' />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <Button type='submit' className='w-full bg-gradient-primary' disabled={isLoading}>
+                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              </Button>
+
+              <div className='relative'>
+                <div className='absolute inset-0 flex items-center'>
+                  <span className='w-full border-t' />
+                </div>
+                <div className='relative flex justify-center text-xs uppercase'>
+                  <span className='bg-background px-2 text-muted-foreground'>Hoặc</span>
+                </div>
+              </div>
+
+              <div className='flex justify-center items-center'>
+                <GoogleLoginButton />
+              </div>
+            </form>
+
+            <div className='mt-6 text-center text-sm'>
+              <p className='text-gray-600'>
+                Chưa có tài khoản?{' '}
+                <Link to='/register' className='text-primary-500 hover:underline'>
+                  Đăng ký ngay
+                </Link>
+              </p>
+            </div>
+
+            {/* <div className='mt-4 p-3 bg-blue-50 rounded-md text-sm'>
+              <p className='font-medium text-blue-800 mb-2'>Tài khoản demo:</p>
+              <p className='text-blue-700'>Admin: admin@wellcare.com / admin123</p>
+              <p className='text-blue-700'>Manager: manager@wellcare.com / manager123</p>
+              <p className='text-blue-700'>Staff: staff@wellcare.com / staff123</p>
+              <p className='text-blue-700'>Consultant: consultant@wellcare.com / consultant123</p>
+              <p className='text-blue-700'>User: user@wellcare.com / user123</p>
+            </div> */}
+          </CardContent>
+        </Card>
+        <ToastContainer position='top-right' autoClose={3000} hideProgressBar={false} />
       </div>
     </div>
   )
 }
 
-export default LoginPage
+export default Login

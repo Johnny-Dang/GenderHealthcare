@@ -6,7 +6,6 @@ function AuthenTemplate({ isLogin }) {
   return (
     <div className='authen-template'>
       <div className='authen-template__form'>{isLogin ? <LoginPage /> : <RegisterPage />}</div>
-      <div className='authen-template__image'></div>
     </div>
   )
 }

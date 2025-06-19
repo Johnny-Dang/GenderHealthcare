@@ -4,6 +4,7 @@ import About from '../../components/About'
 import Services from '../../components/Services'
 import Navigation from '../../components/Navigation'
 import Footer from '../../components/Footer'
+import ChatBot from '../../components/ChatBot'
 
 function HomePage() {
   return (
@@ -13,6 +14,7 @@ function HomePage() {
       <About />
       <Services />
       <Footer />
+      <ChatBot />
     </>
   )
 }

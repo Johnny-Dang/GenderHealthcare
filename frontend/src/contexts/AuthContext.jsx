@@ -1,14 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import api from '@/configs/axios'
 
 const AuthContext = createContext(undefined)
-
-// Mock users data
-const mockUsers = [
-  { id: '1', email: 'admin@wellcare.com', password: 'admin123', name: 'Admin User', role: 'admin' },
-  { id: '2', email: 'staff@wellcare.com', password: 'staff123', name: 'Staff User', role: 'staff' },
-  { id: '3', email: 'user@wellcare.com', password: 'user123', name: 'Regular User', role: 'user' },
-  { id: '4', email: 'consultant@wellcare.com', password: 'consultant123', name: 'Consultant User', role: 'consultant' }
-]
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -16,75 +9,85 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    // NOTE: Cần API - GET /api/auth/me với Authorization header
-    // const savedUser = localStorage.getItem('wellcare_user');
-    // if (savedUser) {
-    //   setUser(JSON.parse(savedUser));
-    // }
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+      setUser(JSON.parse(savedUser))
+    }
     setIsLoading(false)
   }, [])
 
   const login = async (email, password) => {
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await api.post('Account/login', {
+        email,
+        password
+      })
 
-    // NOTE: Cần API - POST /api/auth/login
-    // Body: { email, password }
-    // Response: { user: {...}, token: "..." }
-    const foundUser = mockUsers.find((u) => u.email === email && u.password === password)
-
-    if (foundUser) {
-      const userData = { id: foundUser.id, email: foundUser.email, name: foundUser.name, role: foundUser.role }
-      setUser(userData)
-      // NOTE: Cần lưu token - localStorage.setItem('wellcare_user', JSON.stringify(userData));
+      if (response.data) {
+        setUser(response.data)
+        localStorage.setItem('user', JSON.stringify(response.data))
+        localStorage.setItem('token', JSON.stringify(response.data.token))
+        setIsLoading(false)
+        return true
+      }
+    } catch (error) {
+      console.error('Login error:', error)
       setIsLoading(false)
-      return true
+      return false
     }
 
     setIsLoading(false)
     return false
   }
 
-  const register = async (email, password, name) => {
+  const register = async (email, password, name, additionalData) => {
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Convert string gender to boolean (true for male, false for female)
+      const genderBoolean = additionalData.gender === 'male' ? true : false
 
-    // NOTE: Cần API - POST /api/auth/register
-    // Body: { email, password, name }
-    // Response: { user: {...}, token: "..." }
+      const response = await api.post('/Account/register', {
+        email,
+        password,
+        name,
+        firstName: additionalData.firstName,
+        lastName: additionalData.lastName,
+        phone: additionalData.phone,
+        dateOfBirth: additionalData.dateOfBirth,
+        gender: genderBoolean
+      })
 
-    // Check if user already exists
-    const existingUser = mockUsers.find((u) => u.email === email)
-    if (existingUser) {
+      if (response.data) {
+        setUser(response.data)
+        localStorage.setItem('user', JSON.stringify(response.data))
+        localStorage.setItem('token', JSON.stringify(response.data.token))
+        setIsLoading(false)
+        return true
+      }
+    } catch (error) {
+      console.error('Register error:', error)
       setIsLoading(false)
       return false
     }
 
-    // Create new user
-    const newUser = {
-      id: Date.now().toString(),
-      email,
-      name,
-      role: 'user'
-    }
-
-    setUser(newUser)
-    // NOTE: Cần lưu token - localStorage.setItem('wellcare_user', JSON.stringify(newUser));
     setIsLoading(false)
-    return true
+    return false
   }
 
   const logout = () => {
-    // NOTE: Cần API - POST /api/auth/logout
     setUser(null)
-    // NOTE: Cần xóa token - localStorage.removeItem('wellcare_user');
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {

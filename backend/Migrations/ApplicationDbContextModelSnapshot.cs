@@ -311,7 +311,7 @@ namespace backend.Migrations
 
                     b.HasIndex("StaffId");
 
-                    b.ToTable("ConsultationBookings", (string)null);
+                    b.ToTable("ConsultationBooking", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
