@@ -16,7 +16,7 @@ const Navigation = () => {
     if (!user) {
       return [
         ...baseItems,
-        { path: '/services', label: 'Dịch vụ xét nghiệm' },
+        { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
         { path: '/consultation', label: 'Đặt tư vấn' },
         { path: '/blog', label: 'Blog' },
         { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
