@@ -1,4 +1,5 @@
-﻿using backend.Application.Common.Mappings;
+﻿using backend.API.Middleware;
+using backend.Application.Common.Mappings;
 using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.Database;
@@ -95,19 +96,34 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(AccountProfile),typeof(RoleProfile));
+builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile));
 
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // domain React
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// CORS middleware should be called early in the pipeline
+app.UseCors("AllowFrontend");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-//app.UseMiddleware<JwtBlacklistMiddleware>(); // Đặt trước UseAuthentication
+app.UseJwtMiddleware(); // Add the JWT blacklist middleware
 
 app.UseAuthentication();
 
@@ -116,12 +132,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseCors(option =>
-{
-    option.WithOrigins("http://localhost:3000")
-    .AllowAnyMethod()
-    .AllowAnyHeader();
-});
 
 app.Run();

@@ -8,20 +8,21 @@ namespace backend.Infrastructure.Database
     public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         
-        
-
-        public DbSet<Account> Accounts { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<StaffInfo> StaffInfos { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<Appoiment> Appoiment { get; set; }
+        public DbSet<Account> Account { get; set; }
+        public DbSet<Role> Role { get; set; }
+        public DbSet<StaffInfo> StaffInfo { get; set; }
+        public DbSet<RefreshToken> RefreshToken { get; set; }
+        public DbSet<Booking> Booking { get; set; }
         public DbSet<TestService> TestService { get; set; }
         public DbSet<TestResult> TestResult { get; set; }
 
-        public DbSet<Blog> Blogs { get; set; }
-        public DbSet<BlogCategory> Categories { get; set; }
+        public DbSet<Blog> Blog { get; set; }
+        public DbSet<BlogCategory> BlogCategory { get; set; }
+        public DbSet<Payment> Payment { get; set; }
+        public DbSet<BookingDetail> BookingDetail { get ; set ; }
+        public DbSet<Feedback> Feedback { get ; set; }
 
-        public DbSet<ConsultationBooking> ConsultationBookings { get; set; }
+        public DbSet<ConsultationBooking> ConsultationBooking { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import BlogManagement from './pages/blog/BlogManagement'
 import BlogPage from './pages/blog/BlogPage'
 import BlogDetailPage from './pages/blog/BlogDetailPage'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
   const router = createBrowserRouter([
@@ -50,6 +51,7 @@ function App() {
   return (
     <div>
       <AuthProvider>
+        <ToastContainer />
         <RouterProvider router={router} />
       </AuthProvider>
     </div>

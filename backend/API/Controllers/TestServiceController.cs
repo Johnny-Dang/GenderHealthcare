@@ -1,20 +1,35 @@
 ﻿using backend.Application.DTOs.ServiceDTO;
 using backend.Application.Interfaces;
+using backend.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.API.Controllers
 {
     [ApiController]
-    [Route("api/service")]
+    [Route("api/services")]
     public class TestServiceController : ControllerBase
     {
-        private readonly ITestService _service;
-        public TestServiceController(ITestService service)
+        private readonly ITestServiceService _service;
+
+        public TestServiceController(ITestServiceService service)
         {
             _service = service;
         }
-        // GET: api/service
+
+        // POST: api/services
+        [HttpPost]
+        [Authorize(Roles = "Staff,Manager")]
+        public async Task<IActionResult> Create([FromBody] CreateTestServiceRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+                
+            var service = await _service.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = service.ServiceId }, service);
+        }
+
+        // GET: api/services
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -22,54 +37,49 @@ namespace backend.API.Controllers
             return Ok(services);
         }
 
-        // GET: api/service/{id}
+        // GET: api/services/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var service = await _service.GetByIdAsync(id);
             if (service == null)
                 return NotFound();
+
             return Ok(service);
         }
 
-
-        // POST: api/service
-        [HttpPost]
-        [Authorize(Roles = "Staff,Manager")]
-
-        public async Task<IActionResult> Create([FromBody] CreateTestServiceRequest serviceRequest)
+        // GET: api/services/category/{category}
+        [HttpGet("category/{category}")]
+        public async Task<IActionResult> GetByCategory(string category)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var created = await _service.CreateAsync(serviceRequest);
-            return Ok(created);
+            var services = await _service.GetByCategoryAsync(category);
+            return Ok(services);
         }
 
-        // PUT: api/service/{id}
+        // PUT: api/services/{id}
         [HttpPut("{id}")]
         [Authorize(Roles = "Staff,Manager")]
-
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTestServiceRequest serviceRequest)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTestServiceRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var updated = await _service.UpdateAsync(id, serviceRequest);
-            if (!updated)
+            var updatedService = await _service.UpdateAsync(id, request);
+            if (updatedService == null)
                 return NotFound();
-            return NoContent();
+
+            return Ok(updatedService);
         }
 
-        // DELETE: api/service/{id}
+        // DELETE: api/services/{id}
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Manager")]
-
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await _service.DeleteAsync(id);
-            if (!deleted)
+            var result = await _service.DeleteAsync(id);
+            if (!result)
                 return NotFound();
+
             return NoContent();
         }
     }

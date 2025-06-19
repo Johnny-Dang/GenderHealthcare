@@ -29,12 +29,17 @@ backend/*.suo
 backend/*.userosscache
 backend/*.sln.docstates
 backend/.vs/
-backend/appsettings.json
-backend/appsettings.Development.json
-backend/Migrations/*
 # ASP.NET secrets (if any)
 backend/.vscode/
+backend/appsettings.json
+backend/appsettings.Development.json
+backend/appsettings.*.json
+backend/Migrations/
+backend/appsettings.*.json
+# Environment
+*.env
+*.env.*
+.env
+
 # Others
 *.log
-.env
-*.env.*
