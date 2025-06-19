@@ -7,6 +7,7 @@ import NotFound from './pages/NotFound'
 import { AuthProvider } from './contexts/AuthContext'
 import { ToastContainer } from 'react-toastify'
 import TestServicePage from './pages/test-service'
+import BookConsultantPage from './pages/booking-consultant'
 
 function App() {
   const router = createBrowserRouter([
@@ -21,6 +22,10 @@ function App() {
     {
       path: '/register',
       element: <RegisterPage />
+    },
+    {
+      path: '/booking-consultant',
+      element: <BookConsultantPage />
     },
     {
       path: '*',

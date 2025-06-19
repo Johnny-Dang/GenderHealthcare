@@ -17,7 +17,7 @@ const Navigation = () => {
       return [
         ...baseItems,
         { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
-        { path: '/consultation', label: 'Đặt tư vấn' },
+        { path: '/booking-consultant', label: 'Đặt tư vấn' },
         { path: '/blog', label: 'Blog' },
         { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
       ]
