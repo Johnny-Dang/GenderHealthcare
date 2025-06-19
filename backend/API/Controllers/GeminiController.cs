@@ -1,4 +1,5 @@
-﻿using backend.Application.Interfaces;
+﻿using backend.Application.DTOs.ChatPromptDTO;
+using backend.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.API.Controllers
@@ -15,7 +16,7 @@ namespace backend.API.Controllers
         }
 
         [HttpPost("chat")]
-        public async Task<IActionResult> Chat([FromBody] ChatPromptDto dto)
+        public async Task<IActionResult> Chat([FromBody] ChatPromptResponse dto)
         {
             var reply = await _geminiService.GenerateReplyAsync(dto.Prompt);
             return Ok(reply); 
