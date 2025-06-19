@@ -107,6 +107,7 @@ namespace backend.Infrastructure.Services
                         detail.ServiceId = detailDto.ServiceId;
                         detail.FirstName = detailDto.FirstName;
                         detail.LastName = detailDto.LastName;
+                        detail.Phone = detailDto.Phone; // Assuming Phone is part of BookingDetail
                         detail.DateOfBirth = detailDto.DateOfBirth;
                         detail.Gender = detailDto.Gender;
                         updatedDetails.Add(detail);
@@ -121,6 +122,7 @@ namespace backend.Infrastructure.Services
                             ServiceId = detailDto.ServiceId,
                             FirstName = detailDto.FirstName,
                             LastName = detailDto.LastName,
+                            Phone = detailDto.Phone, // Assuming Phone is part of BookingDetail
                             DateOfBirth = detailDto.DateOfBirth,
                             Gender = detailDto.Gender
                         };
@@ -191,6 +193,7 @@ namespace backend.Infrastructure.Services
                         Price = detail.TestService?.Price ?? 0,
                         FirstName = detail.FirstName,
                         LastName = detail.LastName,
+                        Phone = detail.Phone,
                         DateOfBirth = detail.DateOfBirth,
                         Gender = detail.Gender
                     });
