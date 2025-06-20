@@ -10,6 +10,11 @@ import BlogPage from './pages/blog/BlogPage'
 import BlogDetailPage from './pages/blog/BlogDetailPage'
 import { ToastContainer } from 'react-toastify'
 import TestServicePage from './pages/test-service'
+import DashboardAdmin from './components/dashboard'
+import UserManagement from './pages/admin/UserManagement'
+import ProductManagement from './pages/admin/TestServiceManagement'
+import TestServiceManagement from './pages/admin/TestServiceManagement'
+import AdminPage from './pages/admin/Admin'
 
 function App() {
   const router = createBrowserRouter([
@@ -43,14 +48,27 @@ function App() {
       path: '/staff/blog',
       element: <BlogManagement />
     },
-
-    {
-      path: '*',
-      element: <NotFound />
-    },
     {
       path: '/test-service',
       element: <TestServicePage />
+    },
+    {
+      path: '/admin',
+      element: <AdminPage />,
+      children: [
+        {
+          path: 'users',
+          element: <UserManagement />
+        },
+        {
+          path: 'services',
+          element: <TestServiceManagement />
+        }
+      ]
+    },
+    {
+      path: '*',
+      element: <NotFound />
     }
   ])
   return (
