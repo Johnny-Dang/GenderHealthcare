@@ -1,9 +1,11 @@
 import React from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
 import NotFound from './pages/NotFound'
+import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
+import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
 import BlogManagement from './pages/blog/BlogManagement'
 import BlogPage from './pages/blog/BlogPage'
 import BlogDetailPage from './pages/blog/BlogDetailPage'
@@ -13,7 +15,8 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './redux/store'
 
 function App() {
-  const router = createBrowserRouter([
+  // Using HashRouter for better compatibility with different server configurations
+  const router = createHashRouter([
     {
       path: '/',
       element: <HomePage />
@@ -46,6 +49,14 @@ function App() {
     },
 
     {
+      path: '/cycle-tracking',
+      element: <CycleTrackingPage />
+    },
+    {
+      path: '/cycle-tracking/result',
+      element: <CycleTrackingResultPage />
+    },
+    {
       path: '*',
       element: <NotFound />
     },
@@ -54,6 +65,7 @@ function App() {
       element: <TestServicePage />
     }
   ])
+
   return (
     <>
       <Provider store={store}>
