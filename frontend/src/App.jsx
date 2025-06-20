@@ -4,12 +4,13 @@ import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
 import NotFound from './pages/NotFound'
-import { AuthProvider } from './contexts/AuthContext'
 import BlogManagement from './pages/blog/BlogManagement'
 import BlogPage from './pages/blog/BlogPage'
 import BlogDetailPage from './pages/blog/BlogDetailPage'
-import { ToastContainer } from 'react-toastify'
 import TestServicePage from './pages/test-service'
+import { Provider } from 'react-redux'
+import { PersistGate } from 'redux-persist/integration/react'
+import { store, persistor } from './redux/store'
 
 function App() {
   const router = createBrowserRouter([
@@ -54,12 +55,13 @@ function App() {
     }
   ])
   return (
-    <div>
-      <AuthProvider>
-        <ToastContainer />
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </div>
+    <>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <RouterProvider router={router} />
+        </PersistGate>
+      </Provider>
+    </>
   )
 }
 

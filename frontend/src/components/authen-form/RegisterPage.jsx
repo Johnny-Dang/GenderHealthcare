@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useAuth } from '@/contexts/AuthContext'
 import { Heart, AlertCircle } from 'lucide-react'
 import { toast } from 'react-toastify'
 
@@ -21,7 +20,6 @@ const Register = () => {
     gender: ''
   })
   const [errors, setErrors] = useState({})
-  const { register, isLoading } = useAuth()
   const navigate = useNavigate()
 
   const validateForm = () => {
@@ -304,8 +302,8 @@ const Register = () => {
                 )}
               </div>
 
-              <Button type='submit' className='w-full bg-gradient-primary' disabled={isLoading}>
-                {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
+              <Button type='submit' className='w-full bg-gradient-primary'>
+                {'Đăng ký'}
               </Button>
             </form>
 

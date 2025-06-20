@@ -1,15 +1,13 @@
 import React, { useEffect } from 'react'
 import api from '../configs/axios'
-import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useDispatch } from "react-redux";
 import { login } from '../redux/features/userSlice'
 
 export default function GoogleLoginButton() {
-  const { setUser } = useAuth()
   const navigate = useNavigate()
-
+  const dispatch = useDispatch()
   useEffect(() => {
     if (window.google) {
       window.google.accounts.id.initialize({
@@ -25,27 +23,24 @@ export default function GoogleLoginButton() {
       )
     }
   }, [])
+
   async function handleCredentialResponse(response) {
     try {
       const apiResponse = await api.post('Account/login-google', {
         credential: response.credential
       })
-
-      if (apiResponse.data) {
-        const userData = apiResponse.data
+      console.log(apiResponse);
+      
+      if (apiResponse) {
+        
         // Store user data and token in localStorage
-        // dispatch(login(userData))
-        localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('token', JSON.stringify(userData.token))
-
-        // Update auth context with the user data
-        setUser(userData)
+        dispatch(login(apiResponse.data))
+        localStorage.setItem('token', apiResponse.data.accessToken)
 
         toast.success('Đăng nhập thành công!', {
           position: 'top-right',
           autoClose: 3000
         })
-
         navigate('/')
       }
     } catch (error) {
