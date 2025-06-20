@@ -9,6 +9,7 @@ import BlogManagement from './pages/blog/BlogManagement'
 import BlogPage from './pages/blog/BlogPage'
 import BlogDetailPage from './pages/blog/BlogDetailPage'
 import { ToastContainer } from 'react-toastify'
+import TestServicePage from './pages/test-service'
 
 function App() {
   const router = createBrowserRouter([
@@ -46,6 +47,10 @@ function App() {
     {
       path: '*',
       element: <NotFound />
+    },
+    {
+      path: '/test-service',
+      element: <TestServicePage />
     }
   ])
   return (
