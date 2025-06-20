@@ -54,7 +54,7 @@ const Navigation = () => {
           { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
           { path: '/tu-van', label: 'Đặt tư vấn' },
           { path: '/blog', label: 'Blog' },
-          { path: '/chu-ky', label: 'Theo dõi chu kỳ' }
+          { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
         ]
       default:
         return baseItems
@@ -101,8 +101,6 @@ const Navigation = () => {
     { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
     { path: '/blog', label: 'Blog' },
     { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
-    { path: '/register', label: 'Đăng ký' },
-    { path: '/login', label: 'Đăng nhập' },
     { path: '/booking', label: 'Đặt tư vấn' }
   ];
 
