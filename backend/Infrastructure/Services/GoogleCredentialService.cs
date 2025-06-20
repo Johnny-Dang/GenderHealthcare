@@ -124,7 +124,6 @@ namespace backend.Infrastructure.Services
                     AccountId = account.AccountId,
                 };
             }
-
             return Result<LoginResponse>.Success(response);
         }
 

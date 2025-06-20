@@ -3,6 +3,8 @@ import api from '../configs/axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useDispatch } from "react-redux";
+import { login } from '../redux/features/userSlice'
 
 export default function GoogleLoginButton() {
   const { setUser } = useAuth()
@@ -11,7 +13,7 @@ export default function GoogleLoginButton() {
   useEffect(() => {
     if (window.google) {
       window.google.accounts.id.initialize({
-        client_id: '137320849289-d8q97maftuq347tslj5276bjl1lc3jp5.apps.googleusercontent.com',
+        client_id: '1009838237823-cgfehmh9ssdblpodj2sdfcd4p76ilvfb.apps.googleusercontent.com',
 
         callback: handleCredentialResponse
       })
@@ -32,6 +34,7 @@ export default function GoogleLoginButton() {
       if (apiResponse.data) {
         const userData = apiResponse.data
         // Store user data and token in localStorage
+        // dispatch(login(userData))
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.setItem('token', JSON.stringify(userData.token))
 
