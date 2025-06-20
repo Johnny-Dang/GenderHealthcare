@@ -141,18 +141,18 @@ const Register = () => {
   return (
     <div className='min-h-screen bg-gradient-soft flex items-center justify-center p-4'>
       <div className='w-full max-w-md'>
+        <div className='flex flex-col items-center mb-4'>
+          <Link to='/' className='inline-block'>
+            <div className='flex flex-col items-center'>
+              <div className='w-16 h-16 bg-gradient-primary rounded-lg flex items-center justify-center mb-2'>
+                <Heart className='h-8 w-8 text-white' />
+              </div>
+              <span className='text-xl font-bold gradient-text'>WellCare</span>
+            </div>
+          </Link>
+        </div>
         <Card>
           <CardHeader className='text-center'>
-            <div className='flex flex-col items-center mb-4'>
-              <Link to='/' className='inline-block'>
-                <div className='flex flex-col items-center'>
-                  <div className='w-16 h-16 bg-gradient-primary rounded-lg flex items-center justify-center mb-2'>
-                    <Heart className='h-8 w-8 text-white' />
-                  </div>
-                  <span className='text-xl font-bold gradient-text'>WellCare</span>
-                </div>
-              </Link>
-            </div>
             <CardTitle>Đăng ký</CardTitle>
             <CardDescription>Tạo tài khoản mới để bắt đầu chăm sóc sức khỏe</CardDescription>
           </CardHeader>

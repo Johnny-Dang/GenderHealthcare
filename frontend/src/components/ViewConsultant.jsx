@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, MessageSquare, Heart, Star, Award, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const Consultation = () => {
-  const [selectedConsultationType, setSelectedConsultationType] = useState('')
-
+const ViewConsultation = () => {
   const consultationTypes = [
     {
       icon: MessageSquare,
@@ -68,12 +66,6 @@ const Consultation = () => {
       achievements: ['Chuyên gia tư vấn tâm lý', 'Chứng chỉ quốc tế về CBT']
     }
   ]
-
-  const handleBookingSubmit = (e) => {
-    e.preventDefault()
-    console.log('Booking submitted')
-    alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.')
-  }
 
   return (
     <div className='min-h-screen'>
@@ -140,4 +132,4 @@ const Consultation = () => {
   )
 }
 
-export default Consultation
+export default ViewConsultation
