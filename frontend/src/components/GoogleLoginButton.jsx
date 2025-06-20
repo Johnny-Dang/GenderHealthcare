@@ -46,7 +46,7 @@ export default function GoogleLoginButton() {
         navigate('/')
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Login error Lỗi này của chó server', error)
       toast.error('Đăng nhập thất bại!', {
         position: 'top-right',
         autoClose: 3000
