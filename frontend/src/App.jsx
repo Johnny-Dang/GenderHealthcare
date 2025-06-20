@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
 import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
 import { ToastContainer } from 'react-toastify'
+import TestServicePage from './pages/test-service'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -35,6 +36,10 @@ function App() {
     {
       path: '*',
       element: <NotFound />
+    },
+    {
+      path: '/test-service',
+      element: <TestServicePage />
     }
   ])
 
