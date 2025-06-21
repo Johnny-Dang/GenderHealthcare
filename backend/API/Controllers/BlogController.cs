@@ -1,5 +1,6 @@
 ﻿using backend.Application.DTOs.BlogDTO;
 using backend.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.API.Controllers
@@ -33,6 +34,7 @@ namespace backend.API.Controllers
 
         // POST: api/blog
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateBlog([FromBody] CreateBlogRequest request)
         {
             if (!ModelState.IsValid)
@@ -43,6 +45,8 @@ namespace backend.API.Controllers
 
         // PUT: api/blog/{id}
         [HttpPut("{id}")]
+        [Authorize]
+
         public async Task<IActionResult> UpdateBlog(Guid id, [FromBody] UpdateBlogRequest request)
         {
             if (!ModelState.IsValid)
@@ -55,6 +59,7 @@ namespace backend.API.Controllers
 
         // DELETE: api/blog/{id}
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteBlog(Guid id)
         {
             var result = await _blogService.DeleteBlogAsync(id);
