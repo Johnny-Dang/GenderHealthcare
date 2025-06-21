@@ -1,10 +1,12 @@
 ﻿using backend.API.Middleware;
 using backend.Application.Common.Mappings;
+using backend.Application.Services;
 using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.Database;
 using backend.Infrastructure.Extensions;
 using backend.Infrastructure.Persistence.Configurations;
+using backend.Infrastructure.Services;
 using DeployGenderSystem.Domain.Entity;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -96,8 +98,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile));
+builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile), typeof(StaffInfoProfile));
 
+
+builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

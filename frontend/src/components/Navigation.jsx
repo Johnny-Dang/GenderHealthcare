@@ -1,59 +1,63 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Heart, Menu, X, User, LogOut } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSelector, useDispatch } from 'react-redux'
+import { logout } from '@/redux/features/userSlice'
+import api from '@/configs/axios'
+import { toast } from 'react-toastify'
 
 const Navigation = () => {
+  const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const { user, logout } = useAuth()
+  const user = useSelector((state) => state.user)
+  const dispatch = useDispatch()
+  const isGuest = !user
 
   // Define navigation items based on user role
   const getNavItems = () => {
     const baseItems = [{ path: '/', label: 'Trang chủ' }]
 
-    if (!user) {
+    if (isGuest) {
       return [
         ...baseItems,
-        { path: '/services', label: 'Dịch vụ xét nghiệm' },
-        { path: '/consultation', label: 'Đặt tư vấn' },
+        { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
         { path: '/blog', label: 'Blog' },
-        { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
+        { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
+        { path: '/booking', label: 'Đặt tư vấn' }
       ]
     }
 
     switch (user.role) {
-      case 'admin':
+      case 'Admin':
         return [
           { path: '/admin', label: 'Quản lý hệ thống' },
           { path: '/staff-management', label: 'Quản lý nội dung' },
           { path: '/blog', label: 'Blog' }
         ]
 
-      case 'staff':
+      case 'Staff':
         return [
           { path: '/staff-management', label: 'Quản lý Blog & Dịch vụ' },
           { path: '/blog', label: 'Blog' },
           { path: '/dich-vu', label: 'Dịch vụ' }
         ]
 
-      case 'consultant':
+      case 'Consultant':
         return [
           { path: '/consultant-dashboard', label: 'Dashboard' },
           { path: '/tu-van', label: 'Lịch tư vấn' },
           { path: '/blog', label: 'Blog' }
         ]
 
-      case 'user':
+      case 'Customer':
         return [
-          { path: '/user-dashboard', label: 'Dashboard' },
-          { path: '/dich-vu', label: 'Dịch vụ xét nghiệm' },
+          { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
           { path: '/tu-van', label: 'Đặt tư vấn' },
           { path: '/blog', label: 'Blog' },
-          { path: '/chu-ky', label: 'Theo dõi chu kỳ' }
+          { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
         ]
-
       default:
         return baseItems
     }
@@ -65,25 +69,41 @@ const Navigation = () => {
     return location.pathname === path
   }
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    try {
+      await api.post('/Account/logout')
+    } catch (error) {
+      toast.error('Đã xảy ra lỗi khi đăng xuất')
+    }
+    dispatch(logout())
     setIsMenuOpen(false)
+    navigate('/')
   }
 
   const getRoleDisplayName = (role) => {
     switch (role) {
-      case 'admin':
+      case 'Admin':
         return 'Quản trị viên'
-      case 'staff':
+      case 'Staff':
         return 'Nhân viên'
-      case 'consultant':
+      case 'Consultant':
         return 'Tư vấn viên'
-      case 'user':
-        return 'Người dùng'
+      case 'Customer':
+        return 'Khách hàng'
+      case 'Manager':
+        return 'Quản lý'
       default:
         return 'Khách'
     }
   }
+
+  const guestNavItems = [
+    { path: '/', label: 'Trang chủ' },
+    { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
+    { path: '/blog', label: 'Blog' },
+    { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
+    { path: '/booking', label: 'Đặt tư vấn' }
+  ]
 
   return (
     <nav className='bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100'>
@@ -100,17 +120,29 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className='hidden md:flex items-center space-x-8'>
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary-500 ${
-                  isActivePath(item.path) ? 'text-primary-500 border-b-2 border-primary-500 pb-1' : 'text-gray-700'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {isGuest
+              ? guestNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`text-sm font-medium transition-colors hover:text-primary-500 ${
+                      isActivePath(item.path) ? 'text-primary-500 border-b-2 border-primary-500 pb-1' : 'text-gray-700'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))
+              : navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`text-sm font-medium transition-colors hover:text-primary-500 ${
+                      isActivePath(item.path) ? 'text-primary-500 border-b-2 border-primary-500 pb-1' : 'text-gray-700'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
 
             {user ? (
               <div className='flex items-center space-x-4'>

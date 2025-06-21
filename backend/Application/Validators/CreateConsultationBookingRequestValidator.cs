@@ -25,7 +25,10 @@ namespace backend.Application.Validators
                 .NotEmpty()
                 .When(x => !x.CustomerId.HasValue)
                 .WithMessage("GuestPhone is required if CustomerId is not provided.")
-                .MaximumLength(20);
+                .MaximumLength(20)
+                .Matches(@"^(0\d{9}|(\+84)\d{9})$")
+                .When(x => !string.IsNullOrEmpty(x.GuestPhone))
+                .WithMessage("GuestPhone must be a valid Vietnamese phone number.");
 
             RuleFor(x => x.StaffId)
                 .NotEqual(Guid.Empty).WithMessage("StaffId is required.");
