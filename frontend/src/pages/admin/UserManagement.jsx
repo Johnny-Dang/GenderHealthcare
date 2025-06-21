@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Button, Space, Spin, Modal, Form, Input, Select, message, Typography, Badge, Divider, Tag } from 'antd'
+import { Table, Button, Space, Spin, Modal, Form, Input, Select, Typography, Divider, Tag } from 'antd'
 import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined, SearchOutlined } from '@ant-design/icons'
+import moment from 'moment'
+import api from '../../configs/axios'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const { Option } = Select
 const { Title, Text } = Typography
@@ -11,55 +15,36 @@ const UserManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [form] = Form.useForm()
+  const [deleteModal, setDeleteModal] = useState({ open: false, id: null })
+
+  const fetchUsers = async () => {
+    setLoading(true)
+    try {
+      const response = await api.get(`api/users`)
+      const formattedData = response.data.map((user, index) => ({
+        key: index.toString(),
+        id: user.accountId,
+        name: user.fullName || (user.firstName || '') + ' ' + (user.lastName || ''),
+        email: user.email,
+        phone: user.phone,
+        gender: user.gender ? 'Nam' : 'Nữ',
+        dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
+        createAt: moment(user.createAt).format('DD/MM/YYYY'),
+        role: user.roleName,
+        avatarUrl: user.avatarUrl,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isDeleted: user.isDeleted
+      }))
+      setUserData(formattedData)
+      setLoading(false)
+    } catch {
+      setLoading(false)
+      toast.error('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.')
+    }
+  }
 
   useEffect(() => {
-    // NOTE: API call cần thực hiện ở đây
-    // Cần gọi API để lấy danh sách người dùng
-    // API: GET /api/users
-
-    // Mô phỏng việc gọi API
-    const fetchUsers = async () => {
-      try {
-        // Thay thế bằng API call thực tế
-        // const response = await axios.get('/api/users');
-        // setUserData(response.data);
-
-        // Dữ liệu mẫu
-        setTimeout(() => {
-          setUserData([
-            {
-              key: '1',
-              id: '1',
-              name: 'Nguyễn Văn A',
-              email: 'nguyenvana@example.com',
-              role: 'User',
-              status: 'Active'
-            },
-            {
-              key: '2',
-              id: '2',
-              name: 'Trần Thị B',
-              email: 'tranthib@example.com',
-              role: 'Admin',
-              status: 'Active'
-            },
-            {
-              key: '3',
-              id: '3',
-              name: 'Lê Văn C',
-              email: 'levanc@example.com',
-              role: 'User',
-              status: 'Inactive'
-            }
-          ])
-          setLoading(false)
-        }, 1000)
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu người dùng:', error)
-        setLoading(false)
-      }
-    }
-
     fetchUsers()
   }, [])
 
@@ -76,30 +61,46 @@ const UserManagement = () => {
   const handleOk = () => {
     form
       .validateFields()
-      .then((values) => {
-        if (currentUser) {
-          // NOTE: API call cần thực hiện ở đây
-          // Cần gọi API để cập nhật thông tin người dùng
-          // API: PUT /api/users/:id
-          // Body: values
-
-          message.success('Cập nhật người dùng thành công!')
-        } else {
-          // NOTE: API call cần thực hiện ở đây
-          // Cần gọi API để tạo người dùng mới
-          // API: POST /api/users
-          // Body: values
-
-          message.success('Thêm người dùng thành công!')
+      .then(async (values) => {
+        try {
+          let firstName = '',
+            lastName = ''
+          if (values.name) {
+            const parts = values.name.trim().split(' ')
+            lastName = parts.pop()
+            firstName = parts.join(' ')
+          }
+          if (currentUser) {
+            // Cập nhật thông tin người dùng
+            await api.put(`api/users/${currentUser.id}`, {
+              email: values.email,
+              firstName,
+              lastName,
+              roleName: values.role
+            })
+            toast.success('Cập nhật người dùng thành công!')
+          } else {
+            // Tạo người dùng mới
+            const response = await api.post(`api/users`, {
+              email: values.email,
+              password: values.password || 'DefaultPassword123',
+              firstName,
+              lastName,
+              roleName: values.role
+            })
+            if (response.data && response.data.accountId) {
+              toast.success('Thêm người dùng thành công!')
+            }
+          }
+          setIsModalVisible(false)
+          form.resetFields()
+          fetchUsers()
+        } catch {
+          toast.error('Có lỗi xảy ra. Vui lòng thử lại sau.')
         }
-
-        setIsModalVisible(false)
-        form.resetFields()
-
-        // Sau khi thêm/cập nhật, gọi lại API lấy danh sách người dùng
       })
-      .catch((info) => {
-        console.log('Validation Failed:', info)
+      .catch(() => {
+        // Không cần toast ở đây
       })
   }
 
@@ -109,55 +110,20 @@ const UserManagement = () => {
   }
 
   const handleDelete = (userId) => {
-    Modal.confirm({
-      title: 'Bạn có chắc chắn muốn xóa người dùng này?',
-      content: 'Hành động này không thể hoàn tác.',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      onOk() {
-        // NOTE: API call cần thực hiện ở đây
-        // Cần gọi API để xóa người dùng
-        // API: DELETE /api/users/:id
+    console.log('Xóa người dùng với ID:', userId)
 
-        message.success('Xóa người dùng thành công!')
+    setDeleteModal({ open: true, id: userId })
+  }
 
-        // Sau khi xóa, cập nhật lại danh sách người dùng
-        setUserData((prevData) => prevData.filter((user) => user.id !== userId))
-      }
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'N/A'
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     })
-  }
-
-  const getStatusBadge = (status) => {
-    if (status === 'Active') {
-      return (
-        <Tag color='success' className='px-3 py-1 rounded-full'>
-          Active
-        </Tag>
-      )
-    } else {
-      return (
-        <Tag color='error' className='px-3 py-1 rounded-full'>
-          Inactive
-        </Tag>
-      )
-    }
-  }
-
-  const getRoleBadge = (role) => {
-    if (role === 'Admin') {
-      return (
-        <Tag color='pink' className='px-3 py-1 rounded-full'>
-          Admin
-        </Tag>
-      )
-    } else {
-      return (
-        <Tag color='blue' className='px-3 py-1 rounded-full'>
-          User
-        </Tag>
-      )
-    }
   }
 
   const columns = [
@@ -165,44 +131,87 @@ const UserManagement = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      width: '10%'
+      width: '18%'
     },
     {
       title: 'Tên',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => <Text strong>{text}</Text>
+      render: (text) => <Text strong>{text}</Text>,
+      sorter: (a, b) => a.name.localeCompare(b.name)
     },
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email'
+      key: 'email',
+      width: '20%'
+    },
+    {
+      title: 'Số điện thoại',
+      dataIndex: 'phone',
+      key: 'phone',
+      width: '12%'
+    },
+    {
+      title: 'Giới tính',
+      dataIndex: 'gender',
+      key: 'gender',
+      width: '10%',
+      filters: [
+        { text: 'Nam', value: 'Nam' },
+        { text: 'Nữ', value: 'Nữ' }
+      ],
+      onFilter: (value, record) => record.gender === value
+    },
+    {
+      title: 'Ngày sinh',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      width: '12%',
+      render: (date) => <span>{date ? formatDate(date) : 'N/A'}</span>
     },
     {
       title: 'Vai trò',
       dataIndex: 'role',
       key: 'role',
-      render: (role) => getRoleBadge(role),
+      render: (role) => {
+        let color = 'blue'
+        if (role === 'Admin') color = 'pink'
+        else if (role === 'Consultant') color = 'geekblue'
+        else if (role === 'Manager') color = 'gold'
+        else if (role === 'Staff') color = 'purple'
+        else if (role === 'User') color = 'blue'
+        return (
+          <Tag color={color} className='px-3 py-1 rounded-full'>
+            {role}
+          </Tag>
+        )
+      },
       filters: [
         { text: 'Admin', value: 'Admin' },
+        { text: 'Consultant', value: 'Consultant' },
+        { text: 'Manager', value: 'Manager' },
+        { text: 'Staff', value: 'Staff' },
         { text: 'User', value: 'User' }
       ],
       onFilter: (value, record) => record.role === value
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => getStatusBadge(status),
+      dataIndex: 'isDeleted',
+      key: 'isDeleted',
+      width: '10%',
+      render: (isDeleted) => <Tag color={isDeleted ? 'red' : 'green'}>{isDeleted ? 'Đã xóa' : 'Hoạt động'}</Tag>,
       filters: [
-        { text: 'Active', value: 'Active' },
-        { text: 'Inactive', value: 'Inactive' }
+        { text: 'Hoạt động', value: false },
+        { text: 'Đã xóa', value: true }
       ],
-      onFilter: (value, record) => record.status === value
+      onFilter: (value, record) => record.isDeleted === value
     },
     {
       title: 'Hành động',
       key: 'action',
+      width: '12%',
       render: (_, record) => (
         <Space size='middle'>
           <Button
@@ -228,6 +237,7 @@ const UserManagement = () => {
 
   return (
     <>
+      <ToastContainer />
       <div className='mb-6'>
         <Title level={3} className='text-gray-800 mb-1'>
           Quản lý người dùng
@@ -284,7 +294,7 @@ const UserManagement = () => {
       >
         <Form form={form} layout='vertical' name='userForm' className='pt-4'>
           <Form.Item name='name' label='Tên' rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}>
-            <Input placeholder='Nhập tên người dùng' />
+            <Input placeholder='Nhập họ và tên người dùng' />
           </Form.Item>
           <Form.Item
             name='email'
@@ -299,20 +309,39 @@ const UserManagement = () => {
           <Form.Item name='role' label='Vai trò' rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}>
             <Select placeholder='Chọn vai trò'>
               <Option value='Admin'>Admin</Option>
+              <Option value='Consultant'>Consultant</Option>
+              <Option value='Manager'>Manager</Option>
+              <Option value='Staff'>Staff</Option>
               <Option value='User'>User</Option>
             </Select>
           </Form.Item>
-          <Form.Item
-            name='status'
-            label='Trạng thái'
-            rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-          >
-            <Select placeholder='Chọn trạng thái'>
-              <Option value='Active'>Active</Option>
-              <Option value='Inactive'>Inactive</Option>
-            </Select>
-          </Form.Item>
+          {/* Nếu là tạo mới thì cho nhập password */}
+          {!currentUser && (
+            <Form.Item name='password' label='Mật khẩu'>
+              <Input.Password placeholder='Nhập mật khẩu (mặc định: DefaultPassword123)' />
+            </Form.Item>
+          )}
         </Form>
+      </Modal>
+
+      <Modal
+        open={deleteModal.open}
+        onOk={async () => {
+          try {
+            await api.delete(`api/users/${deleteModal.id}`)
+            toast.success('Đã xóa (mềm) người dùng!')
+            fetchUsers()
+          } catch {
+            toast.error('Không thể xóa người dùng. Vui lòng thử lại sau.')
+          }
+          setDeleteModal({ open: false, id: null })
+        }}
+        onCancel={() => setDeleteModal({ open: false, id: null })}
+        okText='Xóa'
+        okType='danger'
+        cancelText='Hủy'
+      >
+        Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.
       </Modal>
     </>
   )
