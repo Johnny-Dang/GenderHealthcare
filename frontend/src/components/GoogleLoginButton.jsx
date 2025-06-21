@@ -5,6 +5,11 @@ import { toast } from 'react-toastify'
 import { useDispatch } from "react-redux";
 import { login } from '../redux/features/userSlice'
 
+/**
+ * Renders a Google Sign-In button and handles user authentication via Google OAuth.
+ *
+ * Initializes the Google Sign-In client on mount, renders the sign-in button, and processes the authentication response. On successful login, updates the Redux state, stores the access token, displays a success notification, and redirects to the home page. Displays an error notification if authentication fails.
+ */
 export default function GoogleLoginButton() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
