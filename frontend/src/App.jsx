@@ -1,22 +1,34 @@
 import React from 'react'
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { createHashRouter, RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom'
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
 import NotFound from './pages/NotFound'
-import { AuthProvider } from './contexts/AuthContext'
+import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
+import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
 import BlogManagement from './pages/blog/BlogManagement'
 import BlogPage from './pages/blog/BlogPage'
 import BlogDetailPage from './pages/blog/BlogDetailPage'
-import { ToastContainer } from 'react-toastify'
 import TestServicePage from './pages/test-service'
+import { Provider } from 'react-redux'
+import { PersistGate } from 'redux-persist/integration/react'
+import { store, persistor } from './redux/store'
+
+/**
+ * Root component for the application, setting up routing and Redux state management with persistence.
+ *
+ * Defines all application routes and wraps the app with Redux Provider and PersistGate to enable global state and state persistence across sessions.
+ *
+ * @returns {JSX.Element} The application root element with routing and state management configured.
+ */
 import UserManagement from './pages/admin/UserManagement'
 import TestServiceManagement from './pages/admin/TestServiceManagement'
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
 
 function App() {
-  const router = createBrowserRouter([
+  // Using HashRouter for better compatibility with different server configurations
+  const router = createHashRouter([
     {
       path: '/',
       element: <HomePage />
@@ -46,6 +58,19 @@ function App() {
     {
       path: '/staff/blog',
       element: <BlogManagement />
+    },
+
+    {
+      path: '/cycle-tracking',
+      element: <CycleTrackingPage />
+    },
+    {
+      path: '/cycle-tracking/result',
+      element: <CycleTrackingResultPage />
+    },
+    {
+      path: '*',
+      element: <NotFound />
     },
     {
       path: '/test-service',
@@ -78,13 +103,15 @@ function App() {
       element: <NotFound />
     }
   ])
+
   return (
-    <div>
-      <AuthProvider>
-        <ToastContainer />
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </div>
+    <>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <RouterProvider router={router} />
+        </PersistGate>
+      </Provider>
+    </>
   )
 }
 

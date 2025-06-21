@@ -14,41 +14,40 @@ const Services = () => {
   const [categories, setCategories] = useState(["Tất cả"]);
   const [categoryInput, setCategoryInput] = useState("");
 
-  // Lấy danh sách category từ API khi load lần đầu
+  const fetchServices = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("https://localhost:7195/api/services");
+      console.log(response);
+      
+      setServices(response.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh mục dịch vụ:", error);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get("https://localhost:7195/api/services");
-        const uniqueCategories = Array.from(new Set(response.data.map(s => s.category)));
-        setCategories(["Tất cả", ...uniqueCategories]);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh mục dịch vụ:", error);
-      }
-    };
-    fetchCategories();
+    fetchServices();
   }, []);
 
-  // Lấy danh sách dịch vụ theo category
-  useEffect(() => {
-    const fetchServices = async () => {
-      setLoading(true);
-      try {
-        let url = "https://localhost:7195/api/services";
-        const filterValue = categoryInput.trim() || selectedCategory;
-        if (filterValue && filterValue !== "Tất cả") {
-          url = `https://localhost:7195/api/services/category/${encodeURIComponent(filterValue)}`;
-        }
-        const response = await axios.get(url);
-        setServices(response.data);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu dịch vụ:", error);
-        setServices([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchServices();
-  }, [categoryInput, selectedCategory]);
+  // // Lấy danh sách dịch vụ theo category
+  // useEffect(() => {
+  //   const fetchServices = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const response = await axios.get("https://localhost:7195/api/services");
+  //       setServices(response.data);
+  //     } catch (error) {
+  //       console.error("Lỗi khi lấy dữ liệu dịch vụ:", error);
+  //       setServices([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchServices();
+  // }, []);
 
   return (
     <div className="min-h-screen">

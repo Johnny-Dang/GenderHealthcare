@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { useAuth } from '@/contexts/AuthContext'
 import { Heart, AlertCircle } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import GoogleLoginButton from '../GoogleLoginButton'
+import { useDispatch } from 'react-redux'
+import api from '../../configs/axios'
+import { login } from '../../redux/features/userSlice'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -17,53 +19,90 @@ const Login = () => {
   const [error, setError] = useState('')
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
-  const { login, loginWithGoogle, isLoading } = useAuth()
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    try {
+      const response = await api.post('https://localhost:7195/Account/login', {
+        email,
+        password
+      })
 
-    const success = await login(email, password)
+      console.log(response)
 
-    if (success) {
-      toast.success('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
+      dispatch(login(response.data))
+      localStorage.setItem('token', response.data.accessToken)
 
-      const userData = JSON.parse(localStorage.getItem('wellcare_user') || '{}')
+      if (response?.data?.accessToken && response?.data?.role) {
+        toast.success('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
 
-      switch (userData.role) {
-        case 'admin':
-          navigate('/admin/dashboard')
-          break
-        case 'staff':
-          navigate('/staff/dashboard')
-          break
-        case 'consultant':
-          navigate('/consultant/dashboard')
-          break
-        case 'manager':
-          navigate('/manager/dashboard')
-          break
-        case 'user':
-          navigate('/user/dashboard')
-          break
-        default:
-          navigate('/')
+        switch (response.data.role) {
+          case 'Admin':
+            navigate('/admin/dashboard')
+            break
+          case 'Staff':
+            navigate('/staff/dashboard')
+            break
+          case 'Consultant':
+            navigate('/consultant/dashboard')
+            break
+          case 'Manager':
+            navigate('/manager/dashboard')
+            break
+          case 'Customer':
+            navigate('/')
+            break
+          default:
+            navigate('/')
+        }
+      } else {
+        toast.error('Dữ liệu phản hổi không hợp lệ')
+        setError('Dữ liệu phản hổi không hợp lệ')
       }
-    } else {
-      toast.error('Email hoặc mật khẩu không đúng')
-      setError('Email hoặc mật khẩu không đúng')
+    } catch (error) {
+      const errorMessage = error.response?.data
+      toast.error(errorMessage)
+      setError(errorMessage)
     }
   }
 
   const handleForgotPassword = async (e) => {
     e.preventDefault()
-    console.log('Forgot password for:', forgotPasswordEmail)
+    e.stopPropagation()
+    try {
+      await api.post('/Account/forgot-password/send-code', {
+        email: forgotPasswordEmail
+      })
+      toast.success('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.')
+      setShowResetForm(true)
+    } catch (error) {
+      toast.error('Gửi email khôi phục thất bại. Vui lòng thử lại!')
+    }
+  }
 
-    toast.success('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.')
-
-    setIsForgotPasswordOpen(false)
-    setForgotPasswordEmail('')
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      await api.post('/Account/forgot-password/reset', {
+        email: forgotPasswordEmail,
+        verificationCode,
+        newPassword
+      })
+      toast.success('Đặt lại mật khẩu thành công!')
+      setShowResetForm(false)
+      setIsForgotPasswordOpen(false)
+      setForgotPasswordEmail('')
+      setVerificationCode('')
+      setNewPassword('')
+    } catch (error) {
+      toast.error('Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại mã xác thực hoặc thử lại!')
+    }
   }
 
   return (
@@ -100,7 +139,18 @@ const Login = () => {
               <div className='space-y-2'>
                 <div className='flex items-center justify-between'>
                   <Label htmlFor='password'>Mật khẩu</Label>
-                  <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+                  <Dialog
+                    open={isForgotPasswordOpen}
+                    onOpenChange={(open) => {
+                      setIsForgotPasswordOpen(open)
+                      if (!open) {
+                        setShowResetForm(false)
+                        setForgotPasswordEmail('')
+                        setVerificationCode('')
+                        setNewPassword('')
+                      }
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <button type='button' className='text-sm text-primary-500 hover:underline'>
                         Quên mật khẩu?
@@ -110,22 +160,53 @@ const Login = () => {
                       <DialogHeader>
                         <DialogTitle>Khôi phục mật khẩu</DialogTitle>
                       </DialogHeader>
-                      <form onSubmit={handleForgotPassword} className='space-y-4'>
-                        <div>
-                          <Label htmlFor='forgotEmail'>Email khôi phục</Label>
-                          <Input
-                            id='forgotEmail'
-                            type='email'
-                            value={forgotPasswordEmail}
-                            onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                            required
-                            placeholder='Nhập email của bạn'
-                          />
-                        </div>
-                        <Button type='submit' className='w-full bg-gradient-primary'>
-                          Gửi email khôi phục
-                        </Button>
-                      </form>
+                      {!showResetForm && (
+                        <form onSubmit={handleForgotPassword} className='space-y-4'>
+                          <div>
+                            <Label htmlFor='forgotEmail'>Email khôi phục</Label>
+                            <Input
+                              id='forgotEmail'
+                              type='email'
+                              value={forgotPasswordEmail}
+                              onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                              required
+                              placeholder='Nhập email của bạn'
+                            />
+                          </div>
+                          <Button type='submit' className='w-full bg-gradient-primary'>
+                            Gửi email khôi phục
+                          </Button>
+                        </form>
+                      )}
+                      {showResetForm && (
+                        <form onSubmit={handleResetPassword} className='space-y-4 mt-4'>
+                          <div>
+                            <Label htmlFor='verificationCode'>Mã xác thực</Label>
+                            <Input
+                              id='verificationCode'
+                              type='text'
+                              value={verificationCode}
+                              onChange={(e) => setVerificationCode(e.target.value)}
+                              required
+                              placeholder='Nhập mã xác thực'
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='newPassword'>Mật khẩu mới</Label>
+                            <Input
+                              id='newPassword'
+                              type='password'
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              required
+                              placeholder='Nhập mật khẩu mới'
+                            />
+                          </div>
+                          <Button type='submit' className='w-full bg-gradient-primary'>
+                            Đặt lại mật khẩu
+                          </Button>
+                        </form>
+                      )}
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -146,8 +227,8 @@ const Login = () => {
                 </div>
               )}
 
-              <Button type='submit' className='w-full bg-gradient-primary' disabled={isLoading}>
-                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              <Button type='submit' className='w-full bg-gradient-primary'>
+                Đăng Nhập
               </Button>
 
               <div className='relative'>

@@ -1,17 +1,22 @@
 import React, { useEffect } from 'react'
 import api from '../configs/axios'
-import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useDispatch } from 'react-redux'
+import { login } from '../redux/features/userSlice'
 
+/**
+ * Renders a Google Sign-In button and handles user authentication via Google OAuth.
+ *
+ * Initializes the Google Sign-In client on mount, renders the sign-in button, and processes the authentication response. On successful login, updates the Redux state, stores the access token, displays a success notification, and redirects to the home page. Displays an error notification if authentication fails.
+ */
 export default function GoogleLoginButton() {
-  const { setUser } = useAuth()
   const navigate = useNavigate()
-
+  const dispatch = useDispatch()
   useEffect(() => {
     if (window.google) {
       window.google.accounts.id.initialize({
-        client_id: '137320849289-d8q97maftuq347tslj5276bjl1lc3jp5.apps.googleusercontent.com',
+        client_id: '1009838237823-cgfehmh9ssdblpodj2sdfcd4p76ilvfb.apps.googleusercontent.com',
 
         callback: handleCredentialResponse
       })
@@ -23,27 +28,25 @@ export default function GoogleLoginButton() {
       )
     }
   }, [])
+
   async function handleCredentialResponse(response) {
     try {
       const apiResponse = await api.post('Account/login-google', {
         credential: response.credential
       })
 
-      if (apiResponse.data) {
-        const userData = apiResponse.data
+      if (apiResponse?.data.accessToken) {
         // Store user data and token in localStorage
-        localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('token', JSON.stringify(userData.token))
-
-        // Update auth context with the user data
-        setUser(userData)
+        dispatch(login(apiResponse.data))
+        localStorage.setItem('token', apiResponse.data.accessToken)
 
         toast.success('Đăng nhập thành công!', {
           position: 'top-right',
           autoClose: 3000
         })
-
         navigate('/')
+      } else {
+        toast.error('Dữ liệu phản hồi không hợp lệ')
       }
     } catch (error) {
       console.error('Login error:', error)
