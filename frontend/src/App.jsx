@@ -69,10 +69,6 @@ function App() {
       element: <CycleTrackingResultPage />
     },
     {
-      path: '*',
-      element: <NotFound />
-    },
-    {
       path: '/test-service',
       element: <TestServicePage />
     },
