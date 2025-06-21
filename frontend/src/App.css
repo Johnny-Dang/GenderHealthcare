@@ -1,0 +1,50 @@
+/* ... existing CSS styles ... */
+
+/* Dashboard styles */
+.dashboard-home .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dashboard-home .ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-home .ant-statistic-content-value {
+  font-weight: 600;
+}
+
+.dashboard-home .ant-list-item {
+  padding: 12px 0;
+}
+
+.dashboard-home .ant-table-wrapper {
+  background: white;
+  border-radius: 8px;
+}
+
+.dashboard-home .ant-progress-bg {
+  height: 8px !important;
+  border-radius: 4px !important;
+}
+
+/* Scroll bar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffc0cb;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff85c0;
+}

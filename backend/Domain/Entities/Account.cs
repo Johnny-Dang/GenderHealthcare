@@ -15,6 +15,7 @@ namespace DeployGenderSystem.Domain.Entity
         public string? avatarUrl { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public bool Gender { get; set; }
+        public bool IsDeleted { get; set; } = false;
         public DateTime CreateAt { get; set; }
         public DateTime? UpdateAt { get; set; }
 

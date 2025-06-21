@@ -50,6 +50,11 @@ namespace backend.Migrations
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -148,7 +153,7 @@ namespace backend.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categorie");
+                    b.ToTable("BlogCategory");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.Booking", b =>
@@ -196,10 +201,6 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uniqueidentifier");
 
@@ -210,60 +211,6 @@ namespace backend.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("BookingDetail");
-                });
-
-            modelBuilder.Entity("backend.Domain.Entities.Feedback", b =>
-                {
-                    b.Property<Guid>("FeedbackId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Detail")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ServiceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("FeedbackId");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.ToTable("Feedback");
-                });
-
-            modelBuilder.Entity("backend.Domain.Entities.PaymentHistory", b =>
-                {
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ExpiredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("BookingId");
-
-                    b.ToTable("PaymentHistory");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
@@ -318,6 +265,61 @@ namespace backend.Migrations
                     b.ToTable("ConsultationBooking", (string)null);
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.Feedback", b =>
+                {
+                    b.Property<Guid>("FeedbackId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("FeedbackId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("Feedback");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.Payment", b =>
+                {
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("BookingId");
+
+                    b.ToTable("Payment");
+                });
+
             modelBuilder.Entity("backend.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("RefreshTokenId")
@@ -368,45 +370,6 @@ namespace backend.Migrations
                     b.ToTable("Role");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.Service", b =>
-                {
-                    b.Property<Guid>("ServiceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ServiceName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ServiceId");
-
-                    b.ToTable("Service");
-                });
-
             modelBuilder.Entity("backend.Domain.Entities.StaffInfo", b =>
                 {
                     b.Property<Guid>("AccountId")
@@ -453,7 +416,7 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ResultFilePath")
+                    b.Property<string>("Result")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -469,6 +432,45 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("TestResult");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.TestService", b =>
+                {
+                    b.Property<Guid>("ServiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ServiceId");
+
+                    b.ToTable("TestService");
                 });
 
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
@@ -501,24 +503,6 @@ namespace backend.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
-                {
-                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Customer")
-                        .WithMany("CustomerBookings")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
-                        .WithMany("StaffBookings")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Staff");
-                });
-
             modelBuilder.Entity("backend.Domain.Entities.Booking", b =>
                 {
                     b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Account")
@@ -538,7 +522,7 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend.Domain.Entities.Service", "TestService")
+                    b.HasOne("backend.Domain.Entities.TestService", "TestService")
                         .WithMany("BookingDetails")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -549,6 +533,24 @@ namespace backend.Migrations
                     b.Navigation("TestService");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
+                {
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Customer")
+                        .WithMany("CustomerBookings")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
+                        .WithMany("StaffBookings")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Staff");
+                });
+
             modelBuilder.Entity("backend.Domain.Entities.Feedback", b =>
                 {
                     b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Account")
@@ -557,7 +559,7 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend.Domain.Entities.Service", "TestService")
+                    b.HasOne("backend.Domain.Entities.TestService", "TestService")
                         .WithMany("Feedbacks")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -568,11 +570,11 @@ namespace backend.Migrations
                     b.Navigation("TestService");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.PaymentHistory", b =>
+            modelBuilder.Entity("backend.Domain.Entities.Payment", b =>
                 {
                     b.HasOne("backend.Domain.Entities.Booking", "Booking")
                         .WithOne("PaymentHistory")
-                        .HasForeignKey("backend.Domain.Entities.PaymentHistory", "BookingId")
+                        .HasForeignKey("backend.Domain.Entities.Payment", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -614,16 +616,15 @@ namespace backend.Migrations
 
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
                 {
-                    b.Navigation("CustomerBookings");
-
-                    b.Navigation("RefreshToken");
-
-                    b.Navigation("StaffBookings");
                     b.Navigation("Bookings");
+
+                    b.Navigation("CustomerBookings");
 
                     b.Navigation("Feedbacks");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("StaffBookings");
 
                     b.Navigation("StaffInfo");
                 });
@@ -647,7 +648,7 @@ namespace backend.Migrations
                     b.Navigation("Accounts");
                 });
 
-            modelBuilder.Entity("backend.Domain.Entities.Service", b =>
+            modelBuilder.Entity("backend.Domain.Entities.TestService", b =>
                 {
                     b.Navigation("BookingDetails");
 
