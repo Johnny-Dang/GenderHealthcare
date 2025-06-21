@@ -112,11 +112,13 @@ const AdminPage = () => {
           </div>
         </Header>
 
+        {/* chổ này là chỗ hiển thị nội dung của các trang con */}
         <Content className='m-6'>
           <div className='p-6 min-h-[360px] bg-white rounded-lg shadow-md'>
             <Outlet />
           </div>
         </Content>
+
         <Footer className='text-center py-3 px-12 bg-pink-50 border-t border-pink-100'>
           <div className='flex items-center justify-center gap-2'>
             <Heart size={16} className='text-pink-500' />
