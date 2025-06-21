@@ -5,10 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend.API.Controllers
 {
-
-    [Route("[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Route("api/users")]
+    //[Authorize(Roles = "Admin")]
 
     public class AdminController : ControllerBase
     {
@@ -19,7 +18,7 @@ namespace backend.API.Controllers
             _accountService = accountService;
         }
 
-        [HttpGet("accounts")]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var result = await _accountService.GetAllAsync();
@@ -33,7 +32,7 @@ namespace backend.API.Controllers
             return result.IsSuccess ? Ok(result.Data) : NotFound(result.Error);
         }
 
-        [HttpPost("account")]
+        [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateAccountRequest request)
         {
             var result = await _accountService.CreateAsync(request);

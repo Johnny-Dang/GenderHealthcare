@@ -1,4 +1,5 @@
 using AutoMapper;
+using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Repositories;
@@ -92,6 +93,8 @@ namespace backend.Infrastructure.Services
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }
 
+        
+
         public async Task<Result<AccountDto>> GetByIdAsync(Guid id)
         {
             var acc = await _accountRepository.GetAccountByIdWithRoleAsync(id);
@@ -99,10 +102,31 @@ namespace backend.Infrastructure.Services
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(acc));
         }
 
-        public async Task<Result<List<AccountDto>>> GetAllAsync()
+        //public async Task<Result<List<AccountDto>>> GetAllAsync()
+        //{
+        //    var accounts = await _accountRepository.GetAllAccountsAsync();
+        //    return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
+        //}
+        
+        // Fix lại nè
+        public async Task<Result<List<AccountResponse>>> GetAllAsync()
         {
             var accounts = await _accountRepository.GetAllAccountsAsync();
-            return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
+
+            var result = accounts.Select(acc => new AccountResponse
+            {
+                AccountId = acc.AccountId,
+                Email = acc.Email,
+                Phone = acc.Phone,
+                AvatarUrl = acc.avatarUrl,
+                DateOfBirth = acc.DateOfBirth,
+                Gender = acc.Gender,
+                CreateAt = acc.CreateAt,
+                FullName = $"{acc.FirstName} {acc.LastName}".Trim(),
+                RoleName = acc.Role != null ? acc.Role.Name : string.Empty
+            }).ToList();
+
+            return Result<List<AccountResponse>>.Success(result);
         }
 
         public async Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request)

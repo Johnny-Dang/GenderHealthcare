@@ -1,3 +1,4 @@
+using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
 using DeployGenderSystem.Domain.Entity;
 using Google.Apis.Auth;
@@ -14,7 +15,7 @@ namespace backend.Application.Interfaces
         public Task<Result<AccountDto>> CreateAsync(CreateAccountRequest request); // admin
         public Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request); // admin
         public Task<Result<bool>> DeleteAsync(Guid id); // admin
-        public Task<Result<List<AccountDto>>> GetAllAsync(); // admin
+        public Task<Result<List<AccountResponse>>> GetAllAsync(); // admin
         public Task<Result<AccountDto>> GetByIdAsync(Guid id); // admin
 
         public Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request);
