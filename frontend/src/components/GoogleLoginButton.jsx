@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import api from '../configs/axios'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { useDispatch } from "react-redux";
+import { useDispatch } from 'react-redux'
 import { login } from '../redux/features/userSlice'
 
 export default function GoogleLoginButton() {
@@ -29,10 +29,8 @@ export default function GoogleLoginButton() {
       const apiResponse = await api.post('Account/login-google', {
         credential: response.credential
       })
-      console.log(apiResponse);
-      
-      if (apiResponse) {
-        
+
+      if (apiResponse?.data.accessToken) {
         // Store user data and token in localStorage
         dispatch(login(apiResponse.data))
         localStorage.setItem('token', apiResponse.data.accessToken)
@@ -42,6 +40,8 @@ export default function GoogleLoginButton() {
           autoClose: 3000
         })
         navigate('/')
+      } else {
+        toast.error('Dữ liệu phản hồi không hợp lệ')
       }
     } catch (error) {
       console.error('Login error:', error)

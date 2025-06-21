@@ -26,19 +26,19 @@ const Login = () => {
   const dispatch = useDispatch()
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
-      const response = await api.post("https://localhost:7195/Account/login", {
+      const response = await api.post('https://localhost:7195/Account/login', {
         email,
         password
-      });
+      })
 
-      console.log(response);
-      
+      console.log(response)
+
       dispatch(login(response.data))
       localStorage.setItem('token', response.data.accessToken)
 
-      if (response) {
+      if (response?.data?.accessToken && response?.data?.role) {
         toast.success('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
 
         switch (response.data.role) {
@@ -61,45 +61,47 @@ const Login = () => {
             navigate('/')
         }
       } else {
-        toast.error('Email hoặc mật khẩu không đúng')
-        setError('Email hoặc mật khẩu không đúng')
+        toast.error('Dữ liệu phản hổi không hợp lệ')
+        setError('Dữ liệu phản hổi không hợp lệ')
       }
-    }catch(error){
-      toast.error("Login Không Thành Công")
+    } catch (error) {
+      const errorMessage = error.response?.data
+      toast.error(errorMessage)
+      setError(errorMessage)
     }
   }
 
   const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault()
+    e.stopPropagation()
     try {
-      await api.post("/Account/forgot-password/send-code", {
+      await api.post('/Account/forgot-password/send-code', {
         email: forgotPasswordEmail
-      });
-      toast.success('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.');
-      setShowResetForm(true);
+      })
+      toast.success('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.')
+      setShowResetForm(true)
     } catch (error) {
-      toast.error('Gửi email khôi phục thất bại. Vui lòng thử lại!');
+      toast.error('Gửi email khôi phục thất bại. Vui lòng thử lại!')
     }
   }
 
   const handleResetPassword = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault()
+    e.stopPropagation()
     try {
-      await api.post("/Account/forgot-password/reset", {
+      await api.post('/Account/forgot-password/reset', {
         email: forgotPasswordEmail,
         verificationCode,
         newPassword
-      });
-      toast.success('Đặt lại mật khẩu thành công!');
-      setShowResetForm(false);
-      setIsForgotPasswordOpen(false);
-      setForgotPasswordEmail('');
-      setVerificationCode('');
-      setNewPassword('');
+      })
+      toast.success('Đặt lại mật khẩu thành công!')
+      setShowResetForm(false)
+      setIsForgotPasswordOpen(false)
+      setForgotPasswordEmail('')
+      setVerificationCode('')
+      setNewPassword('')
     } catch (error) {
-      toast.error('Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại mã xác thực hoặc thử lại!');
+      toast.error('Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại mã xác thực hoặc thử lại!')
     }
   }
 
@@ -137,15 +139,18 @@ const Login = () => {
               <div className='space-y-2'>
                 <div className='flex items-center justify-between'>
                   <Label htmlFor='password'>Mật khẩu</Label>
-                  <Dialog open={isForgotPasswordOpen} onOpenChange={(open) => {
-                    setIsForgotPasswordOpen(open);
-                    if (!open) {
-                      setShowResetForm(false);
-                      setForgotPasswordEmail('');
-                      setVerificationCode('');
-                      setNewPassword('');
-                    }
-                  }}>
+                  <Dialog
+                    open={isForgotPasswordOpen}
+                    onOpenChange={(open) => {
+                      setIsForgotPasswordOpen(open)
+                      if (!open) {
+                        setShowResetForm(false)
+                        setForgotPasswordEmail('')
+                        setVerificationCode('')
+                        setNewPassword('')
+                      }
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <button type='button' className='text-sm text-primary-500 hover:underline'>
                         Quên mật khẩu?
@@ -181,7 +186,7 @@ const Login = () => {
                               id='verificationCode'
                               type='text'
                               value={verificationCode}
-                              onChange={e => setVerificationCode(e.target.value)}
+                              onChange={(e) => setVerificationCode(e.target.value)}
                               required
                               placeholder='Nhập mã xác thực'
                             />
@@ -192,7 +197,7 @@ const Login = () => {
                               id='newPassword'
                               type='password'
                               value={newPassword}
-                              onChange={e => setNewPassword(e.target.value)}
+                              onChange={(e) => setNewPassword(e.target.value)}
                               required
                               placeholder='Nhập mật khẩu mới'
                             />

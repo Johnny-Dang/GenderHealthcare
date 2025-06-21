@@ -1,17 +1,19 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Heart, Menu, X, User, LogOut } from 'lucide-react'
-import { useSelector, useDispatch } from "react-redux";
-import { logout } from "@/redux/features/userSlice";
-import api from "@/configs/axios";
+import { useSelector, useDispatch } from 'react-redux'
+import { logout } from '@/redux/features/userSlice'
+import api from '@/configs/axios'
+import { toast } from 'react-toastify'
 
 const Navigation = () => {
+  const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const user = useSelector(state => state.user);
-  const dispatch = useDispatch();
-  const isGuest = !user;
+  const user = useSelector((state) => state.user)
+  const dispatch = useDispatch()
+  const isGuest = !user
 
   // Define navigation items based on user role
   const getNavItems = () => {
@@ -69,14 +71,13 @@ const Navigation = () => {
 
   const handleLogout = async () => {
     try {
-      await api.post("/Account/logout");
+      await api.post('/Account/logout')
     } catch (error) {
-      // Có thể log lỗi hoặc bỏ qua nếu không quan trọng
-      console.error("Lỗi khi logout:", error);
+      toast.error('Đã xảy ra lỗi khi đăng xuất')
     }
-    dispatch(logout());
-    setIsMenuOpen(false);
-    window.location.href = "/";
+    dispatch(logout())
+    setIsMenuOpen(false)
+    navigate('/')
   }
 
   const getRoleDisplayName = (role) => {
@@ -87,10 +88,10 @@ const Navigation = () => {
         return 'Nhân viên'
       case 'Consultant':
         return 'Tư vấn viên'
-      case 'User':
-        return 'Người dùng'
-      case "Manager":
-        return "Quản lý"
+      case 'Customer':
+        return 'Khách hàng'
+      case 'Manager':
+        return 'Quản lý'
       default:
         return 'Khách'
     }
@@ -102,7 +103,7 @@ const Navigation = () => {
     { path: '/blog', label: 'Blog' },
     { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
     { path: '/booking', label: 'Đặt tư vấn' }
-  ];
+  ]
 
   return (
     <nav className='bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100'>
@@ -120,7 +121,7 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <div className='hidden md:flex items-center space-x-8'>
             {isGuest
-              ? guestNavItems.map(item => (
+              ? guestNavItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
@@ -131,7 +132,7 @@ const Navigation = () => {
                     {item.label}
                   </Link>
                 ))
-              : navItems.map(item => (
+              : navItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
