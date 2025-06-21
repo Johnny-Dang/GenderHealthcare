@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Repositories;
@@ -46,6 +46,11 @@ namespace backend.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// Authenticates a user using a Google OAuth credential, registering a new account if necessary, and returns a login response with access and refresh tokens.
+        /// </summary>
+        /// <param name="model">The Google login data containing the credential token.</param>
+        /// <returns>A result containing the login response with tokens and user information, or a failure result if authentication fails.</returns>
         public async Task<Result<LoginResponse>> LoginGoogleAsync(GoogleLoginDto model)
         {
             // Get the client ID from configuration
@@ -124,7 +129,6 @@ namespace backend.Infrastructure.Services
                     AccountId = account.AccountId,
                 };
             }
-
             return Result<LoginResponse>.Success(response);
         }
 

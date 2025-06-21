@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useAuth } from '@/contexts/AuthContext'
 import { Heart, AlertCircle } from 'lucide-react'
 import { toast } from 'react-toastify'
+import api from '../../configs/axios'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -21,8 +21,25 @@ const Register = () => {
     gender: ''
   })
   const [errors, setErrors] = useState({})
-  const { register, isLoading } = useAuth()
+  const [verificationCode, setVerificationCode] = useState('')
+  const [isCodeSent, setIsCodeSent] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [countdown, setCountdown] = useState(15)
+  const [isCounting, setIsCounting] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    let timer
+    if (isCounting && countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+    } else if (countdown === 0) {
+      setIsCounting(false)
+      setCountdown(15)
+    }
+    return () => clearTimeout(timer)
+  }, [isCounting, countdown])
 
   const validateForm = () => {
     const newErrors = {}
@@ -100,41 +117,49 @@ const Register = () => {
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!validateForm()) {
+  const handleSendCode = async () => {
+    if (!formData.email) {
+      toast.error('Vui lòng nhập email trước khi gửi mã.')
       return
     }
+    try {
+      await api.post('/Account/send-verification-code', { email: formData.email })
+      toast.success('Mã xác thực đã được gửi đến email của bạn.')
+      setIsCodeSent(true)
+      setIsCounting(true)
+    } catch (error) {
+      toast.error('Gửi mã xác thực thất bại. Vui lòng thử lại.')
+    }
+  }
 
-    const success = await register(formData.email, formData.password, `${formData.firstName} ${formData.lastName}`, {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      phone: formData.phone,
-      dateOfBirth: formData.dateOfBirth,
-      gender: formData.gender
-    })
-
-    if (success) {
-      toast.success('Đăng ký thành công! Tài khoản của bạn đã được tạo thành công!', {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validateForm()) return
+    if (!isCodeSent) {
+      toast.error('Vui lòng gửi và nhập mã xác thực.')
+      return
+    }
+    setIsLoading(true)
+    try {
+      const genderBoolean = formData.gender === 'male'
+      await api.post('/Account/register-with-code', {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        avatarUrl: '', // or a default avatar URL
+        dateOfBirth: formData.dateOfBirth,
+        gender: genderBoolean,
+        verificationCode: verificationCode
       })
-      navigate('/')
-    } else {
-      setErrors({ email: 'Email đã được sử dụng' })
-      toast.error('Đăng ký thất bại! Email đã được sử dụng.', {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      })
+      toast.success('Đăng ký thành công!')
+      navigate('/login')
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -196,23 +221,34 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className='space-y-2'>
-                <Label htmlFor='email'>Email *</Label>
+              <div className='flex items-center space-x-2'>
                 <Input
                   id='email'
                   type='email'
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder='Nhập email của bạn'
+                  placeholder='Nhập email'
                   className={errors.email ? 'border-red-500' : ''}
+                  disabled={isCounting}
                 />
-                {errors.email && (
-                  <div className='flex items-center space-x-1 text-red-600 text-xs'>
-                    <AlertCircle className='h-3 w-3' />
-                    <span>{errors.email}</span>
-                  </div>
-                )}
+                <Button type='button' onClick={handleSendCode} disabled={isCounting || !formData.email}>
+                  {isCounting ? `Gửi lại sau (${countdown}s)` : isCodeSent ? 'Gửi lại mã' : 'Gửi mã'}
+                </Button>
               </div>
+
+              {isCodeSent && (
+                <div className='space-y-2'>
+                  <Label htmlFor='verificationCode'>Mã xác thực *</Label>
+                  <Input
+                    id='verificationCode'
+                    type='text'
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    placeholder='Nhập mã từ email'
+                    required
+                  />
+                </div>
+              )}
 
               <div className='space-y-2'>
                 <Label htmlFor='phone'>Số điện thoại *</Label>
