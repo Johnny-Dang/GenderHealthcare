@@ -9,6 +9,7 @@
         public string? AvatarUrl { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public bool Gender { get; set; }
+        public bool IsDeleted { get; set; }
         public DateTime CreateAt { get; set; }
         public string RoleName { get; set; } = default!;
     }

@@ -101,12 +101,6 @@ namespace backend.Infrastructure.Services
             if (acc == null) return Result<AccountDto>.Failure("Not found");
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(acc));
         }
-
-        //public async Task<Result<List<AccountDto>>> GetAllAsync()
-        //{
-        //    var accounts = await _accountRepository.GetAllAccountsAsync();
-        //    return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
-        //}
         
         // Fix lại nè
         public async Task<Result<List<AccountResponse>>> GetAllAsync()
@@ -123,7 +117,9 @@ namespace backend.Infrastructure.Services
                 Gender = acc.Gender,
                 CreateAt = acc.CreateAt,
                 FullName = $"{acc.FirstName} {acc.LastName}".Trim(),
+                IsDeleted = acc.IsDeleted,
                 RoleName = acc.Role != null ? acc.Role.Name : string.Empty
+                
             }).ToList();
 
             return Result<List<AccountResponse>>.Success(result);
