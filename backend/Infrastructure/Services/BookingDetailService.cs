@@ -54,6 +54,7 @@ namespace backend.Infrastructure.Services
                 Price = service.Price,
                 FirstName = createdDetail.FirstName,
                 LastName = createdDetail.LastName,
+                Phone = createdDetail.Phone,
                 DateOfBirth = createdDetail.DateOfBirth,
                 Gender = createdDetail.Gender
             };
@@ -80,6 +81,7 @@ namespace backend.Infrastructure.Services
                     Price = detail.TestService?.Price ?? 0,
                     FirstName = detail.FirstName,
                     LastName = detail.LastName,
+                    Phone = detail.Phone,
                     DateOfBirth = detail.DateOfBirth,
                     Gender = detail.Gender
                 });
@@ -104,6 +106,7 @@ namespace backend.Infrastructure.Services
                 Price = bookingDetail.TestService?.Price ?? 0,
                 FirstName = bookingDetail.FirstName,
                 LastName = bookingDetail.LastName,
+                Phone = bookingDetail.Phone,
                 DateOfBirth = bookingDetail.DateOfBirth,
                 Gender = bookingDetail.Gender
             };
@@ -141,6 +144,7 @@ namespace backend.Infrastructure.Services
                 Price = service.Price,
                 FirstName = updatedDetail.FirstName,
                 LastName = updatedDetail.LastName,
+                Phone = updatedDetail.Phone,
                 DateOfBirth = updatedDetail.DateOfBirth,
                 Gender = updatedDetail.Gender
             };

@@ -13,7 +13,8 @@ namespace backend.Application.Repositories
         // Read
         Task<Booking> GetByIdAsync(Guid id);
         Task<List<Booking>> GetAllAsync();
-        Task<List<Booking>> GetByAccountIdAsync(Guid accountId);
+        Task<IEnumerable<Booking>> GetByAccountIdAsync(Guid accountId);
+        Task<IEnumerable<Booking>> GetByAccountIdWithDetailsAsync(Guid accountId);
         
         // Update
         Task<Booking> UpdateAsync(Booking booking);
