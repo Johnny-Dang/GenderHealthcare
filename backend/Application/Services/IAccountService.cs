@@ -16,7 +16,7 @@ namespace backend.Application.Interfaces
         public Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request); // admin
         public Task<Result<bool>> DeleteAsync(Guid id); // admin
         public Task<Result<List<AccountResponse>>> GetAllAsync(); // admin
-        public Task<Result<AccountDto>> GetByIdAsync(Guid id); // admin
+        Task<Result<AccountResponse>> GetByIdAsync(Guid id); // fix
 
         public Task<Result<bool>> SendForgotPasswordCodeAsync(SendVerificationCodeRequest request);
         public Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request);

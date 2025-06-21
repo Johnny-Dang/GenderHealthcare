@@ -95,11 +95,26 @@ namespace backend.Infrastructure.Services
 
         
 
-        public async Task<Result<AccountDto>> GetByIdAsync(Guid id)
+         public async Task<Result<AccountResponse>> GetByIdAsync(Guid id)
         {
-            var acc = await _accountRepository.GetAccountByIdWithRoleAsync(id);
-            if (acc == null) return Result<AccountDto>.Failure("Not found");
-            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(acc));
+            var account = await _accountRepository.GetAccountByIdAsync(id);
+            if (account == null) return Result<AccountResponse>.Failure("Not found");
+
+            var response = new AccountResponse
+            {
+                AccountId = account.AccountId,
+                Email = account.Email,
+                Phone = account.Phone,
+                AvatarUrl = account.avatarUrl,
+                DateOfBirth = account.DateOfBirth,
+                Gender = account.Gender,
+                CreateAt = account.CreateAt,
+                FullName = $"{account.FirstName} {account.LastName}".Trim(),
+                IsDeleted = account.IsDeleted,
+                RoleName = account.Role != null ? account.Role.Name : string.Empty
+            };
+
+            return Result<AccountResponse>.Success(response);
         }
         
         // Fix lại nè
@@ -119,7 +134,6 @@ namespace backend.Infrastructure.Services
                 FullName = $"{acc.FirstName} {acc.LastName}".Trim(),
                 IsDeleted = acc.IsDeleted,
                 RoleName = acc.Role != null ? acc.Role.Name : string.Empty
-                
             }).ToList();
 
             return Result<List<AccountResponse>>.Success(result);
