@@ -1,5 +1,5 @@
 import React from 'react'
-import { createHashRouter, RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom'
+import { RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom'
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
@@ -28,7 +28,7 @@ import DashboardHome from './pages/admin/DashboardHome'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
-  const router = createHashRouter([
+  const router = createBrowserRouter([
     {
       path: '/',
       element: <HomePage />

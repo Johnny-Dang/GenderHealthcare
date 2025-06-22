@@ -7,7 +7,7 @@ namespace backend.API.Controllers
 {
     [ApiController]
     [Route("api/users")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
 
     public class AdminController : ControllerBase
     {

@@ -8,6 +8,10 @@ import 'react-toastify/dist/ReactToastify.css'
 
 const { Option } = Select
 const { Title, Text } = Typography
+const GENDER_MAP = {
+  true: { label: 'Nam', value: 'male' },
+  false: { label: 'Nữ', value: 'female' }
+}
 
 const UserManagement = () => {
   const [loading, setLoading] = useState(true)
@@ -16,6 +20,7 @@ const UserManagement = () => {
   const [currentUser, setCurrentUser] = useState(null)
   const [form] = Form.useForm()
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null })
+  const [searchText, setSearchText] = useState('') // Add search state
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -27,7 +32,7 @@ const UserManagement = () => {
         name: user.fullName || (user.firstName || '') + ' ' + (user.lastName || ''),
         email: user.email,
         phone: user.phone,
-        gender: user.gender ? 'Nam' : 'Nữ',
+        gender: GENDER_MAP[user.gender]?.label || 'N/A',
         dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
         createAt: moment(user.createAt).format('DD/MM/YYYY'),
         role: user.roleName,
@@ -88,7 +93,7 @@ const UserManagement = () => {
               lastName,
               roleName: values.role
             })
-            if (response.data && response.data.accountId) {
+            if (response.data?.accountId) {
               toast.success('Thêm người dùng thành công!')
             }
           }
@@ -99,9 +104,7 @@ const UserManagement = () => {
           toast.error('Có lỗi xảy ra. Vui lòng thử lại sau.')
         }
       })
-      .catch(() => {
-        // Không cần toast ở đây
-      })
+      .catch(() => {})
   }
 
   const handleCancel = () => {
@@ -115,16 +118,17 @@ const UserManagement = () => {
     setDeleteModal({ open: true, id: userId })
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return 'N/A'
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
+  // Filtered data based on searchText
+  const filteredData = userData.filter((user) => {
+    const search = searchText.trim().toLowerCase()
+    if (!search) return true
+    return (
+      (user.name && user.name.toLowerCase().includes(search)) ||
+      (user.email && user.email.toLowerCase().includes(search)) ||
+      (user.phone && user.phone.toLowerCase().includes(search)) ||
+      (user.role && user.role.toLowerCase().includes(search))
+    )
+  })
 
   const columns = [
     {
@@ -168,7 +172,7 @@ const UserManagement = () => {
       dataIndex: 'dateOfBirth',
       key: 'dateOfBirth',
       width: '12%',
-      render: (date) => <span>{date ? formatDate(date) : 'N/A'}</span>
+      render: (date) => <span>{date || 'N/A'}</span>
     },
     {
       title: 'Vai trò',
@@ -252,6 +256,9 @@ const UserManagement = () => {
             placeholder='Tìm kiếm người dùng...'
             prefix={<SearchOutlined className='text-gray-400' />}
             className='w-64 mr-4'
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
           />
         </div>
         <Button
@@ -266,7 +273,7 @@ const UserManagement = () => {
 
       <Table
         columns={columns}
-        dataSource={userData}
+        dataSource={filteredData}
         rowClassName='hover:bg-pink-50'
         pagination={{
           pageSize: 10,
@@ -315,7 +322,7 @@ const UserManagement = () => {
               <Option value='User'>User</Option>
             </Select>
           </Form.Item>
-          {/* Nếu là tạo mới thì cho nhập password */}
+          {/* Show password field only for new users */}
           {!currentUser && (
             <Form.Item name='password' label='Mật khẩu'>
               <Input.Password placeholder='Nhập mật khẩu (mặc định: DefaultPassword123)' />

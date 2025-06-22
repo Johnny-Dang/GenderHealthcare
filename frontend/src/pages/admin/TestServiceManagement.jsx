@@ -334,7 +334,13 @@ const TestServiceManagement = () => {
             label='Giá dịch vụ'
             rules={[{ required: true, message: 'Vui lòng nhập giá dịch vụ!' }]}
           >
-            <Input placeholder='VD: 350,000 VND' />
+            <InputNumber
+              placeholder='350000'
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+              addonAfter='VND'
+              style={{ width: '100%' }}
+            />
           </Form.Item>
           <Form.Item
             name='duration'

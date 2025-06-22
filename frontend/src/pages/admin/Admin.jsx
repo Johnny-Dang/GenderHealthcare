@@ -32,16 +32,16 @@ const AdminPage = () => {
     token: { colorBgContainer, borderRadiusLG }
   } = theme.useToken()
 
+  const breadcrumbMap = {
+    '/admin/users': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý người dùng' }],
+    '/admin/services': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý dịch vụ xét nghiệm' }],
+    '/admin/dashboard': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }]
+  }
+
   // Update breadcrumb based on current path
   useEffect(() => {
-    const pathSnippets = location.pathname.split('/').filter((i) => i) // Tạo breadcrumb items dựa vào đường dẫn
-    if (location.pathname.includes('/users')) {
-      setBreadcrumbItems([{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý người dùng' }])
-    } else if (location.pathname.includes('/services')) {
-      setBreadcrumbItems([{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý dịch vụ xét nghiệm' }])
-    } else {
-      setBreadcrumbItems([{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }])
-    }
+    const breadcrumb = breadcrumbMap[location.pathname] || breadcrumbMap['/admin/dashboard']
+    setBreadcrumbItems(breadcrumb)
   }, [location])
   // Xác định menu active
   const getActiveMenu = () => {

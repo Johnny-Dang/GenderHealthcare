@@ -65,7 +65,7 @@ const DashboardHome = () => {
 
   // Format number with commas
   const formatNumber = (num) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return new Intl.NumberFormat('vi-VN').format(num)
   }
 
   // Columns for recent appointments table
