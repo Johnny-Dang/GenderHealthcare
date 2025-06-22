@@ -22,14 +22,15 @@ const BlogPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Lấy danh sách blog posts từ API
+  // Lấy danh sách blog posts và categories từ API
   useEffect(() => {
-    const fetchBlogs = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await api.get('/api/Blog/published')
 
-        const formattedPosts = response.data.map((blog) => ({
+        // Lấy danh sách bài viết
+        const blogsResponse = await api.get('/api/Blog/published')
+        const formattedPosts = blogsResponse.data.map((blog) => ({
           id: blog.blogId,
           title: blog.title,
           excerpt: blog.excerpt || blog.content.substring(0, 150) + '...',
@@ -38,25 +39,26 @@ const BlogPage = () => {
           date: new Date(blog.createdAt).toISOString().split('T')[0],
           image:
             blog.featuredImageUrl || 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop',
-          category: blog.categoryName || 'Chưa phân loại'
+          category: blog.categoryName || 'Chưa phân loại',
+          categoryId: blog.categoryId
         }))
-
         setBlogPosts(formattedPosts)
 
-        // Extract unique categories from blog posts
-        const uniqueCategories = ['Tất cả', ...new Set(formattedPosts.map((post) => post.category))]
-        setCategories(uniqueCategories)
+        // Lấy danh sách danh mục trực tiếp từ API
+        const categoriesResponse = await api.get('/api/BlogCategory')
+        const categoryOptions = ['Tất cả', ...categoriesResponse.data.map((cat) => cat.name)]
+        setCategories(categoryOptions)
 
         setError(null)
       } catch (error) {
-        console.error('Error fetching blogs:', error)
-        setError('Không thể tải bài viết. Vui lòng thử lại sau.')
+        console.error('Error fetching data:', error)
+        setError('Không thể tải dữ liệu. Vui lòng thử lại sau.')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchBlogs()
+    fetchData()
   }, [])
 
   // Filter posts by category
