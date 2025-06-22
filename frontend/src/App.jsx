@@ -18,9 +18,9 @@ import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage';
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
- * 
+ *
  * Defines all application routes and wraps the app with Redux Provider and PersistGate to enable global state and state persistence across sessions.
- * 
+ *
  * @returns {JSX.Element} The application root element with routing and state management configured.
  */
 function App() {
