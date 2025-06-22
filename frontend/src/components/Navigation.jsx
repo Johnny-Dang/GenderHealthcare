@@ -39,7 +39,7 @@ const Navigation = () => {
 
       case 'Staff':
         return [
-          { path: '/staff-management', label: 'Quản lý Blog & Dịch vụ' },
+          { path: '/staff/blog', label: 'Quản lý Blog & Dịch vụ' },
           { path: '/blog', label: 'Blog' },
           { path: '/dich-vu', label: 'Dịch vụ' }
         ]
@@ -53,6 +53,7 @@ const Navigation = () => {
 
       case 'Customer':
         return [
+          { path: '/customer-dashboard', label: 'Dashboard' },
           { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
           { path: '/tu-van', label: 'Đặt tư vấn' },
           { path: '/blog', label: 'Blog' },
@@ -101,8 +102,7 @@ const Navigation = () => {
     { path: '/', label: 'Trang chủ' },
     { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
     { path: '/blog', label: 'Blog' },
-    { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
-    { path: '/booking', label: 'Đặt tư vấn' }
+    { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
   ]
 
   return (

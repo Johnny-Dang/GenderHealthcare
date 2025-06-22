@@ -31,7 +31,7 @@ namespace backend.API.Controllers
         // GET: api/payments/vnpay-callback
         [HttpGet("vnpay-callback")]
         [AllowAnonymous]
-        public async Task<IActionResult> VnPayCallback([FromQuery]PaymentResponse request)
+        public async Task<IActionResult> VnPayCallback()
         {
             var response = _paymentService.PaymentExecute(Request.Query);
             await _paymentService.StorePayment(response);

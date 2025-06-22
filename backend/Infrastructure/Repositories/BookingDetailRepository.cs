@@ -56,6 +56,7 @@ namespace backend.Infrastructure.Repositories
             existingDetail.ServiceId = bookingDetail.ServiceId;
             existingDetail.FirstName = bookingDetail.FirstName;
             existingDetail.LastName = bookingDetail.LastName;
+            existingDetail.Phone = bookingDetail.Phone; 
             existingDetail.DateOfBirth = bookingDetail.DateOfBirth;
             existingDetail.Gender = bookingDetail.Gender;
             

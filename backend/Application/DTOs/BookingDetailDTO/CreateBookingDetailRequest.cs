@@ -22,6 +22,10 @@ namespace backend.Application.DTOs.BookingDetailDTO
         [Required]
         public DateOnly DateOfBirth { get; set; }
         
+        [Required]
+        [StringLength(20)]
+        public string Phone { get; set; } = default!;
+        
         public bool Gender { get; set; } = false;
     }
 } 

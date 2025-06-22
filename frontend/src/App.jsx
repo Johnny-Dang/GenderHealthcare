@@ -1,5 +1,5 @@
 import React from 'react'
-import { createHashRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
@@ -13,6 +13,8 @@ import TestServicePage from './pages/test-service'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './redux/store'
+import CustomerDashboard from './pages/customer-dashboard/BookingDashboard';
+import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage';
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
@@ -23,14 +25,14 @@ import { store, persistor } from './redux/store'
  */
 function App() {
   // Using HashRouter for better compatibility with different server configurations
-  const router = createHashRouter([
+  const router = createBrowserRouter([
     {
       path: '/',
       element: <HomePage />
     },
     {
       path: '/login',
-      element: <LoginPage />
+      element: <LoginPage /> 
     },
     {
       path: '/register',
@@ -45,11 +47,6 @@ function App() {
       path: '/blog/:id',
       element: <BlogDetailPage />
     },
-    // Role: Staff
-    // {
-    //   path: '/staff',
-    //   element: <StaffPage />
-    // },
     {
       path: '/staff/blog',
       element: <BlogManagement />
@@ -70,6 +67,14 @@ function App() {
     {
       path: '/test-service',
       element: <TestServicePage />
+    },
+    {
+      path: '/customer-dashboard',
+      element: <CustomerDashboard />
+    },
+    {
+      path: '/customer-dashboard/booking/:bookingId',
+      element: <BookingDetailPage />
     }
   ])
 
