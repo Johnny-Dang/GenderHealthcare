@@ -1,4 +1,5 @@
 using AutoMapper;
+using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Repositories;
@@ -92,17 +93,50 @@ namespace backend.Infrastructure.Services
             return Result<AccountDto>.Success(_mapper.Map<AccountDto>(account));
         }
 
-        public async Task<Result<AccountDto>> GetByIdAsync(Guid id)
-        {
-            var acc = await _accountRepository.GetAccountByIdWithRoleAsync(id);
-            if (acc == null) return Result<AccountDto>.Failure("Not found");
-            return Result<AccountDto>.Success(_mapper.Map<AccountDto>(acc));
-        }
+        
 
-        public async Task<Result<List<AccountDto>>> GetAllAsync()
+         public async Task<Result<AccountResponse>> GetByIdAsync(Guid id)
+        {
+            var account = await _accountRepository.GetAccountByIdAsync(id);
+            if (account == null) return Result<AccountResponse>.Failure("Not found");
+
+            var response = new AccountResponse
+            {
+                AccountId = account.AccountId,
+                Email = account.Email,
+                Phone = account.Phone,
+                AvatarUrl = account.avatarUrl,
+                DateOfBirth = account.DateOfBirth,
+                Gender = account.Gender,
+                CreateAt = account.CreateAt,
+                FullName = $"{account.FirstName} {account.LastName}".Trim(),
+                IsDeleted = account.IsDeleted,
+                RoleName = account.Role != null ? account.Role.Name : string.Empty
+            };
+
+            return Result<AccountResponse>.Success(response);
+        }
+        
+        // Fix lại nè
+        public async Task<Result<List<AccountResponse>>> GetAllAsync()
         {
             var accounts = await _accountRepository.GetAllAccountsAsync();
-            return Result<List<AccountDto>>.Success(_mapper.Map<List<AccountDto>>(accounts));
+
+            var result = accounts.Select(acc => new AccountResponse
+            {
+                AccountId = acc.AccountId,
+                Email = acc.Email,
+                Phone = acc.Phone,
+                AvatarUrl = acc.avatarUrl,
+                DateOfBirth = acc.DateOfBirth,
+                Gender = acc.Gender,
+                CreateAt = acc.CreateAt,
+                FullName = $"{acc.FirstName} {acc.LastName}".Trim(),
+                IsDeleted = acc.IsDeleted,
+                RoleName = acc.Role != null ? acc.Role.Name : string.Empty
+            }).ToList();
+
+            return Result<List<AccountResponse>>.Success(result);
         }
 
         public async Task<Result<AccountDto>> UpdateAsync(Guid id, UpdateAccountRequest request)
