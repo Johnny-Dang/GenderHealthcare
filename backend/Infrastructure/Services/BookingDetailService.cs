@@ -38,6 +38,7 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 DateOfBirth = request.DateOfBirth,
+                Phone = request.Phone,
                 Gender = request.Gender
             };
 
@@ -129,6 +130,7 @@ namespace backend.Infrastructure.Services
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
+            existingDetail.Phone = request.Phone;
             existingDetail.Gender = request.Gender;
 
             // Save changes

@@ -102,7 +102,7 @@ const Navigation = () => {
     { path: '/', label: 'Trang chủ' },
     { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
     { path: '/blog', label: 'Blog' },
-    { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
+    { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
   ]
 
   return (
