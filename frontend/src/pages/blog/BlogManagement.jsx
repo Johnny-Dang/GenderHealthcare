@@ -9,11 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { PlusCircle, Edit, Trash2, Eye, FileText, X, Filter, RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 // Constants
 const API_BASE_URL = 'https://localhost:7195'
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop'
-const DEFAULT_AUTHOR_ID = 'E37EB746-045B-475E-80DF-0C0B2A38C772'
 
 // Cấu hình axios với baseURL và headers mặc định
 const api = axios.create({
@@ -25,6 +26,8 @@ const api = axios.create({
 
 const BlogManagement = () => {
   const { toast } = useToast()
+  const navigate = useNavigate()
+  const user = useSelector((state) => state.user)
   const [blogPosts, setBlogPosts] = useState([])
   const [isFetchingBlogs, setIsFetchingBlogs] = useState(true)
 
@@ -44,6 +47,21 @@ const BlogManagement = () => {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [viewingPost, setViewingPost] = useState(null)
+
+  // New Category Modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    description: ''
+  })
+
+  // Edit Category Modal state
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false)
+  const [editingCategory, setEditingCategory] = useState(null)
+
+  // Delete Category Confirmation state
+  const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
 
   // Filter state
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
@@ -115,9 +133,30 @@ const BlogManagement = () => {
 
   // Lấy danh sách categories và blogs khi component mount
   useEffect(() => {
+    // Chỉ cho phép user đã đăng nhập và có role phù hợp truy cập
+    if (!user) {
+      toast({
+        title: 'Không có quyền truy cập',
+        description: 'Bạn cần đăng nhập để quản lý blog',
+        variant: 'destructive'
+      })
+      navigate('/login')
+      return
+    }
+
+    if (user && user.role !== 'Staff' && user.role !== 'Admin') {
+      toast({
+        title: 'Không có quyền truy cập',
+        description: 'Bạn không có quyền quản lý blog',
+        variant: 'destructive'
+      })
+      navigate('/')
+      return
+    }
+
     fetchCategories()
     fetchPublishedBlogs()
-  }, [])
+  }, [user, navigate])
 
   // Hàm lấy danh sách blogs đã xuất bản từ API
   async function fetchPublishedBlogs() {
@@ -191,7 +230,7 @@ const BlogManagement = () => {
       slug: slug,
       content: formData.content,
       excerpt: excerpt,
-      authorId: DEFAULT_AUTHOR_ID,
+      authorId: user?.accountId || user?.id, // Sử dụng ID người dùng đã đăng nhập
       categoryId: formData.categoryId,
       featuredImageUrl: formData.image || DEFAULT_IMAGE,
       isPublished: !isDraft
@@ -200,6 +239,9 @@ const BlogManagement = () => {
     if (isUpdate && editingPost) {
       postData.blogId = editingPost.id
     }
+
+    // Log để debug
+    console.log('Sending blog data:', postData)
 
     return postData
   }
@@ -222,6 +264,16 @@ const BlogManagement = () => {
 
   async function handleCreatePost(isDraft = false) {
     if (!validateForm()) return
+
+    // Kiểm tra user ID
+    if (!user || (!user.accountId && !user.id)) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xác định người tạo bài viết. Vui lòng đăng nhập lại.',
+        variant: 'destructive'
+      })
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -363,6 +415,165 @@ const BlogManagement = () => {
     )
   }
 
+  // Hàm tạo mới danh mục
+  async function handleCreateCategory() {
+    if (!newCategory.name.trim()) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng nhập tên danh mục',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await api.post('/api/BlogCategory', {
+        name: newCategory.name,
+        description: newCategory.description
+      })
+
+      // Thêm danh mục mới vào danh sách
+      const createdCategory = response.data
+      setCategories((prev) => [...prev, createdCategory])
+
+      // Chọn danh mục mới làm category hiện tại cho form
+      setFormData((prev) => ({
+        ...prev,
+        categoryId: createdCategory.categoryId
+      }))
+
+      toast({
+        title: 'Thành công',
+        description: 'Đã tạo danh mục mới'
+      })
+
+      // Reset form và đóng modal
+      setNewCategory({ name: '', description: '' })
+      setShowCategoryModal(false)
+    } catch (error) {
+      handleApiError(error, 'tạo danh mục mới')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Mở modal chỉnh sửa danh mục
+  function openEditCategoryModal(category) {
+    setEditingCategory({
+      categoryId: category.categoryId,
+      name: category.name,
+      description: category.description || ''
+    })
+    setShowEditCategoryModal(true)
+  }
+
+  // Hàm cập nhật danh mục
+  async function handleUpdateCategory() {
+    if (!editingCategory || !editingCategory.name.trim()) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng nhập tên danh mục',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await api.put(`/api/BlogCategory/${editingCategory.categoryId}`, {
+        categoryId: editingCategory.categoryId,
+        name: editingCategory.name,
+        description: editingCategory.description
+      })
+
+      // Cập nhật danh mục trong danh sách
+      const updatedCategory = response.data
+      setCategories((prev) =>
+        prev.map((cat) => (cat.categoryId === updatedCategory.categoryId ? updatedCategory : cat))
+      )
+
+      toast({
+        title: 'Thành công',
+        description: 'Đã cập nhật danh mục'
+      })
+
+      // Đóng modal
+      setEditingCategory(null)
+      setShowEditCategoryModal(false)
+    } catch (error) {
+      handleApiError(error, 'cập nhật danh mục')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Mở xác nhận xóa danh mục
+  function openDeleteCategoryConfirm(category) {
+    setCategoryToDelete(category)
+    setShowDeleteCategoryConfirm(true)
+  }
+
+  // Hàm xóa danh mục
+  async function handleDeleteCategory() {
+    if (!categoryToDelete) return
+
+    setIsLoading(true)
+    try {
+      await api.delete(`/api/BlogCategory/${categoryToDelete.categoryId}`)
+
+      // Xóa danh mục khỏi danh sách
+      setCategories((prev) => prev.filter((cat) => cat.categoryId !== categoryToDelete.categoryId))
+
+      // Nếu đang chọn danh mục bị xóa thì reset bộ lọc
+      if (selectedCategoryId === categoryToDelete.categoryId) {
+        clearFilter()
+      }
+
+      // Nếu form đang chọn danh mục bị xóa thì chọn danh mục đầu tiên hoặc để trống
+      if (formData.categoryId === categoryToDelete.categoryId) {
+        setFormData((prev) => ({
+          ...prev,
+          categoryId:
+            categories.length > 1
+              ? categories.find((c) => c.categoryId !== categoryToDelete.categoryId)?.categoryId || ''
+              : ''
+        }))
+      }
+
+      toast({
+        title: 'Thành công',
+        description: 'Đã xóa danh mục'
+      })
+
+      // Đóng modal xác nhận
+      setCategoryToDelete(null)
+      setShowDeleteCategoryConfirm(false)
+    } catch (error) {
+      handleApiError(error, 'xóa danh mục')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Function to close the category modal
+  function closeCategoryModal() {
+    setShowCategoryModal(false)
+    setNewCategory({ name: '', description: '' })
+  }
+
+  // Đóng modal chỉnh sửa danh mục
+  function closeEditCategoryModal() {
+    setShowEditCategoryModal(false)
+    setEditingCategory(null)
+  }
+
+  // Đóng modal xác nhận xóa danh mục
+  function closeDeleteCategoryConfirm() {
+    setShowDeleteCategoryConfirm(false)
+    setCategoryToDelete(null)
+  }
+
   return (
     <div className='min-h-screen bg-gradient-soft'>
       <Navigation />
@@ -432,7 +643,19 @@ const BlogManagement = () => {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='category'>Danh mục</Label>
+                <div className='flex justify-between items-center'>
+                  <Label htmlFor='category'>Danh mục</Label>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='ghost'
+                    className='text-primary-500 hover:text-primary-600 hover:bg-primary-50'
+                    onClick={() => setShowCategoryModal(true)}
+                  >
+                    <PlusCircle className='h-4 w-4 mr-1' />
+                    Thêm danh mục
+                  </Button>
+                </div>
                 <select
                   id='category'
                   className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
@@ -537,24 +760,65 @@ const BlogManagement = () => {
                 </select>
               </div>
 
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={clearFilter}
-                disabled={!selectedCategoryId}
-                className='transition-all duration-300 hover:bg-gray-50'
-              >
-                <RefreshCw className='h-4 w-4 mr-2' />
-                Xóa bộ lọc
-              </Button>
+              <div className='flex space-x-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={clearFilter}
+                  disabled={!selectedCategoryId}
+                  className='transition-all duration-300 hover:bg-gray-50'
+                >
+                  <RefreshCw className='h-4 w-4 mr-2' />
+                  Xóa bộ lọc
+                </Button>
+
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setShowCategoryModal(true)}
+                  className='transition-all duration-300 hover:bg-primary-50'
+                >
+                  <PlusCircle className='h-4 w-4 mr-2' />
+                  Thêm danh mục
+                </Button>
+              </div>
             </div>
 
             {selectedCategoryId && (
-              <div className='mt-2 text-sm text-gray-500'>
-                Đang hiển thị {filteredBlogPosts.length} bài viết trong danh mục{' '}
-                <span className='font-medium'>
-                  {categories.find((cat) => cat.categoryId === selectedCategoryId)?.name || 'Không xác định'}
+              <div className='mt-2 text-sm text-gray-500 flex justify-between items-center'>
+                <span>
+                  Đang hiển thị {filteredBlogPosts.length} bài viết trong danh mục{' '}
+                  <span className='font-medium'>
+                    {categories.find((cat) => cat.categoryId === selectedCategoryId)?.name || 'Không xác định'}
+                  </span>
                 </span>
+
+                {selectedCategoryId && (
+                  <div className='flex space-x-1'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => {
+                        const category = categories.find((cat) => cat.categoryId === selectedCategoryId)
+                        if (category) openEditCategoryModal(category)
+                      }}
+                      className='text-blue-600 hover:text-blue-800 px-2'
+                    >
+                      <Edit className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => {
+                        const category = categories.find((cat) => cat.categoryId === selectedCategoryId)
+                        if (category) openDeleteCategoryConfirm(category)
+                      }}
+                      className='text-red-600 hover:text-red-800 px-2'
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -779,7 +1043,19 @@ const BlogManagement = () => {
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='edit-category'>Danh mục</Label>
+                    <div className='flex justify-between items-center'>
+                      <Label htmlFor='edit-category'>Danh mục</Label>
+                      <Button
+                        type='button'
+                        size='sm'
+                        variant='ghost'
+                        className='text-primary-500 hover:text-primary-600 hover:bg-primary-50'
+                        onClick={() => setShowCategoryModal(true)}
+                      >
+                        <PlusCircle className='h-4 w-4 mr-1' />
+                        Thêm danh mục
+                      </Button>
+                    </div>
                     <select
                       id='edit-category'
                       className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
@@ -807,11 +1083,6 @@ const BlogManagement = () => {
                       value={formData.image}
                       onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
                     />
-                    {formData.image && (
-                      <div className='mt-2'>
-                        <img src={formData.image} alt='Preview' className='h-40 rounded-md object-cover' />
-                      </div>
-                    )}
                   </div>
 
                   <div className='space-y-2'>
@@ -864,6 +1135,160 @@ const BlogManagement = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Create Category Modal */}
+      {showCategoryModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
+          <Card className='w-full max-w-md animate-fade-in'>
+            <CardHeader>
+              <div className='flex justify-between items-center'>
+                <CardTitle>Tạo danh mục mới</CardTitle>
+                <Button variant='ghost' size='sm' onClick={closeCategoryModal}>
+                  <X className='h-4 w-4' />
+                </Button>
+              </div>
+              <CardDescription>Thêm danh mục mới cho blog</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='new-category-name'>Tên danh mục</Label>
+                  <Input
+                    id='new-category-name'
+                    placeholder='Nhập tên danh mục'
+                    value={newCategory.name}
+                    onChange={(e) => setNewCategory((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='new-category-desc'>Mô tả (tùy chọn)</Label>
+                  <Textarea
+                    id='new-category-desc'
+                    placeholder='Mô tả ngắn về danh mục'
+                    value={newCategory.description || ''}
+                    onChange={(e) => setNewCategory((prev) => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+
+                <div className='flex justify-end space-x-2 pt-4'>
+                  <Button variant='outline' onClick={closeCategoryModal} disabled={isLoading}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleCreateCategory} disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></span>
+                        Đang xử lý
+                      </>
+                    ) : (
+                      'Tạo danh mục'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Category Modal */}
+      {showEditCategoryModal && editingCategory && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
+          <Card className='w-full max-w-md animate-fade-in'>
+            <CardHeader>
+              <div className='flex justify-between items-center'>
+                <CardTitle>Chỉnh sửa danh mục</CardTitle>
+                <Button variant='ghost' size='sm' onClick={closeEditCategoryModal}>
+                  <X className='h-4 w-4' />
+                </Button>
+              </div>
+              <CardDescription>Cập nhật thông tin danh mục blog</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='edit-category-name'>Tên danh mục</Label>
+                  <Input
+                    id='edit-category-name'
+                    placeholder='Nhập tên danh mục'
+                    value={editingCategory.name}
+                    onChange={(e) => setEditingCategory((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='edit-category-desc'>Mô tả (tùy chọn)</Label>
+                  <Textarea
+                    id='edit-category-desc'
+                    placeholder='Mô tả ngắn về danh mục'
+                    value={editingCategory.description || ''}
+                    onChange={(e) => setEditingCategory((prev) => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+
+                <div className='flex justify-end space-x-2 pt-4'>
+                  <Button variant='outline' onClick={closeEditCategoryModal} disabled={isLoading}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleUpdateCategory} disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></span>
+                        Đang xử lý
+                      </>
+                    ) : (
+                      'Cập nhật'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Category Confirmation */}
+      {showDeleteCategoryConfirm && categoryToDelete && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
+          <Card className='w-full max-w-md animate-fade-in'>
+            <CardHeader>
+              <div className='flex justify-between items-center'>
+                <CardTitle className='text-red-600'>Xác nhận xóa</CardTitle>
+                <Button variant='ghost' size='sm' onClick={closeDeleteCategoryConfirm}>
+                  <X className='h-4 w-4' />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                <p>
+                  Bạn có chắc chắn muốn xóa danh mục <strong>{categoryToDelete.name}</strong>?
+                </p>
+                <p className='text-sm text-gray-500'>
+                  Thao tác này không thể hoàn tác và có thể ảnh hưởng đến các bài viết thuộc danh mục này.
+                </p>
+
+                <div className='flex justify-end space-x-2 pt-4'>
+                  <Button variant='outline' onClick={closeDeleteCategoryConfirm} disabled={isLoading}>
+                    Hủy
+                  </Button>
+                  <Button variant='destructive' onClick={handleDeleteCategory} disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></span>
+                        Đang xử lý
+                      </>
+                    ) : (
+                      'Xóa danh mục'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
