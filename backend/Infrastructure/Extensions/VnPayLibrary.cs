@@ -46,6 +46,7 @@ namespace VnPayDemo.Helpers
             {
                 Success = true,
                 PaymentMethod = "VnPay",
+                Amount = Amount, // Convert from cents to original amount
                 OrderInfo = orderInfo,
                 TransactionId = vnPayTranId.ToString(),
                 Token = vnpSecureHash,

@@ -13,6 +13,8 @@ import TestServicePage from './pages/test-service'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './redux/store'
+import CustomerDashboard from './pages/customer-dashboard/BookingDashboard'
+import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage'
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
@@ -50,11 +52,6 @@ function App() {
       path: '/blog/:id',
       element: <BlogDetailPage />
     },
-    // Role: Staff
-    // {
-    //   path: '/staff',
-    //   element: <StaffPage />
-    // },
     {
       path: '/staff/blog',
       element: <BlogManagement />
@@ -94,6 +91,16 @@ function App() {
         }
       ]
     },
+    {
+      path: '/customer-dashboard',
+      element: <CustomerDashboard />
+    },
+    {
+      path: '/customer-dashboard/booking/:bookingId',
+      element: <BookingDetailPage />
+    },
+
+    // Cái page này để cuối nếu not found
     {
       path: '*',
       element: <NotFound />

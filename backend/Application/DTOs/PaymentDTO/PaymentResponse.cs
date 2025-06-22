@@ -6,6 +6,8 @@ namespace backend.Application.DTOs.PaymentDTO
     {
         public string OrderInfo { get; set; } = string.Empty;
 
+        public string Amount { get; set; } = string.Empty;   
+        
         public string TransactionId { get; set; } = string.Empty;
         
         public string PaymentMethod { get; set; } = string.Empty;

@@ -13,7 +13,7 @@
         public string LastName { get; set; } = default!;
 
         public DateOnly DateOfBirth {  get; set; }  
-
+        public string Phone { get; set;} = default!;
         public bool Gender { get; set; } = false;
 
         public Booking Booking { get; set; } = default!;
