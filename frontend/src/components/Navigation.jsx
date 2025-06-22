@@ -6,14 +6,15 @@ import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '@/redux/features/userSlice'
 import api from '@/configs/axios'
 import { toast } from 'react-toastify'
+import CartIcon from './CartIcon'
 
 const Navigation = () => {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const user = useSelector((state) => state.user)
+  const userInfo = useSelector((state) => state.user.userInfo)
   const dispatch = useDispatch()
-  const isGuest = !user
+  const isGuest = !userInfo
 
   // Define navigation items based on user role
   const getNavItems = () => {
@@ -29,7 +30,7 @@ const Navigation = () => {
       ]
     }
 
-    switch (user.role) {
+    switch (userInfo.role) {
       case 'Admin':
         return [
           { path: '/admin', label: 'Quản lý hệ thống' },
@@ -77,6 +78,7 @@ const Navigation = () => {
       toast.error('Đã xảy ra lỗi khi đăng xuất')
     }
     dispatch(logout())
+    localStorage.removeItem('token')
     setIsMenuOpen(false)
     navigate('/')
   }
@@ -144,12 +146,15 @@ const Navigation = () => {
                   </Link>
                 ))}
 
-            {user ? (
+            {/* Cart Icon */}
+            <CartIcon />
+
+            {userInfo ? (
               <div className='flex items-center space-x-4'>
                 <div className='flex items-center space-x-2'>
                   <User className='h-4 w-4 text-gray-600' />
                   <span className='text-sm text-gray-700'>
-                    {user.name} ({getRoleDisplayName(user.role)})
+                    {userInfo.name} ({getRoleDisplayName(userInfo.role)})
                   </span>
                 </div>
                 <Button variant='ghost' size='sm' onClick={handleLogout}>
@@ -200,10 +205,10 @@ const Navigation = () => {
                 </Link>
               ))}
 
-              {user ? (
+              {userInfo ? (
                 <div className='px-3 py-2 border-t border-gray-100 mt-2'>
                   <p className='text-sm text-gray-600 mb-2'>
-                    {user.name} ({getRoleDisplayName(user.role)})
+                    {userInfo.name} ({getRoleDisplayName(userInfo.role)})
                   </p>
                   <Button variant='ghost' size='sm' onClick={handleLogout} className='w-full justify-start'>
                     <LogOut className='h-4 w-4 mr-2' />
