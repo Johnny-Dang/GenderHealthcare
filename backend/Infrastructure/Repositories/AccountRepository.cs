@@ -43,6 +43,7 @@ namespace backend.Infrastructure.Repositories
         public async Task<List<Account>> GetAllAccountsAsync()
         {
             return await _context.Account
+                .IgnoreQueryFilters()
                 .Include(a => a.Role)
                 .Where(x => x.Role.Name != "Admin")
                 .ToListAsync();
@@ -76,8 +77,7 @@ namespace backend.Infrastructure.Repositories
         {
             var account = await _context.Account.FindAsync(id);
             if (account == null) return false;
-            
-            _context.Account.Remove(account);
+            account.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
         }
