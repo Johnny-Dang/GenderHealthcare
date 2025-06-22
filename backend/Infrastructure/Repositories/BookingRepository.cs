@@ -40,7 +40,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.Booking
                 .Include(b => b.Account)
-                .Include(b => b.PaymentHistory)
+                .Include(b => b.Payment)
                 .Include(b => b.BookingDetails)
                     .ThenInclude(bd => bd.TestService)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
@@ -50,7 +50,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.Booking
                 .Include(b => b.Account)
-                .Include(b => b.PaymentHistory)
+                .Include(b => b.Payment)
                 .Include(b => b.BookingDetails)
                     .ThenInclude(bd => bd.TestService)
                 .ToListAsync();

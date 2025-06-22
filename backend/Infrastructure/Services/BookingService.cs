@@ -160,9 +160,9 @@ namespace backend.Infrastructure.Services
             
             decimal totalAmount = 0;
             // Safely check if PaymentHistory exists before accessing Amount
-            if (booking.PaymentHistory != null)
+            if (booking.Payment != null)
             {
-                totalAmount = booking.PaymentHistory.Amount;
+                totalAmount = booking.Payment.Amount;
             }
             
             var response = new BookingResponse
