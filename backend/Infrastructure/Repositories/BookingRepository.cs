@@ -56,14 +56,18 @@ namespace backend.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Booking>> GetByAccountIdAsync(Guid accountId)
+        public async Task<IEnumerable<Booking>> GetByAccountIdAsync(Guid accountId)
         {
             return await _context.Booking
-                .Include(b => b.Account)
-                .Include(b => b.PaymentHistory)
-                .Include(b => b.BookingDetails)
-                    .ThenInclude(bd => bd.TestService)
                 .Where(b => b.AccountId == accountId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Booking>> GetByAccountIdWithDetailsAsync(Guid accountId)
+        {
+            return await _context.Booking
+                .Where(b => b.AccountId == accountId)
+                .Include(b => b.BookingDetails)
                 .ToListAsync();
         }
 

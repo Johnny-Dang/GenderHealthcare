@@ -1,4 +1,4 @@
-using backend.Domain.Entities;
+﻿using backend.Domain.Entities;
 using backend.Infrastructure.Persistence.Configurations;
 using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +35,9 @@ namespace backend.Infrastructure.Database
         //}
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // mấy thằng bị xóa mềm là ban nè
+            modelBuilder.Entity<Account>().HasQueryFilter(a => !a.IsDeleted);
+
             // Load mapping configurations
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 

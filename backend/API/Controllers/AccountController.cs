@@ -42,7 +42,8 @@ namespace backend.Api.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                Expires = DateTime.Now.AddDays(7)
+                Expires = DateTime.Now.AddDays(7),
+                SameSite = SameSiteMode.None, // Thêm dòng này!
             };
 
             HttpContext.Response.Cookies.Append("refreshToken", result.Data.RefreshToken, cookieOptions);
@@ -69,7 +70,8 @@ namespace backend.Api.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                Expires = DateTime.Now.AddDays(7)
+                Expires = DateTime.Now.AddDays(7),
+                SameSite = SameSiteMode.None, // Thêm dòng này!
             };
 
             HttpContext.Response.Cookies.Append("refreshToken", result.Data.RefreshToken, cookieOptions);
@@ -89,7 +91,8 @@ namespace backend.Api.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                Expires = DateTime.Now.AddDays(7)
+                Expires = DateTime.Now.AddDays(7),
+                SameSite = SameSiteMode.None, // Thêm dòng này!
             };
             
             HttpContext.Response.Cookies.Append("refreshToken", result.Data.RefreshToken, cookieOptions);

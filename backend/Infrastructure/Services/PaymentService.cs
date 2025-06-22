@@ -38,7 +38,7 @@ namespace backend.Infrastructure.Services
             pay.AddRequestData("vnp_CurrCode", _configuration["Vnpay:CurrCode"]);
             pay.AddRequestData("vnp_IpAddr", pay.GetIpAddress(context));
             pay.AddRequestData("vnp_Locale", _configuration["Vnpay:Locale"]);
-            pay.AddRequestData("vnp_OrderInfo", $"{model.OrderDescription},{model.Amount}");
+            pay.AddRequestData("vnp_OrderInfo", $"{model.BookingId}");
             pay.AddRequestData("vnp_OrderType", model.OrderType);
             pay.AddRequestData("vnp_ReturnUrl", urlCallBack);
             pay.AddRequestData("vnp_TxnRef", tick);
@@ -61,14 +61,14 @@ namespace backend.Infrastructure.Services
         {
             if (response.VnPayResponseCode == "00") // Successful transaction
             {
-                var OrderInfo = response.OrderInfo.Split(",");
                 var newPayment = new Payment
                 {
-                    BookingId = Guid.Parse(OrderInfo[0]),
+                    BookingId = Guid.Parse(response.OrderInfo),
                     PaymentMethod = response.PaymentMethod,
-                    Amount = Decimal.Parse(OrderInfo[1]),
+                    Amount = Decimal.Parse(response.Amount),
                     TransactionId = Guid.Parse(response.TransactionId),
                     CreatedAt = DateTime.Now,
+
                 };
                 
                 // Use repository to store payment
