@@ -22,7 +22,7 @@ namespace backend.API.Controllers
         // POST: api/payments/create-vnpay-url
         [HttpPost("create-vnpay-url")]
         //[Authorize]
-        public IActionResult CreateVnPayUrl([FromBody] CreateVnPayRequest request, Guid BookingId)
+        public IActionResult CreateVnPayUrl([FromBody] CreateVnPayRequest request)
         {
             var url = _paymentService.CreatePaymentUrl(request, HttpContext);
             return Ok(url);
