@@ -21,11 +21,6 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .HasForeignKey(bd => bd.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(bd => bd.TestResult)
-                .WithOne(tr => tr.BookingDetail)
-                .HasForeignKey<TestResult>(tr => tr.BookingDetailId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasOne(bd => bd.TestService)
                 .WithMany(ts => ts.BookingDetails)
                 .HasForeignKey(bd => bd.ServiceId)

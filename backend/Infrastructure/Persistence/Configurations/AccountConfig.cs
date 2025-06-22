@@ -23,25 +23,11 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .HasForeignKey(a => a.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(a => a.StaffInfo)
-                .WithOne(s => s.Account)
-                .HasForeignKey<StaffInfo>(s => s.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasMany(a => a.RefreshTokens)
                 .WithOne(r => r.Account)
                 .HasForeignKey(r => r.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(a => a.Bookings)
-                .WithOne(b => b.Account)
-                .HasForeignKey(b => b.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasMany(a => a.Feedbacks)
-                .WithOne(f => f.Account)
-                .HasForeignKey(x => x.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
