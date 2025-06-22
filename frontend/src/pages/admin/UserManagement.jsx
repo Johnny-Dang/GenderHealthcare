@@ -100,8 +100,10 @@ const UserManagement = () => {
           setIsModalVisible(false)
           form.resetFields()
           fetchUsers()
-        } catch {
-          toast.error('Có lỗi xảy ra. Vui lòng thử lại sau.')
+        } catch (error) {
+          console.error('Error saving user:', error)
+          const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.'
+          toast.error(errorMessage)
         }
       })
       .catch(() => {})
@@ -123,10 +125,10 @@ const UserManagement = () => {
     const search = searchText.trim().toLowerCase()
     if (!search) return true
     return (
-      (user.name && user.name.toLowerCase().includes(search)) ||
-      (user.email && user.email.toLowerCase().includes(search)) ||
-      (user.phone && user.phone.toLowerCase().includes(search)) ||
-      (user.role && user.role.toLowerCase().includes(search))
+      user.name?.toLowerCase().includes(search) ||
+      user.email?.toLowerCase().includes(search) ||
+      user.phone?.toLowerCase().includes(search) ||
+      user.role?.toLowerCase().includes(search)
     )
   })
 
