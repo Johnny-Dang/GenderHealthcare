@@ -520,6 +520,20 @@ const BlogManagement = () => {
 
     setIsLoading(true)
     try {
+      // Kiểm tra xem danh mục có bài viết nào không
+      const hasBlogPosts = blogPosts.some((post) => post.categoryId === categoryToDelete.categoryId)
+
+      if (hasBlogPosts) {
+        toast({
+          title: 'Không thể xóa',
+          description:
+            'Không thể xóa danh mục này vì vẫn còn bài viết thuộc danh mục. Vui lòng xóa hoặc chuyển bài viết sang danh mục khác trước.',
+          variant: 'destructive'
+        })
+        closeDeleteCategoryConfirm()
+        return
+      }
+
       await api.delete(`/api/BlogCategory/${categoryToDelete.categoryId}`)
 
       // Xóa danh mục khỏi danh sách
