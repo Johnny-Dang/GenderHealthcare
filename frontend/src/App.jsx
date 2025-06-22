@@ -15,6 +15,7 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './redux/store'
 import CustomerDashboard from './pages/customer-dashboard/BookingDashboard';
 import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage';
+import CartPage from './pages/cart';
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
@@ -75,6 +76,10 @@ function App() {
     {
       path: '/customer-dashboard/booking/:bookingId',
       element: <BookingDetailPage />
+    },
+    {
+      path: '/cart',
+      element: <CartPage />
     }
   ])
 
