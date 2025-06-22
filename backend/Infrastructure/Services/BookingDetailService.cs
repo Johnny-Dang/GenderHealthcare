@@ -120,13 +120,7 @@ namespace backend.Infrastructure.Services
             if (existingDetail == null)
                 return null;
 
-            // Check if service exists
-            var service = await _testServiceRepository.GetByIdAsync(request.ServiceId);
-            if (service == null)
-                return null;
-
-            // Update booking detail
-            existingDetail.ServiceId = request.ServiceId;
+            // Update allowed fields only
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
@@ -142,8 +136,8 @@ namespace backend.Infrastructure.Services
                 BookingDetailId = updatedDetail.BookingDetailId,
                 BookingId = updatedDetail.BookingId,
                 ServiceId = updatedDetail.ServiceId,
-                ServiceName = service.ServiceName,
-                Price = service.Price,
+                ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
+                Price = updatedDetail.TestService?.Price ?? 0,
                 FirstName = updatedDetail.FirstName,
                 LastName = updatedDetail.LastName,
                 Phone = updatedDetail.Phone,

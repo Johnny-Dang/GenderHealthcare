@@ -69,19 +69,22 @@ namespace backend.API.Controllers
             return Ok(totalAmount);
         }
         
-        // PUT: api/booking-details
+        // PUT: api/booking-details?bookingDetailId=xxx
         [HttpPut]
         [Authorize]
-        public async Task<IActionResult> Update([FromBody] UpdateBookingDetailRequest request)
+        public async Task<IActionResult> Update([FromQuery] Guid bookingDetailId, [FromBody] UpdateBookingDetailRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-                
+
+            // Set the bookingDetailId from querystring
+            request.BookingDetailId = bookingDetailId;
+
             var updatedBookingDetail = await _bookingDetailService.UpdateAsync(request);
-            
+
             if (updatedBookingDetail == null)
                 return NotFound();
-                
+
             return Ok(updatedBookingDetail);
         }
         
