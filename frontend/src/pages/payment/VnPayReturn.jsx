@@ -11,6 +11,26 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
+// Hàm ánh xạ mã lỗi VNPAY sang thông báo tiếng Việt
+const getVnPayMessage = (code) => {
+  switch (code) {
+    case '00': return 'Giao dịch thành công.';
+    case '07': return 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).';
+    case '09': return 'Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng chưa đăng ký dịch vụ InternetBanking tại ngân hàng.';
+    case '10': return 'Giao dịch không thành công do: Khách hàng xác thực thông tin thẻ/tài khoản không đúng quá 3 lần.';
+    case '11': return 'Giao dịch không thành công do: Đã hết hạn chờ thanh toán. Vui lòng thực hiện lại giao dịch.';
+    case '12': return 'Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng bị khóa.';
+    case '13': return 'Giao dịch không thành công do nhập sai mật khẩu xác thực giao dịch (OTP). Vui lòng thực hiện lại.';
+    case '24': return 'Giao dịch không thành công do: Khách hàng hủy giao dịch.';
+    case '51': return 'Giao dịch không thành công do: Tài khoản không đủ số dư.';
+    case '65': return 'Giao dịch không thành công do: Tài khoản đã vượt quá hạn mức giao dịch trong ngày.';
+    case '75': return 'Ngân hàng thanh toán đang bảo trì.';
+    case '79': return 'Giao dịch không thành công do nhập sai mật khẩu thanh toán quá số lần quy định.';
+    case '99': return 'Lỗi không xác định hoặc lỗi khác.';
+    default: return 'Không xác định mã phản hồi từ VNPAY.';
+  }
+};
+
 export default function VnPayReturn() {
   const userInfo = useSelector(state => state.user.userInfo);
   const dispatch = useDispatch();
@@ -19,6 +39,9 @@ export default function VnPayReturn() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const calledRef = useRef(false);
+
+  // Hàm xác định trạng thái thành công dựa vào mã VNPAY
+  const isSuccess = result?.vnPayResponseCode === '00';
 
   useEffect(() => {
     if (calledRef.current) return;
@@ -69,18 +92,18 @@ export default function VnPayReturn() {
             </>
           ) : (
             <>
-              {result?.success ? (
+              {isSuccess ? (
                 <CheckCircle className="h-20 w-20 text-green-500 mb-4" />
               ) : (
                 <XCircle className="h-20 w-20 text-red-500 mb-4" />
               )}
-              <h2 className={`text-3xl font-bold mb-2 ${result?.success ? 'text-green-700' : 'text-red-700'}`}>
-                {result?.success ? 'Thanh toán thành công!' : 'Thanh toán thất bại'}
+              <h2 className={`text-3xl font-bold mb-2 ${isSuccess ? 'text-green-700' : 'text-red-700'}`}>
+                {isSuccess ? 'Thanh toán thành công!' : 'Thanh toán thất bại'}
               </h2>
               <p className="text-gray-600 mb-6">
-                {result?.success
+                {isSuccess
                   ? 'Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Đơn hàng của bạn đã được ghi nhận.'
-                  : 'Giao dịch không thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ.'}
+                  : getVnPayMessage(result?.vnPayResponseCode)}
               </p>
               <div className="w-full bg-gray-50 rounded-xl p-4 mb-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -112,3 +135,4 @@ export default function VnPayReturn() {
     </div>
   );
 } 
+ 

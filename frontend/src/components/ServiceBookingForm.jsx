@@ -38,7 +38,7 @@ export default function ServiceBookingForm({ open, onOpenChange, serviceId, book
     const { name, value, type, checked } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: name === 'gender' ? value === 'true' : (type === 'checkbox' ? checked : value),
     }));
   };
 
@@ -112,8 +112,8 @@ export default function ServiceBookingForm({ open, onOpenChange, serviceId, book
               <input
                 type="radio"
                 name="gender"
-                value="true"
-                checked={form.gender === true || form.gender === 'true'}
+                value={true}
+                checked={form.gender === true}
                 onChange={handleChange}
                 required
               />
@@ -123,8 +123,8 @@ export default function ServiceBookingForm({ open, onOpenChange, serviceId, book
               <input
                 type="radio"
                 name="gender"
-                value="false"
-                checked={form.gender === false || form.gender === 'false'}
+                value={false}
+                checked={form.gender === false}
                 onChange={handleChange}
                 required
               />
