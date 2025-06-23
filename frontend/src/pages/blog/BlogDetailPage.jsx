@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import axios from 'axios'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, User, Loader, Clock, Tag } from 'lucide-react'
-
-// Cấu hình axios với baseURL và headers mặc định
-const api = axios.create({
-  baseURL: 'https://localhost:7195',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
+import api from '@/configs/axios'
 
 const BlogDetailPage = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -32,12 +25,18 @@ const BlogDetailPage = () => {
   // Lấy dữ liệu blog từ API
   useEffect(() => {
     const fetchBlogDetail = async () => {
-      if (!id) return
+      if (!id) {
+        setError('Không tìm thấy bài viết')
+        setLoading(false)
+        return
+      }
 
       try {
         setLoading(true)
 
-        // Lấy tất cả các bài viết đã xuất bản
+        // Lưu ý: Backend chỉ có API lấy blog theo slug (/api/Blog/{slug})
+        // nhưng frontend đang sử dụng ID trong URL (/blog/:id)
+        // Vì không thể thay đổi backend, chúng ta phải lấy tất cả bài viết và lọc theo ID
         const response = await api.get('/api/Blog/published')
 
         // Tìm bài viết với id tương ứng
@@ -45,11 +44,12 @@ const BlogDetailPage = () => {
 
         if (!blogData) {
           setError('Không tìm thấy bài viết')
+          setLoading(false)
           return
         }
 
         // Tạo tags từ category và các từ khóa trong nội dung
-        const tags = [blogData.categoryName]
+        const tags = blogData.categoryName ? [blogData.categoryName] : []
 
         // Format dữ liệu blog
         const formattedPost = {
@@ -57,9 +57,9 @@ const BlogDetailPage = () => {
           title: blogData.title,
           content: blogData.content,
           excerpt: blogData.excerpt,
-          author: blogData.authorName || 'WellCare Staff',
+          author: blogData.authorName || 'Staff',
           date: new Date(blogData.createdAt).toISOString().split('T')[0],
-          readTime: calculateReadTime(blogData.content),
+          readTime: calculateReadTime(blogData.content || ''),
           tags: tags,
           image:
             blogData.featuredImageUrl ||
@@ -78,7 +78,7 @@ const BlogDetailPage = () => {
     }
 
     fetchBlogDetail()
-  }, [id])
+  }, [id, navigate])
 
   if (loading) {
     return (
