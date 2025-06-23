@@ -46,7 +46,7 @@ namespace VnPayDemo.Helpers
             {
                 Success = true,
                 PaymentMethod = "VnPay",
-                Amount = Amount,
+                Amount = (decimal.Parse(Amount) / 100).ToString(),
                 BookingId = bookingId,
                 TransactionId = vnPayTranId.ToString(),
                 Token = vnpSecureHash,
