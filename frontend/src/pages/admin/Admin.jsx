@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Link, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
-import { Layout, Menu, theme, Avatar, Badge, Typography, Button, Breadcrumb } from 'antd'
-
-import { PieChart, Users, Package, BarChart, ChevronLeft, ChevronRight, Bell, UserCircle, Heart } from 'lucide-react'
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
+import { Layout, Menu, theme, Avatar, Badge, Typography, Button, Breadcrumb, Dropdown } from 'antd'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../../redux/features/userSlice'
+import { PieChart, Users, Package, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
+import api from '../../configs/axios'
 
 const { Header, Content, Footer, Sider } = Layout
-const { Title, Text } = Typography
+const { Text } = Typography
 
 function getItem(label, key, icon, children) {
   return {
@@ -16,7 +18,6 @@ function getItem(label, key, icon, children) {
   }
 }
 
-// Sử dụng icons phù hợp
 const items = [
   getItem('Dashboard', 'dashboard', <PieChart size={18} />),
   getItem('Quản lý người dùng', 'users', <Users size={18} />),
@@ -27,6 +28,9 @@ const AdminPage = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [breadcrumbItems, setBreadcrumbItems] = useState([])
   const location = useLocation()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
 
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -38,12 +42,17 @@ const AdminPage = () => {
     '/admin/dashboard': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }]
   }
 
-  // Update breadcrumb based on current path
   useEffect(() => {
     const breadcrumb = breadcrumbMap[location.pathname] || breadcrumbMap['/admin/dashboard']
     setBreadcrumbItems(breadcrumb)
   }, [location])
-  // Xác định menu active
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/')
+    }
+  }, [isAuthenticated, navigate])
+
   const getActiveMenu = () => {
     const path = location.pathname
     if (path.includes('/users')) return 'users'
@@ -51,12 +60,32 @@ const AdminPage = () => {
     return 'dashboard'
   }
 
+  // Hàm xử lý logout: gọi API trước, sau đó logout và về trang chủ
+  const handleLogout = () => {
+    api
+      .post('Account/logout')
+      .catch(() => {})
+      .finally(() => {
+        dispatch(logout())
+        navigate('/')
+      })
+  }
+
+  // Menu cho dropdown
+  const menu = (
+    <Menu>
+      <Menu.Item key='logout' icon={<LogOut size={18} />} onClick={handleLogout} danger>
+        Đăng xuất
+      </Menu.Item>
+    </Menu>
+  )
+
   return (
     <Layout className='min-h-screen'>
       <Sider
         collapsible
         collapsed={collapsed}
-        trigger={null} // Hide default trigger
+        trigger={null}
         className='shadow-lg bg-gradient-to-b from-pink-50 to-pink-100'
         width={250}
       >
@@ -100,19 +129,21 @@ const AdminPage = () => {
           </div>
 
           <div className='flex items-center gap-6'>
-            <Badge count={5} size='small' color='#eb2f96'>
-              <Bell size={18} className='cursor-pointer text-slate-600 hover:text-pink-500' />
-            </Badge>
-            <div className='flex items-center gap-3'>
-              <Avatar size={36} className='bg-gradient-to-r from-pink-500 to-red-500' icon={<UserCircle size={20} />} />
-              <Text strong className='text-slate-700'>
-                Admin
-              </Text>
-            </div>
+            <Dropdown overlay={menu} trigger={['click']} placement='bottomRight' arrow>
+              <div className='flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-pink-50'>
+                <Avatar
+                  size={36}
+                  className='bg-gradient-to-r from-pink-500 to-red-500'
+                  icon={<UserCircle size={20} />}
+                />
+                <Text strong className='text-slate-700'>
+                  Admin
+                </Text>
+              </div>
+            </Dropdown>
           </div>
         </Header>
 
-        {/* chổ này là chỗ hiển thị nội dung của các trang con */}
         <Content className='m-6'>
           <div className='p-6 min-h-[360px] bg-white rounded-lg shadow-md'>
             <Outlet />

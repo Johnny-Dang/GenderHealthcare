@@ -12,7 +12,15 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      // Đảm bảo tiền tố 'Bearer ' được thêm đúng cách
+      config.headers.Authorization = `Bearer ${token.trim()}`
+
+      // Log chi tiết khi gửi request để debug
+      if (config.url?.includes('logout')) {
+        console.log('Sending logout request with headers:', config.headers)
+      }
+    } else if (config.url?.includes('logout')) {
+      console.warn('Attempting logout without token')
     }
     return config
   },
