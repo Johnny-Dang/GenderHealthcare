@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, User, Loader } from 'lucide-react'
+import { Calendar, User, Loader, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
-
-// Cấu hình axios với baseURL và headers mặc định
-const api = axios.create({
-  baseURL: 'https://localhost:7195',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
+import api from '@/configs/axios'
+import { useToast } from '@/hooks/use-toast'
 
 const BlogPage = () => {
+  const { toast } = useToast()
   const [blogPosts, setBlogPosts] = useState([])
   const [categories, setCategories] = useState(['Tất cả'])
   const [selectedCategory, setSelectedCategory] = useState('Tất cả')
@@ -28,10 +22,11 @@ const BlogPage = () => {
       try {
         setLoading(true)
 
-        // Lấy danh sách bài viết
+        // Lấy danh sách bài viết đã xuất bản
         const blogsResponse = await api.get('/api/Blog/published')
         const formattedPosts = blogsResponse.data.map((blog) => ({
           id: blog.blogId,
+          slug: blog.slug,
           title: blog.title,
           excerpt: blog.excerpt || blog.content.substring(0, 150) + '...',
           content: blog.content,
@@ -44,26 +39,76 @@ const BlogPage = () => {
         }))
         setBlogPosts(formattedPosts)
 
-        // Lấy danh sách danh mục trực tiếp từ API
-        const categoriesResponse = await api.get('/api/BlogCategory')
-        const categoryOptions = ['Tất cả', ...categoriesResponse.data.map((cat) => cat.name)]
-        setCategories(categoryOptions)
+        // Lấy danh sách danh mục
+        try {
+          const categoriesResponse = await api.get('/api/BlogCategory')
+          const categoryOptions = ['Tất cả', ...categoriesResponse.data.map((cat) => cat.name)]
+          setCategories(categoryOptions)
+        } catch (categoryError) {
+          console.error('Error fetching categories:', categoryError)
+          // Không hiển thị lỗi nếu chỉ là không lấy được danh mục
+        }
 
         setError(null)
       } catch (error) {
-        console.error('Error fetching data:', error)
-        setError('Không thể tải dữ liệu. Vui lòng thử lại sau.')
+        console.error('Error fetching blog posts:', error)
+        setError('Không thể tải danh sách bài viết. Vui lòng thử lại sau.')
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể tải danh sách bài viết. Vui lòng thử lại sau.',
+          variant: 'destructive'
+        })
       } finally {
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [])
+  }, [toast])
 
   // Filter posts by category
   const filteredPosts =
     selectedCategory === 'Tất cả' ? blogPosts : blogPosts.filter((post) => post.category === selectedCategory)
+
+  // Function to refresh blog posts
+  const refreshBlogPosts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Lấy danh sách bài viết đã xuất bản
+      const blogsResponse = await api.get('/api/Blog/published')
+      const formattedPosts = blogsResponse.data.map((blog) => ({
+        id: blog.blogId,
+        slug: blog.slug,
+        title: blog.title,
+        excerpt: blog.excerpt || blog.content.substring(0, 150) + '...',
+        content: blog.content,
+        author: blog.authorName || 'WellCare Staff',
+        date: new Date(blog.createdAt).toISOString().split('T')[0],
+        image:
+          blog.featuredImageUrl || 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=250&fit=crop',
+        category: blog.categoryName || 'Chưa phân loại',
+        categoryId: blog.categoryId
+      }))
+      setBlogPosts(formattedPosts)
+
+      toast({
+        title: 'Thành công',
+        description: 'Đã tải lại danh sách bài viết'
+      })
+    } catch (error) {
+      console.error('Error refreshing blog posts:', error)
+      setError('Không thể tải lại danh sách bài viết. Vui lòng thử lại sau.')
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải lại danh sách bài viết. Vui lòng thử lại sau.',
+        variant: 'destructive'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className='min-h-screen'>
@@ -96,6 +141,10 @@ const BlogPage = () => {
                 {category}
               </Button>
             ))}
+            <Button variant='outline' size='sm' onClick={refreshBlogPosts} disabled={loading} className='ml-2'>
+              <RefreshCw className='h-4 w-4 mr-1' />
+              Làm mới
+            </Button>
           </div>
         </div>
       </section>

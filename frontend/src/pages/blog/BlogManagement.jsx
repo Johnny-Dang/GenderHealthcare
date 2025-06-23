@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import axios from 'axios'
 import Navigation from '@/components/Navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,18 +10,10 @@ import { PlusCircle, Edit, Trash2, Eye, FileText, X, Filter, RefreshCw } from 'l
 import { Badge } from '@/components/ui/badge'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import api from '@/configs/axios'
 
 // Constants
-const API_BASE_URL = 'https://localhost:7195'
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop'
-
-// Cấu hình axios với baseURL và headers mặc định
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
 
 const BlogManagement = () => {
   const { toast } = useToast()
@@ -172,7 +163,7 @@ const BlogManagement = () => {
         content: blog.content,
         image: blog.featuredImageUrl,
         status: blog.isPublished ? 'published' : 'draft',
-        author: blog.authorName || 'Staff',
+        author: blog.authorName || user?.fullName || user?.username || 'Staff',
         date: new Date(blog.createdAt).toISOString().split('T')[0],
         categoryId: blog.categoryId,
         categoryName: blog.categoryName || 'Không xác định'
@@ -255,7 +246,7 @@ const BlogManagement = () => {
       content: postData.content,
       image: postData.featuredImageUrl,
       status: isDraft ? 'draft' : 'published',
-      author: 'Staff',
+      author: user?.fullName || user?.username || 'Staff',
       date: new Date().toISOString().split('T')[0],
       categoryId: postData.categoryId,
       categoryName: getCategoryName(postData.categoryId)
