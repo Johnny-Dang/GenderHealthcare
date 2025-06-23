@@ -9,11 +9,12 @@ namespace backend.Application.DTOs.PaymentDTO
         public Guid BookingId { get; set; }
         
         [Required]
-        public decimal Amount { get; set; }
-        
+        public double Amount { get; set; }
+
         [Required]
         public string OrderDescription { get; set; } = string.Empty;
-        
+
+        [Required]
         public string OrderType { get; set; } = "other";
         
     }

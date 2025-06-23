@@ -9,7 +9,7 @@ namespace backend.Application.Repositories
     {
         Task<Payment> CreatePaymentAsync(Payment payment);
         Task<Payment> GetPaymentByBookingIdAsync(Guid bookingId);
-        Task<Payment> GetPaymentByTransactionIdAsync(Guid transactionId);
+        Task<Payment> GetPaymentByTransactionIdAsync(string transactionId);
         Task<List<Payment>> GetAllPaymentsAsync();
     }
 }

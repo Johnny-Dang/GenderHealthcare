@@ -17,15 +17,6 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.Property(ts => ts.CreatedAt).IsRequired();
             builder.Property(ts => ts.Category).IsRequired().HasMaxLength(100);
 
-            builder.HasMany(ts => ts.BookingDetails)
-                .WithOne(bd => bd.TestService)
-                .HasForeignKey(bd => bd.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(ts => ts.Feedbacks)
-                .WithOne(fb => fb.TestService)
-                .HasForeignKey(fb => fb.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -15,6 +15,8 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './redux/store'
 import CustomerDashboard from './pages/customer-dashboard/BookingDashboard'
 import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage'
+import CartPage from './pages/cart'
+import VnPayReturn from './pages/payment/VnPayReturn'
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
@@ -99,11 +101,13 @@ function App() {
       path: '/customer-dashboard/booking/:bookingId',
       element: <BookingDetailPage />
     },
-
-    // Cái page này để cuối nếu not found
     {
-      path: '*',
-      element: <NotFound />
+      path: '/cart',
+      element: <CartPage />
+    },
+    {
+      path: '/checkout/vnpay-return',
+      element: <VnPayReturn />
     }
   ])
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, MapPin, Phone, Shield, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '@/configs/axios';
+import ServiceBookingForm from '@/components/ServiceBookingForm';
 
 const Services = () => {
   const [services, setServices] = useState([]);
@@ -13,6 +14,8 @@ const Services = () => {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [categories, setCategories] = useState(["Tất cả"]);
   const [categoryInput, setCategoryInput] = useState("");
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
 
   const fetchServices = async () => {
     setLoading(true);
@@ -32,22 +35,6 @@ const Services = () => {
     fetchServices();
   }, []);
 
-  // // Lấy danh sách dịch vụ theo category
-  // useEffect(() => {
-  //   const fetchServices = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const response = await axios.get("https://localhost:7195/api/services");
-  //       setServices(response.data);
-  //     } catch (error) {
-  //       console.error("Lỗi khi lấy dữ liệu dịch vụ:", error);
-  //       setServices([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchServices();
-  // }, []);
 
   return (
     <div className="min-h-screen">
@@ -147,8 +134,14 @@ const Services = () => {
                         {service.price?.toLocaleString()} VNĐ
                       </div>
                     </div>
-                    <Button className="w-full bg-gradient-primary hover:opacity-90 text-white">
-                      Đặt Lịch
+                    <Button
+                      className="w-full bg-gradient-primary hover:opacity-90 text-white"
+                      onClick={() => {
+                        setSelectedServiceId(service.serviceId);
+                        setOpenForm(true);
+                      }}
+                    >
+                      Đặt Dịch Vụ
                     </Button>
                   </CardContent>
                 </Card>
@@ -156,6 +149,13 @@ const Services = () => {
             </div>
           )}
         </div>
+        {/* Form popup đặt dịch vụ */}
+        <ServiceBookingForm
+          open={openForm}
+          onOpenChange={setOpenForm}
+          serviceId={selectedServiceId}
+          onSuccess={() => {}}
+        />
       </section>
 
       {/* Why Choose Us */}
