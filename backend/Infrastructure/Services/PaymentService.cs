@@ -66,7 +66,7 @@ namespace backend.Infrastructure.Services
                     BookingId = response.BookingId,
                     PaymentMethod = response.PaymentMethod,
                     Amount = Decimal.Parse(response.Amount),
-                    TransactionId = Guid.Parse(response.TransactionId),
+                    TransactionId = response.TransactionId,
                     CreatedAt = DateTime.Now,
                 };
                 
@@ -83,7 +83,7 @@ namespace backend.Infrastructure.Services
             return payment != null ? MapToDTO(payment) : null;
         }
 
-        public async Task<PaymentDTO> GetPaymentByTransactionIdAsync(Guid transactionId)
+        public async Task<PaymentDTO> GetPaymentByTransactionIdAsync(string transactionId)
         {
             var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(transactionId);
             return payment != null ? MapToDTO(payment) : null;

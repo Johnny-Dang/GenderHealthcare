@@ -67,7 +67,7 @@ namespace backend.API.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<PaymentDTO>> GetPaymentByTransactionId(Guid transactionId)
+        public async Task<ActionResult<PaymentDTO>> GetPaymentByTransactionId(string transactionId)
         {
             var payment = await _paymentService.GetPaymentByTransactionIdAsync(transactionId);
             if (payment == null)

@@ -28,6 +28,7 @@ namespace VnPayDemo.Helpers
                 }
             }
             Guid.TryParseExact(vnPay.GetResponseData("vnp_TxnRef"), "N", out Guid bookingId);
+            Console.WriteLine(bookingId);
             var vnPayTranId = Convert.ToInt64(vnPay.GetResponseData("vnp_TransactionNo"));
             var vnpResponseCode = vnPay.GetResponseData("vnp_ResponseCode");
             var Amount = vnPay.GetResponseData("vnp_Amount");

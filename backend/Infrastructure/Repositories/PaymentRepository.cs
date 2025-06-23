@@ -32,7 +32,7 @@ namespace backend.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.BookingId == bookingId);
         }
 
-        public async Task<Payment> GetPaymentByTransactionIdAsync(Guid transactionId)
+        public async Task<Payment> GetPaymentByTransactionIdAsync(string transactionId)
         {
             return await _dbContext.Payment
                 .Include(p => p.Booking)
