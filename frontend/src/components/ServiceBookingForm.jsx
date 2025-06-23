@@ -93,14 +93,43 @@ export default function ServiceBookingForm({ open, onOpenChange, serviceId, book
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-2">
-            <Input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Họ" required />
-            <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="Tên" required />
+            <div className="w-1/2">
+              <label className="block font-medium mb-1" htmlFor="lastName">Họ</label>
+              <Input id="lastName" name="lastName" value={form.lastName} onChange={handleChange} placeholder="Họ" required />
+            </div>
+            <div className="w-1/2">
+              <label className="block font-medium mb-1" htmlFor="firstName">Tên</label>
+              <Input id="firstName" name="firstName" value={form.firstName} onChange={handleChange} placeholder="Tên" required />
+            </div>
           </div>
-          <Input name="dateOfBirth" type="date" value={form.dateOfBirth} onChange={handleChange} required />
-          <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Số điện thoại" required />
-          <div className="flex items-center gap-2">
-            <input name="gender" type="checkbox" checked={form.gender} onChange={handleChange} id="gender" />
-            <label htmlFor="gender">Nam</label>
+          <label className="block font-medium mb-1" htmlFor="dateOfBirth">Ngày tháng năm sinh</label>
+          <Input id="dateOfBirth" name="dateOfBirth" type="date" value={form.dateOfBirth} onChange={handleChange} required />
+          <label className="block font-medium mb-1" htmlFor="phone">Số điện thoại</label>
+          <Input id="phone" name="phone" value={form.phone} onChange={handleChange} placeholder="Số điện thoại" required />
+          <div className="flex items-center gap-4">
+            <label className="font-medium">Giới tính:</label>
+            <label className="flex items-center gap-1">
+              <input
+                type="radio"
+                name="gender"
+                value="true"
+                checked={form.gender === true || form.gender === 'true'}
+                onChange={handleChange}
+                required
+              />
+              Nam
+            </label>
+            <label className="flex items-center gap-1">
+              <input
+                type="radio"
+                name="gender"
+                value="false"
+                checked={form.gender === false || form.gender === 'false'}
+                onChange={handleChange}
+                required
+              />
+              Nữ
+            </label>
           </div>
           <DialogFooter>
             <Button type="submit" className="w-full" disabled={loading}>

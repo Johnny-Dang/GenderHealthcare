@@ -32,10 +32,15 @@ export const userSlice = createSlice({
     setCartShouldReload: (state, action) => {
       state.cartShouldReload = action.payload;
     },
+    resetCart: (state) => {
+      state.bookingId = '';
+      state.cartCount = 0;
+      state.cartShouldReload = false;
+    },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { login, logout, setBookingId, incrementCart, setCartCount, setCartShouldReload } = userSlice.actions;
+export const { login, logout, setBookingId, incrementCart, setCartCount, setCartShouldReload, resetCart } = userSlice.actions;
 
 export default userSlice.reducer;

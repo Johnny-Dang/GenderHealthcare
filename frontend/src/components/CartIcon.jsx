@@ -4,7 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 export default function CartIcon() {
   const cartCount = useSelector(state => state.user.cartCount);
+  const userInfo = useSelector(state => state.user.userInfo);
   const navigate = useNavigate();
+
+  // Chỉ hiển thị khi user đã đăng nhập và có role là Customer
+  if (!userInfo || userInfo.role !== 'Customer') {
+    return null;
+  }
 
   return (
     <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => navigate('/cart')}>

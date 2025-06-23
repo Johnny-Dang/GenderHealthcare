@@ -16,6 +16,7 @@ import { store, persistor } from './redux/store'
 import CustomerDashboard from './pages/customer-dashboard/BookingDashboard'
 import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage'
 import CartPage from './pages/cart'
+import VnPayReturn from './pages/payment/VnPayReturn'
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
@@ -103,6 +104,10 @@ function App() {
     {
       path: '/cart',
       element: <CartPage />
+    },
+    {
+      path: '/checkout/vnpay-return',
+      element: <VnPayReturn />
     }
   ])
 
