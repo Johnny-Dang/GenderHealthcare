@@ -11,14 +11,19 @@ export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    login: (state, actions) => {
-      state.userInfo = actions.payload
+    login: (state, action) => {
+      // Lưu toàn bộ thông tin từ response API vào userInfo
+      state.userInfo = action.payload
+      localStorage.setItem('token', action.payload.accessToken)
     },
     logout: (state) => {
       state.userInfo = null
       state.bookingId = ''
       state.cartCount = 0
       state.cartShouldReload = false
+
+      // Đảm bảo xóa token
+      localStorage.removeItem('token')
     },
     setBookingId: (state, action) => {
       state.bookingId = action.payload

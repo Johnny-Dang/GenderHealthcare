@@ -5,7 +5,8 @@ import { login, logout } from '@/redux/features/userSlice'
 // Set config defaults when creating the instance
 const api = axios.create({
   baseURL: 'https://localhost:7195',
-  withCredentials: true // Để gửi cookie refreshToken lên backend
+  withCredentials: true, // Để gửi cookie refreshToken lên backend
+  timeout: 10000
 })
 
 api.interceptors.request.use(
