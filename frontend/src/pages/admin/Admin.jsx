@@ -220,7 +220,7 @@ const AdminPage = () => {
                   <Text strong className='text-slate-700'>
                     {userInfo?.fullName || 'Admin'}
                   </Text>
-                  <Text className='text-xs block text-slate-500'>{userInfo?.email}</Text>
+                  {/* <Text className='text-xs block text-slate-500'>{userInfo?.email}</Text> */}
                 </div>
               </div>
             </Dropdown>
