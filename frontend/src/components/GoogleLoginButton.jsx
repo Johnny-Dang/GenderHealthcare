@@ -31,7 +31,7 @@ export default function GoogleLoginButton() {
 
   async function handleCredentialResponse(response) {
     try {
-      const apiResponse = await api.post('Account/login-google', {
+      const apiResponse = await api.post('/Account/login-google', {
         credential: response.credential
       })
 
