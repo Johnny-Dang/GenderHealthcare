@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Table, Button, Space, Spin, Modal, Form, Input, Select, Typography, Divider, Tag } from 'antd'
-import { EditOutlined, DeleteOutlined, PlusOutlined, UserOutlined, SearchOutlined } from '@ant-design/icons'
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  UserOutlined,
+  SearchOutlined,
+  ReloadOutlined
+} from '@ant-design/icons'
 import moment from 'moment'
 import api from '../../configs/axios'
 import { ToastContainer, toast } from 'react-toastify'
@@ -21,37 +28,56 @@ const UserManagement = () => {
   const [form] = Form.useForm()
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null })
   const [searchText, setSearchText] = useState('') // Add search state
+  const [lastFetched, setLastFetched] = useState(0)
+  const [shouldRefresh, setShouldRefresh] = useState(false)
 
-  const fetchUsers = async () => {
-    setLoading(true)
-    try {
-      const response = await api.get(`/api/users`)
-      const formattedData = response.data.map((user, index) => ({
-        key: index.toString(),
-        id: user.accountId,
-        name: user.fullName || (user.firstName || '') + ' ' + (user.lastName || ''),
-        email: user.email,
-        phone: user.phone,
-        gender: GENDER_MAP[user.gender]?.label || 'N/A',
-        dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
-        createAt: moment(user.createAt).format('DD/MM/YYYY'),
-        role: user.roleName,
-        avatarUrl: user.avatarUrl,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isDeleted: user.isDeleted
-      }))
-      setUserData(formattedData)
-      setLoading(false)
-    } catch {
-      setLoading(false)
-      toast.error('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.')
-    }
-  }
+  // Tạo hàm fetchUsers với useCallback để nó không bị tạo lại khi component re-render
+  const fetchUsers = useCallback(
+    async (force = false) => {
+      // Nếu đã fetch trong vòng 5 phút và không yêu cầu force refresh, thì không fetch lại
+      const now = Date.now()
+      if (!force && lastFetched && now - lastFetched < 5 * 60 * 1000 && userData.length > 0) {
+        return
+      }
+
+      setLoading(true)
+      try {
+        const response = await api.get(`/api/users`)
+        const formattedData = response.data.map((user, index) => ({
+          key: index.toString(),
+          id: user.accountId,
+          name: user.fullName || (user.firstName || '') + ' ' + (user.lastName || ''),
+          email: user.email,
+          phone: user.phone,
+          gender: GENDER_MAP[user.gender]?.label || 'N/A',
+          dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
+          createAt: moment(user.createAt).format('DD/MM/YYYY'),
+          role: user.roleName,
+          avatarUrl: user.avatarUrl,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isDeleted: user.isDeleted
+        }))
+        setUserData(formattedData)
+        setLastFetched(now)
+        setShouldRefresh(false)
+      } catch {
+        toast.error('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [lastFetched, userData.length]
+  )
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
+
+  // Thêm một refresh button để cho phép người dùng làm mới dữ liệu khi cần
+  const handleRefresh = () => {
+    fetchUsers(true)
+  }
 
   const showModal = (user = null) => {
     setCurrentUser(user)
@@ -97,9 +123,11 @@ const UserManagement = () => {
               toast.success('Thêm người dùng thành công!')
             }
           }
+          // Đánh dấu cần refresh data sau khi thêm/sửa
+          setShouldRefresh(true)
           setIsModalVisible(false)
           form.resetFields()
-          fetchUsers()
+          fetchUsers(true) // Force refresh sau khi thêm/sửa
         } catch (error) {
           console.error('Error saving user:', error)
           const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.'
@@ -262,6 +290,9 @@ const UserManagement = () => {
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
           />
+          <Button onClick={handleRefresh} icon={<ReloadOutlined />} className='mr-2' loading={loading}>
+            Làm mới
+          </Button>
         </div>
         <Button
           type='primary'
@@ -339,7 +370,7 @@ const UserManagement = () => {
           try {
             await api.delete(`api/users/${deleteModal.id}`)
             toast.success('Đã xóa (mềm) người dùng!')
-            fetchUsers()
+            fetchUsers(true) // Force refresh sau khi xóa
           } catch {
             toast.error('Không thể xóa người dùng. Vui lòng thử lại sau.')
           }

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Link, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
-import { Layout, Menu, theme, Avatar, Badge, Typography, Button, Breadcrumb } from 'antd'
-
-import { PieChart, Users, Package, BarChart, ChevronLeft, ChevronRight, Bell, UserCircle, Heart } from 'lucide-react'
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
+import { Layout, Menu, theme, Avatar, Typography, Button, Breadcrumb, Dropdown, Spin } from 'antd'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../../redux/features/userSlice'
+import { PieChart, Users, Package, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
+import api from '../../configs/axios'
 
 const { Header, Content, Footer, Sider } = Layout
-const { Title, Text } = Typography
+const { Text } = Typography
 
 function getItem(label, key, icon, children) {
   return {
@@ -16,7 +18,6 @@ function getItem(label, key, icon, children) {
   }
 }
 
-// Sử dụng icons phù hợp
 const items = [
   getItem('Dashboard', 'dashboard', <PieChart size={18} />),
   getItem('Quản lý người dùng', 'users', <Users size={18} />),
@@ -26,7 +27,16 @@ const items = [
 const AdminPage = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [breadcrumbItems, setBreadcrumbItems] = useState([])
+  const [loading, setLoading] = useState(true)
   const location = useLocation()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+
+  // Lấy thông tin user từ Redux store
+  const userInfo = useSelector((state) => state.user.userInfo)
+
+  // Kiểm tra xác thực và quyền admin
+  const isAdmin = userInfo?.role === 'Admin'
 
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -38,12 +48,28 @@ const AdminPage = () => {
     '/admin/dashboard': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }]
   }
 
-  // Update breadcrumb based on current path
   useEffect(() => {
     const breadcrumb = breadcrumbMap[location.pathname] || breadcrumbMap['/admin/dashboard']
     setBreadcrumbItems(breadcrumb)
   }, [location])
-  // Xác định menu active
+
+  useEffect(() => {
+    const checkAuth = setTimeout(() => {
+      if (!isAdmin) {
+        console.log('Not authenticated as Admin, redirecting')
+        navigate('/')
+      } else {
+        console.log('Authenticated as Admin')
+      }
+    }, 100)
+
+    return () => clearTimeout(checkAuth)
+  }, [isAdmin, navigate])
+
+  useEffect(() => {
+    console.log('Admin page loaded, auth state:', { userInfo, isAdmin })
+  }, [userInfo, isAdmin])
+
   const getActiveMenu = () => {
     const path = location.pathname
     if (path.includes('/users')) return 'users'
@@ -51,12 +77,79 @@ const AdminPage = () => {
     return 'dashboard'
   }
 
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token')
+
+      if (token) {
+        await api.post(
+          '/Account/logout',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+      }
+    } catch (error) {
+      console.log('Lỗi logout API:', error)
+    } finally {
+      dispatch(logout())
+      localStorage.removeItem('token')
+      navigate('/')
+    }
+  }
+
+  // Kiểm tra quyền truy cập
+  useEffect(() => {
+    const verifyAdminAccess = () => {
+      setLoading(true)
+
+      // Nếu không có thông tin user hoặc không phải admin
+      if (!userInfo || userInfo.role !== 'Admin') {
+        console.log('Not authorized as Admin, redirecting to home')
+        navigate('/')
+        return
+      }
+
+      console.log('Admin access confirmed for:', userInfo.fullName || userInfo.email)
+      setLoading(false)
+    }
+
+    // Thêm timeout ngắn để đảm bảo Redux đã load
+    const timeoutId = setTimeout(verifyAdminAccess, 100)
+    return () => clearTimeout(timeoutId)
+  }, [userInfo, navigate])
+
+  // Hiển thị loading trong khi xác thực
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+        <Spin size='large' tip='Đang tải...' />
+      </div>
+    )
+  }
+
+  // Nếu không phải admin, không render gì (sẽ chuyển hướng bởi useEffect)
+  if (!isAdmin) {
+    return null
+  }
+
+  const menu = (
+    <Menu>
+      <Menu.Item key='logout' icon={<LogOut size={18} />} onClick={handleLogout} danger>
+        Đăng xuất
+      </Menu.Item>
+    </Menu>
+  )
+
   return (
     <Layout className='min-h-screen'>
       <Sider
         collapsible
         collapsed={collapsed}
-        trigger={null} // Hide default trigger
+        trigger={null}
         className='shadow-lg bg-gradient-to-b from-pink-50 to-pink-100'
         width={250}
       >
@@ -100,19 +193,40 @@ const AdminPage = () => {
           </div>
 
           <div className='flex items-center gap-6'>
-            <Badge count={5} size='small' color='#eb2f96'>
-              <Bell size={18} className='cursor-pointer text-slate-600 hover:text-pink-500' />
-            </Badge>
-            <div className='flex items-center gap-3'>
-              <Avatar size={36} className='bg-gradient-to-r from-pink-500 to-red-500' icon={<UserCircle size={20} />} />
-              <Text strong className='text-slate-700'>
-                Admin
-              </Text>
-            </div>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'logout',
+                    label: 'Đăng xuất',
+                    icon: <LogOut size={18} />,
+                    onClick: handleLogout,
+                    danger: true
+                  }
+                ]
+              }}
+              trigger={['click']}
+              placement='bottomRight'
+              arrow
+            >
+              <div className='flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-pink-50'>
+                <Avatar
+                  size={36}
+                  src={userInfo?.avatarUrl}
+                  className='bg-gradient-to-r from-pink-500 to-red-500'
+                  icon={<UserCircle size={20} />}
+                />
+                <div>
+                  <Text strong className='text-slate-700'>
+                    {userInfo?.fullName || 'Admin'}
+                  </Text>
+                  {/* <Text className='text-xs block text-slate-500'>{userInfo?.email}</Text> */}
+                </div>
+              </div>
+            </Dropdown>
           </div>
         </Header>
 
-        {/* chổ này là chỗ hiển thị nội dung của các trang con */}
         <Content className='m-6'>
           <div className='p-6 min-h-[360px] bg-white rounded-lg shadow-md'>
             <Outlet />
