@@ -22,7 +22,7 @@ namespace backend.API.Controllers
         // POST: api/payments/create-vnpay-url
         [HttpPost("create-vnpay-url")]
         //[Authorize]
-        public IActionResult CreateVnPayUrl([FromBody] CreateVnPayRequest request, Guid BookingId)
+        public IActionResult CreateVnPayUrl([FromBody] CreateVnPayRequest request)
         {
             var url = _paymentService.CreatePaymentUrl(request, HttpContext);
             return Ok(url);
@@ -31,7 +31,7 @@ namespace backend.API.Controllers
         // GET: api/payments/vnpay-callback
         [HttpGet("vnpay-callback")]
         [AllowAnonymous]
-        public async Task<IActionResult> VnPayCallback([FromQuery]PaymentResponse request)
+        public async Task<IActionResult> VnPayCallback()
         {
             var response = _paymentService.PaymentExecute(Request.Query);
             await _paymentService.StorePayment(response);
@@ -67,7 +67,7 @@ namespace backend.API.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<PaymentDTO>> GetPaymentByTransactionId(Guid transactionId)
+        public async Task<ActionResult<PaymentDTO>> GetPaymentByTransactionId(string transactionId)
         {
             var payment = await _paymentService.GetPaymentByTransactionIdAsync(transactionId);
             if (payment == null)

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, MapPin, Phone, Shield, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '@/configs/axios';
+import ServiceBookingForm from '@/components/ServiceBookingForm';
 
 const Services = () => {
   const [services, setServices] = useState([]);
@@ -13,42 +14,27 @@ const Services = () => {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [categories, setCategories] = useState(["Tất cả"]);
   const [categoryInput, setCategoryInput] = useState("");
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
 
-  // Lấy danh sách category từ API khi load lần đầu
+  const fetchServices = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("/api/services");
+      console.log(response);
+      
+      setServices(response.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh mục dịch vụ:", error);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get("https://localhost:7195/api/services");
-        const uniqueCategories = Array.from(new Set(response.data.map(s => s.category)));
-        setCategories(["Tất cả", ...uniqueCategories]);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh mục dịch vụ:", error);
-      }
-    };
-    fetchCategories();
+    fetchServices();
   }, []);
 
-  // Lấy danh sách dịch vụ theo category
-  useEffect(() => {
-    const fetchServices = async () => {
-      setLoading(true);
-      try {
-        let url = "https://localhost:7195/api/services";
-        const filterValue = categoryInput.trim() || selectedCategory;
-        if (filterValue && filterValue !== "Tất cả") {
-          url = `https://localhost:7195/api/services/category/${encodeURIComponent(filterValue)}`;
-        }
-        const response = await axios.get(url);
-        setServices(response.data);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu dịch vụ:", error);
-        setServices([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchServices();
-  }, [categoryInput, selectedCategory]);
 
   return (
     <div className="min-h-screen">
@@ -148,8 +134,14 @@ const Services = () => {
                         {service.price?.toLocaleString()} VNĐ
                       </div>
                     </div>
-                    <Button className="w-full bg-gradient-primary hover:opacity-90 text-white">
-                      Đặt Lịch
+                    <Button
+                      className="w-full bg-gradient-primary hover:opacity-90 text-white"
+                      onClick={() => {
+                        setSelectedServiceId(service.serviceId);
+                        setOpenForm(true);
+                      }}
+                    >
+                      Đặt Dịch Vụ
                     </Button>
                   </CardContent>
                 </Card>
@@ -157,6 +149,13 @@ const Services = () => {
             </div>
           )}
         </div>
+        {/* Form popup đặt dịch vụ */}
+        <ServiceBookingForm
+          open={openForm}
+          onOpenChange={setOpenForm}
+          serviceId={selectedServiceId}
+          onSuccess={() => {}}
+        />
       </section>
 
       {/* Why Choose Us */}

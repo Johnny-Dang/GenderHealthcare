@@ -1,4 +1,4 @@
-﻿namespace backend.Application.Interfaces
+﻿namespace backend.Application.Services
 {
     public interface IGeminiService
     {

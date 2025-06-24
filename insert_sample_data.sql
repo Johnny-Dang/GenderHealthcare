@@ -7,15 +7,15 @@ INSERT INTO Role (RoleId, Name, Description) VALUES
   (N'00000000-0000-0000-0000-000000000005', N'Customer', N'Khách hàng');
 
 -- Insert 5 accounts (mỗi account cho 1 role)
-INSERT INTO Account (AccountId, RoleId, Email, Password, FirstName, LastName, Phone, avatarUrl, DateOfBirth, Gender, CreateAt)
+INSERT INTO Account (AccountId, RoleId, Email, Password, FirstName, LastName, Phone, avatarUrl, DateOfBirth, Gender, IsDeleted, CreateAt)
 VALUES 
-  (N'10000000-0000-0000-0000-000000000001', N'00000000-0000-0000-0000-000000000001', N'staff1@email.com', N'hashedpassword', N'Le', N'Thi B', N'0987654321', NULL, '1985-05-10', 0, GETDATE()),
-  (N'10000000-0000-0000-0000-000000000002', N'00000000-0000-0000-0000-000000000002', N'consultant1@email.com', N'hashedpassword', N'Pham', N'Van C', N'0911222333', NULL, '1992-03-15', 1, GETDATE()),
-  (N'10000000-0000-0000-0000-000000000003', N'00000000-0000-0000-0000-000000000003', N'manager1@email.com', N'hashedpassword', N'Tran', N'Thi D', N'0933444555', NULL, '1980-07-20', 0, GETDATE()),
-  (N'10000000-0000-0000-0000-000000000004', N'00000000-0000-0000-0000-000000000004', N'admin1@email.com', N'hashedpassword', N'Nguyen', N'Van E', N'0944555666', NULL, '1975-12-01', 1, GETDATE()),
-  (N'10000000-0000-0000-0000-000000000005', N'00000000-0000-0000-0000-000000000005', N'customer1@email.com', N'hashedpassword', N'Hoang', N'Thi F', N'0955666777', NULL, '1995-09-09', 0, GETDATE()),
-  (N'10000000-0000-0000-0000-000000000006', N'00000000-0000-0000-0000-000000000005', N'customer2@email.com', N'hashedpassword', N'Truong', N'Van G', N'0966777888', NULL, '1998-02-15', 1, GETDATE()),
-  (N'10000000-0000-0000-0000-000000000007', N'00000000-0000-0000-0000-000000000005', N'customer3@email.com', N'hashedpassword', N'Phan', N'Thi H', N'0977888999', NULL, '1990-11-20', 0, GETDATE());
+  (N'10000000-0000-0000-0000-000000000001', N'00000000-0000-0000-0000-000000000001', N'staff1@email.com', N'hashedpassword', N'Le', N'Thi B', N'0987654321', NULL, '1985-05-10', 0, 0, GETDATE()),
+  (N'10000000-0000-0000-0000-000000000002', N'00000000-0000-0000-0000-000000000002', N'consultant1@email.com', N'hashedpassword', N'Pham', N'Van C', N'0911222333', NULL, '1992-03-15', 1, 0, GETDATE()),
+  (N'10000000-0000-0000-0000-000000000003', N'00000000-0000-0000-0000-000000000003', N'manager1@email.com', N'hashedpassword', N'Tran', N'Thi D', N'0933444555', NULL, '1980-07-20', 0, 0, GETDATE()),
+  (N'10000000-0000-0000-0000-000000000004', N'00000000-0000-0000-0000-000000000004', N'admin1@email.com', N'hashedpassword', N'Nguyen', N'Van E', N'0944555666', NULL, '1975-12-01', 1, 0, GETDATE()),
+  (N'10000000-0000-0000-0000-000000000005', N'00000000-0000-0000-0000-000000000005', N'customer1@email.com', N'hashedpassword', N'Hoang', N'Thi F', N'0955666777', NULL, '1995-09-09', 0, 0, GETDATE()),
+  (N'10000000-0000-0000-0000-000000000006', N'00000000-0000-0000-0000-000000000005', N'customer2@email.com', N'hashedpassword', N'Truong', N'Van G', N'0966777888', NULL, '1998-02-15', 1, 0, GETDATE()),
+  (N'10000000-0000-0000-0000-000000000007', N'00000000-0000-0000-0000-000000000005', N'customer3@email.com', N'hashedpassword', N'Phan', N'Thi H', N'0977888999', NULL, '1990-11-20', 0, 0, GETDATE());
 
 -- Insert 5 StaffInfo cho 5 account đầu (giả sử đều là staff/consultant/manager/admin/customer)
 INSERT INTO StaffInfo (AccountId, Department, Degree, YearOfExperience, Biography,CreateAt)
@@ -143,3 +143,21 @@ VALUES
   (N'80000000-0000-0000-0000-000000000003', N'20000000-0000-0000-0000-000000000003', N'10000000-0000-0000-0000-000000000003', N'Bình thường', 3, GETDATE()),
   (N'80000000-0000-0000-0000-000000000004', N'20000000-0000-0000-0000-000000000004', N'10000000-0000-0000-0000-000000000004', N'Chưa hài lòng', 2, GETDATE()),
   (N'80000000-0000-0000-0000-000000000005', N'20000000-0000-0000-0000-000000000005', N'10000000-0000-0000-0000-000000000005', N'Xuất sắc', 5, GETDATE());
+
+-- Thêm dữ liệu mẫu cho BlogCategory
+INSERT INTO BlogCategory (CategoryId, Name, Description, CreatedAt) VALUES
+  (N'90000000-0000-0000-0000-000000000001', N'Sức khỏe sinh sản', N'Kiến thức về sức khỏe sinh sản', GETDATE()),
+  (N'90000000-0000-0000-0000-000000000002', N'Dinh dưỡng', N'Chia sẻ về dinh dưỡng và ăn uống', GETDATE()),
+  (N'90000000-0000-0000-0000-000000000003', N'Tâm lý', N'Bài viết về sức khỏe tâm lý', GETDATE());
+
+-- Thêm dữ liệu mẫu cho Blog
+INSERT INTO Blog (BlogId, Title, Slug, Content, Excerpt, AuthorId, CategoryId, FeaturedImageUrl, IsPublished, CreatedAt) VALUES
+  (N'A0000000-0000-0000-0000-000000000001', N'Bí quyết chăm sóc sức khỏe sinh sản', N'bi-quyet-cham-soc-suc-khoe-sinh-san', N'Nội dung chi tiết về chăm sóc sức khỏe sinh sản...', N'Bài viết chia sẻ bí quyết...', N'10000000-0000-0000-0000-000000000002', N'90000000-0000-0000-0000-000000000001', NULL, 1, GETDATE()),
+  (N'A0000000-0000-0000-0000-000000000002', N'Dinh dưỡng hợp lý cho mọi lứa tuổi', N'dinh-duong-hop-ly-cho-moi-lua-tuoi', N'Nội dung về dinh dưỡng...', N'Bài viết về dinh dưỡng...', N'10000000-0000-0000-0000-000000000003', N'90000000-0000-0000-0000-000000000002', NULL, 1, GETDATE()),
+  (N'A0000000-0000-0000-0000-000000000003', N'Giữ gìn sức khỏe tâm lý', N'giu-gin-suc-khoe-tam-ly', N'Nội dung về sức khỏe tâm lý...', N'Bài viết về tâm lý...', N'10000000-0000-0000-0000-000000000004', N'90000000-0000-0000-0000-000000000003', NULL, 1, GETDATE());
+
+-- Thêm dữ liệu mẫu cho RefreshToken
+INSERT INTO RefreshToken (RefreshTokenId, Token, AccountId, ExpiryDate, CreatedAt, IsRevoked) VALUES
+  (N'B0000000-0000-0000-0000-000000000001', N'refreshtoken1', N'10000000-0000-0000-0000-000000000001', DATEADD(DAY, 7, GETDATE()), GETDATE(), 0),
+  (N'B0000000-0000-0000-0000-000000000002', N'refreshtoken2', N'10000000-0000-0000-0000-000000000002', DATEADD(DAY, 7, GETDATE()), GETDATE(), 0),
+  (N'B0000000-0000-0000-0000-000000000003', N'refreshtoken3', N'10000000-0000-0000-0000-000000000003', DATEADD(DAY, 7, GETDATE()), GETDATE(), 0);

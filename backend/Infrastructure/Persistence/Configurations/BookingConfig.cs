@@ -18,15 +18,6 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .HasForeignKey(b => b.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(b => b.PaymentHistory)
-                .WithOne(p => p.Booking)
-                .HasForeignKey<Payment>(p => p.BookingId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasMany(b => b.BookingDetails)
-                .WithOne(d => d.Booking)
-                .HasForeignKey(d => d.BookingId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -38,6 +38,7 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 DateOfBirth = request.DateOfBirth,
+                Phone = request.Phone,
                 Gender = request.Gender
             };
 
@@ -54,6 +55,7 @@ namespace backend.Infrastructure.Services
                 Price = service.Price,
                 FirstName = createdDetail.FirstName,
                 LastName = createdDetail.LastName,
+                Phone = createdDetail.Phone,
                 DateOfBirth = createdDetail.DateOfBirth,
                 Gender = createdDetail.Gender
             };
@@ -80,6 +82,7 @@ namespace backend.Infrastructure.Services
                     Price = detail.TestService?.Price ?? 0,
                     FirstName = detail.FirstName,
                     LastName = detail.LastName,
+                    Phone = detail.Phone,
                     DateOfBirth = detail.DateOfBirth,
                     Gender = detail.Gender
                 });
@@ -104,6 +107,7 @@ namespace backend.Infrastructure.Services
                 Price = bookingDetail.TestService?.Price ?? 0,
                 FirstName = bookingDetail.FirstName,
                 LastName = bookingDetail.LastName,
+                Phone = bookingDetail.Phone,
                 DateOfBirth = bookingDetail.DateOfBirth,
                 Gender = bookingDetail.Gender
             };
@@ -116,16 +120,11 @@ namespace backend.Infrastructure.Services
             if (existingDetail == null)
                 return null;
 
-            // Check if service exists
-            var service = await _testServiceRepository.GetByIdAsync(request.ServiceId);
-            if (service == null)
-                return null;
-
-            // Update booking detail
-            existingDetail.ServiceId = request.ServiceId;
+            // Update allowed fields only
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
+            existingDetail.Phone = request.Phone;
             existingDetail.Gender = request.Gender;
 
             // Save changes
@@ -137,10 +136,11 @@ namespace backend.Infrastructure.Services
                 BookingDetailId = updatedDetail.BookingDetailId,
                 BookingId = updatedDetail.BookingId,
                 ServiceId = updatedDetail.ServiceId,
-                ServiceName = service.ServiceName,
-                Price = service.Price,
+                ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
+                Price = updatedDetail.TestService?.Price ?? 0,
                 FirstName = updatedDetail.FirstName,
                 LastName = updatedDetail.LastName,
+                Phone = updatedDetail.Phone,
                 DateOfBirth = updatedDetail.DateOfBirth,
                 Gender = updatedDetail.Gender
             };

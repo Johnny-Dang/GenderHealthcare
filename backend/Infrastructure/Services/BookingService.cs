@@ -6,16 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace backend.Infrastructure.Services
 {
     public class BookingService : IBookingService
     {
         private readonly IBookingRepository _bookingRepository;
+        private readonly IMapper _mapper;
         
-        public BookingService(IBookingRepository bookingRepository)
+        public BookingService(IBookingRepository bookingRepository, IMapper mapper)
         {
             _bookingRepository = bookingRepository;
+            _mapper = mapper;
         }
         
         // Create a booking
@@ -70,17 +73,10 @@ namespace backend.Infrastructure.Services
         }
         
         // Get bookings by account ID
-        public async Task<List<BookingResponse>> GetByAccountIdAsync(Guid accountId)
+        public async Task<IEnumerable<BookingResponse>> GetByAccountIdAsync(Guid accountId)
         {
             var bookings = await _bookingRepository.GetByAccountIdAsync(accountId);
-            var responses = new List<BookingResponse>();
-            
-            foreach (var booking in bookings)
-            {
-                responses.Add(MapToDetailedResponse(booking));
-            }
-            
-            return responses;
+            return _mapper.Map<IEnumerable<BookingResponse>>(bookings);
         }
         
         // Update booking
@@ -107,6 +103,7 @@ namespace backend.Infrastructure.Services
                         detail.ServiceId = detailDto.ServiceId;
                         detail.FirstName = detailDto.FirstName;
                         detail.LastName = detailDto.LastName;
+                        detail.Phone = detailDto.Phone; // Assuming Phone is part of BookingDetail
                         detail.DateOfBirth = detailDto.DateOfBirth;
                         detail.Gender = detailDto.Gender;
                         updatedDetails.Add(detail);
@@ -121,6 +118,7 @@ namespace backend.Infrastructure.Services
                             ServiceId = detailDto.ServiceId,
                             FirstName = detailDto.FirstName,
                             LastName = detailDto.LastName,
+                            Phone = detailDto.Phone, // Assuming Phone is part of BookingDetail
                             DateOfBirth = detailDto.DateOfBirth,
                             Gender = detailDto.Gender
                         };
@@ -162,41 +160,18 @@ namespace backend.Infrastructure.Services
             
             decimal totalAmount = 0;
             // Safely check if PaymentHistory exists before accessing Amount
-            if (booking.PaymentHistory != null)
+            if (booking.Payment != null)
             {
-                totalAmount = booking.PaymentHistory.Amount;
+                totalAmount = booking.Payment.Amount;
             }
             
             var response = new BookingResponse
             {
                 BookingId = booking.BookingId,
                 AccountId = booking.AccountId,
-                AccountName = accountName.Trim(),
                 CreateAt = booking.CreateAt,
                 UpdateAt = booking.UpdateAt,
-                TotalAmount = totalAmount,
-                BookingDetails = new List<BookingDetailResponse>()
             };
-            
-            // Add booking details
-            if (booking.BookingDetails != null && booking.BookingDetails.Any())
-            {
-                foreach (var detail in booking.BookingDetails)
-                {
-                    response.BookingDetails.Add(new BookingDetailResponse
-                    {
-                        BookingDetailId = detail.BookingDetailId,
-                        ServiceId = detail.ServiceId,
-                        ServiceName = detail.TestService?.ServiceName ?? string.Empty,
-                        Price = detail.TestService?.Price ?? 0,
-                        FirstName = detail.FirstName,
-                        LastName = detail.LastName,
-                        DateOfBirth = detail.DateOfBirth,
-                        Gender = detail.Gender
-                    });
-                }
-            }
-            
             return response;
         }
     }
