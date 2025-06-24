@@ -1,10 +1,11 @@
 ﻿using backend.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.API.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api")]
     public class ConsultantController : ControllerBase
     {
         private readonly IConsultantService _consultantService;
@@ -22,7 +23,9 @@ namespace backend.API.Controllers
             return BadRequest(result.Error);
         }
 
+
         [HttpGet("consultants/{id}")]
+        [Authorize(Roles = "Admin,Consultant,Manager,Staff")]
         public async Task<IActionResult> GetConsultantById(Guid id)
         {
             var result = await _consultantService.GetConsultantByIdAsync(id);
