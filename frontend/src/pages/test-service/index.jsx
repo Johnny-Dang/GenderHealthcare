@@ -20,7 +20,7 @@ const Services = () => {
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("https://localhost:7195/api/services");
+      const response = await axios.get("/api/services");
       console.log(response);
       
       setServices(response.data);
