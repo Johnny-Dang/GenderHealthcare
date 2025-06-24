@@ -1,46 +1,47 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-  userInfo: null, 
+  userInfo: null,
   bookingId: '',
   cartCount: 0,
-  cartShouldReload: false,
-};
+  cartShouldReload: false
+}
 
 export const userSlice = createSlice({
-  name: "user",
+  name: 'user',
   initialState,
   reducers: {
     login: (state, actions) => {
-      state.userInfo = actions.payload;
+      state.userInfo = actions.payload
     },
     logout: (state) => {
-      state.userInfo = null;
-      state.bookingId = '';
-      state.cartCount = 0;
-      state.cartShouldReload = false;
+      state.userInfo = null
+      state.bookingId = ''
+      state.cartCount = 0
+      state.cartShouldReload = false
     },
     setBookingId: (state, action) => {
-      state.bookingId = action.payload;
+      state.bookingId = action.payload
     },
     incrementCart: (state) => {
-      state.cartCount += 1;
+      state.cartCount += 1
     },
     setCartCount: (state, action) => {
-      state.cartCount = action.payload;
+      state.cartCount = action.payload
     },
     setCartShouldReload: (state, action) => {
-      state.cartShouldReload = action.payload;
+      state.cartShouldReload = action.payload
     },
     resetCart: (state) => {
-      state.bookingId = '';
-      state.cartCount = 0;
-      state.cartShouldReload = false;
-    },
-  },
-});
+      state.bookingId = ''
+      state.cartCount = 0
+      state.cartShouldReload = false
+    }
+  }
+})
 
 // Action creators are generated for each case reducer function
-export const { login, logout, setBookingId, incrementCart, setCartCount, setCartShouldReload, resetCart } = userSlice.actions;
+export const { login, logout, setBookingId, incrementCart, setCartCount, setCartShouldReload, resetCart } =
+  userSlice.actions
 
-export default userSlice.reducer;
+export default userSlice.reducer

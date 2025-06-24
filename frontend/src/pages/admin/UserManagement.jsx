@@ -25,7 +25,7 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const response = await api.get(`api/users`)
+      const response = await api.get(`/api/users`)
       const formattedData = response.data.map((user, index) => ({
         key: index.toString(),
         id: user.accountId,
@@ -77,7 +77,7 @@ const UserManagement = () => {
           }
           if (currentUser) {
             // Cập nhật thông tin người dùng
-            await api.put(`api/users/${currentUser.id}`, {
+            await api.put(`/api/users/${currentUser.id}`, {
               email: values.email,
               firstName,
               lastName,
@@ -86,7 +86,7 @@ const UserManagement = () => {
             toast.success('Cập nhật người dùng thành công!')
           } else {
             // Tạo người dùng mới
-            const response = await api.post(`api/users`, {
+            const response = await api.post(`/api/users`, {
               email: values.email,
               password: values.password || 'DefaultPassword123',
               firstName,

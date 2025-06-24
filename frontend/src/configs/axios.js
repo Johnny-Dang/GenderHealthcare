@@ -4,7 +4,7 @@ import { login, logout } from '@/redux/features/userSlice'
 
 // Set config defaults when creating the instance
 const api = axios.create({
-  baseURL: 'https://localhost:7195/',
+  baseURL: 'https://localhost:7195',
   withCredentials: true // Để gửi cookie refreshToken lên backend
 })
 
