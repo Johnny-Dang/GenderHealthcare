@@ -124,24 +124,14 @@ const BlogManagement = () => {
 
   // Lấy danh sách categories và blogs khi component mount
   useEffect(() => {
-    // Chỉ cho phép user đã đăng nhập và có role phù hợp truy cập
-    if (!user) {
+    // AuthGuard already handles role-based access, so we can simplify this
+    if (!user || !user.userInfo) {
       toast({
         title: 'Không có quyền truy cập',
         description: 'Bạn cần đăng nhập để quản lý blog',
         variant: 'destructive'
       })
       navigate('/login')
-      return
-    }
-
-    if (user && user.role !== 'Staff' && user.role !== 'Admin') {
-      toast({
-        title: 'Không có quyền truy cập',
-        description: 'Bạn không có quyền quản lý blog',
-        variant: 'destructive'
-      })
-      navigate('/')
       return
     }
 
