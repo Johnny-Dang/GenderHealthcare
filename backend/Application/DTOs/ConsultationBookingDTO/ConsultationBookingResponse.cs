@@ -17,5 +17,7 @@
         public DateTime ScheduledAt { get; set; }
         public string Status { get; set; } = "pending";
         public string? Message { get; set; }
+        public DateTime CreatedAt { get; set; }
+
     }
 }

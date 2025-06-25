@@ -46,7 +46,7 @@ namespace backend.API.Controllers
         }
 
         // api giúp cập nhật trạng thái booking
-        [HttpPatch("{bookingId}/update-status")]
+        [HttpPatch("{bookingId}/status")]
         public async Task<IActionResult> UpdateBookingStatus(Guid bookingId, [FromBody] string status)
         {
             if (string.IsNullOrEmpty(status))
@@ -62,10 +62,10 @@ namespace backend.API.Controllers
         }
 
         // api lấy tất cả booking của nhân viên
-        [HttpGet("staff/{staffId}")]
-        public async Task<IActionResult> GetBookingsByStaffId(Guid staffId)
+        [HttpGet("consultant/{consultantId}")]
+        public async Task<IActionResult> GetBookingsByStaffId(Guid consultantId)
         {
-            var result = await _bookingService.GetBookingsByStaffIdAsync(staffId);
+            var result = await _bookingService.GetBookingsByStaffIdAsync(consultantId);
             if (result.IsSuccess)
             {
                 return Ok(result.Data);

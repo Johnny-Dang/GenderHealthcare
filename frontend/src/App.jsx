@@ -31,6 +31,7 @@ import TestServiceManagement from './pages/admin/TestServiceManagement'
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
 import BookConsultantPage from './pages/booking-consultant'
+import ConsultantBookingSchedule from './pages/booking-consultant/ConsultantBookingSchedule'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -102,6 +103,10 @@ function App() {
           element: <TestServiceManagement />
         }
       ]
+    },
+    {
+      path: '/consultant-schedule',
+      element: <ConsultantBookingSchedule />
     },
     {
       path: '/customer-dashboard',
