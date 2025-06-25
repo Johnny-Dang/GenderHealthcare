@@ -15,7 +15,7 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.Property(p => p.Amount).IsRequired();
             builder.Property(p => p.PaymentMethod).IsRequired();
             builder.HasOne(p => p.Booking)
-                .WithOne(b => b.PaymentHistory)
+                .WithOne(b => b.Payment)
                 .HasForeignKey<Payment>(p => p.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

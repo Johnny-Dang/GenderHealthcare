@@ -4,7 +4,7 @@ namespace backend.Application.DTOs.PaymentDTO
 {
     public class PaymentResponse
     {
-        public string OrderInfo { get; set; } = string.Empty;
+        public Guid BookingId { get; set; }
 
         public string Amount { get; set; } = string.Empty;   
         

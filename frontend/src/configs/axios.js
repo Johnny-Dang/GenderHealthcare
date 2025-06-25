@@ -4,8 +4,9 @@ import { login, logout } from '@/redux/features/userSlice'
 
 // Set config defaults when creating the instance
 const api = axios.create({
-  baseURL: 'https://localhost:7195/',
-  withCredentials: true // Để gửi cookie refreshToken lên backend
+  baseURL: 'https://localhost:7195',
+  withCredentials: true, // Để gửi cookie refreshToken lên backend
+  timeout: 10000
 })
 
 api.interceptors.request.use(
@@ -56,7 +57,7 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const res = await axios.post('https://localhost:7195/Account/refresh-token', {}, { withCredentials: true })
+        const res = await api.post('/Account/refresh-token', {}, { withCredentials: true })
         const newAccessToken = res.data.accessToken
         localStorage.setItem('token', newAccessToken)
         api.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken

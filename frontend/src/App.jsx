@@ -1,5 +1,5 @@
 import React from 'react'
-import { RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom'
+import { RouterProvider, createBrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
@@ -15,6 +15,9 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './redux/store'
 import CustomerDashboard from './pages/customer-dashboard/BookingDashboard'
 import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage'
+import CartPage from './pages/cart'
+import VnPayReturn from './pages/payment/VnPayReturn'
+import AuthGuard from './components/AuthGuard'
 
 /**
  * Root component for the application, setting up routing and Redux state management with persistence.
@@ -76,7 +79,11 @@ function App() {
     },
     {
       path: '/admin',
-      element: <AdminPage />,
+      element: (
+        <AuthGuard allowedRoles={['Admin', 'Manager']} redirectTo='/'>
+          <AdminPage />
+        </AuthGuard>
+      ),
       children: [
         {
           index: true,
@@ -134,8 +141,14 @@ function App() {
       path: '/customer-dashboard/booking/:bookingId',
       element: <BookingDetailPage />
     },
-
-    // Cái page này để cuối nếu not found
+    {
+      path: '/cart',
+      element: <CartPage />
+    },
+    {
+      path: '/checkout/vnpay-return',
+      element: <VnPayReturn />
+    },
     {
       path: '*',
       element: <NotFound />

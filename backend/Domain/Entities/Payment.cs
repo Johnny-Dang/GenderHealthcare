@@ -6,7 +6,7 @@ namespace backend.Domain.Entities
     {
         public Guid BookingId { get; set; }
 
-        public Guid TransactionId { get; set; }
+        public string TransactionId { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
 

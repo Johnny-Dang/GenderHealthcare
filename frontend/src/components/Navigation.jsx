@@ -1,19 +1,21 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Heart, Menu, X, User, LogOut } from 'lucide-react'
+import { Avatar, Dropdown } from 'antd'
+import { Heart, Menu, X, User, LogOut, Settings, ChevronDown } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '@/redux/features/userSlice'
 import api from '@/configs/axios'
 import { toast } from 'react-toastify'
+import CartIcon from './CartIcon'
 
 const Navigation = () => {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const user = useSelector((state) => state.user)
+  const userInfo = useSelector((state) => state.user.userInfo)
   const dispatch = useDispatch()
-  const isGuest = !user
+  const isGuest = !userInfo
 
   // Define navigation items based on user role
   const getNavItems = () => {
@@ -29,12 +31,11 @@ const Navigation = () => {
       ]
     }
 
-    switch (user.role) {
+    switch (userInfo.role) {
       case 'Admin':
         return [
           { path: '/admin', label: 'Quản lý hệ thống' },
-          { path: '/staff-management', label: 'Quản lý nội dung' },
-          { path: '/blog', label: 'Blog' }
+          { path: '/admin/users', label: 'Quản lý tài khoản' }
         ]
 
       case 'Staff':
@@ -72,13 +73,60 @@ const Navigation = () => {
 
   const handleLogout = async () => {
     try {
-      await api.post('/Account/logout')
+      // Thay đổi thứ tự: Phải gọi API TRƯỚC khi xóa token
+      // Lấy token từ cả hai nguồn để đảm bảo có token
+      const token = localStorage.getItem('token') || userInfo?.accessToken
+
+      console.log('Token used for logout:', token?.substring(0, 20) + '...') // Debug token
+
+      if (token) {
+        // Thêm thêm headers và options cho request
+        await api.post(
+          '/Account/logout',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            withCredentials: true
+          }
+        )
+        console.log('Logout API called successfully')
+      } else {
+        console.warn('No token available for logout')
+      }
     } catch (error) {
-      toast.error('Đã xảy ra lỗi khi đăng xuất')
+      console.error('Logout error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      })
+    } finally {
+      // CHỈ sau khi gọi API xong mới xóa state và localStorage
+      dispatch(logout())
+      localStorage.removeItem('token')
+
+      // Xóa cookies
+      document.cookie.split(';').forEach(function (c) {
+        document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/')
+      })
+
+      setIsMenuOpen(false)
+      navigate('/')
+      toast.success('Đã đăng xuất thành công')
     }
-    dispatch(logout())
-    setIsMenuOpen(false)
-    navigate('/')
+  }
+
+  // Helper function to display user name correctly
+  const getUserDisplayName = () => {
+    if (!userInfo) return ''
+
+    // Check different possible name properties based on API response structure
+    if (userInfo.fullName) return userInfo.fullName
+    if (userInfo.name) return userInfo.name
+
+    return userInfo.email || 'Người dùng'
   }
 
   const getRoleDisplayName = (role) => {
@@ -104,6 +152,39 @@ const Navigation = () => {
     { path: '/blog', label: 'Blog' },
     { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
   ]
+
+  // Menu items for user dropdown
+  const userMenuItems = [
+    {
+      key: 'profile',
+      label: 'Cập nhật hồ sơ',
+      icon: <Settings size={14} className='mr-2' />,
+      onClick: () => navigate('/profile')
+    },
+    {
+      key: 'divider',
+      type: 'divider'
+    },
+    {
+      key: 'logout',
+      label: 'Đăng xuất',
+      icon: <LogOut size={14} className='mr-2' />,
+      onClick: handleLogout,
+      danger: true
+    }
+  ]
+
+  // Get avatar URL or use first letter of name
+  const getAvatarContent = () => {
+    if (!userInfo) return null
+
+    if (userInfo.avatarUrl) {
+      return <img src={userInfo.avatarUrl} alt='Avatar' />
+    }
+
+    const name = getUserDisplayName()
+    return name.charAt(0).toUpperCase()
+  }
 
   return (
     <nav className='bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100'>
@@ -144,19 +225,30 @@ const Navigation = () => {
                   </Link>
                 ))}
 
-            {user ? (
-              <div className='flex items-center space-x-4'>
-                <div className='flex items-center space-x-2'>
-                  <User className='h-4 w-4 text-gray-600' />
-                  <span className='text-sm text-gray-700'>
-                    {user.name} ({getRoleDisplayName(user.role)})
-                  </span>
+            {/* Cart Icon */}
+            <CartIcon />
+
+            {/* User avatar and dropdown */}
+            {userInfo ? (
+              <Dropdown menu={{ items: userMenuItems }} placement='bottomRight' arrow trigger={['click']}>
+                <div className='flex items-center space-x-2 cursor-pointer'>
+                  <Avatar
+                    size={36}
+                    src={userInfo.avatarUrl}
+                    className='bg-gradient-to-r from-pink-500 to-red-500'
+                    style={{ color: 'white', fontWeight: 'bold' }}
+                  >
+                    {!userInfo.avatarUrl && getUserDisplayName().charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div className='hidden lg:block'>
+                    <span className='text-sm font-medium text-gray-700'>{getUserDisplayName()}</span>
+                    <div className='flex items-center text-xs text-gray-500'>
+                      <span>{getRoleDisplayName(userInfo.role)}</span>
+                      <ChevronDown size={12} className='ml-1' />
+                    </div>
+                  </div>
                 </div>
-                <Button variant='ghost' size='sm' onClick={handleLogout}>
-                  <LogOut className='h-4 w-4 mr-2' />
-                  Đăng xuất
-                </Button>
-              </div>
+              </Dropdown>
             ) : (
               <div className='flex items-center space-x-2'>
                 <Link to='/login'>
@@ -200,15 +292,47 @@ const Navigation = () => {
                 </Link>
               ))}
 
-              {user ? (
+              {userInfo ? (
                 <div className='px-3 py-2 border-t border-gray-100 mt-2'>
-                  <p className='text-sm text-gray-600 mb-2'>
-                    {user.name} ({getRoleDisplayName(user.role)})
-                  </p>
-                  <Button variant='ghost' size='sm' onClick={handleLogout} className='w-full justify-start'>
-                    <LogOut className='h-4 w-4 mr-2' />
-                    Đăng xuất
-                  </Button>
+                  <div className='flex items-center space-x-3 mb-3'>
+                    <Avatar
+                      size={40}
+                      src={userInfo.avatarUrl}
+                      className='bg-gradient-to-r from-pink-500 to-red-500'
+                      style={{ color: 'white', fontWeight: 'bold' }}
+                    >
+                      {!userInfo.avatarUrl && getUserDisplayName().charAt(0).toUpperCase()}
+                    </Avatar>
+                    <div>
+                      <p className='text-sm font-medium text-gray-700'>{getUserDisplayName()}</p>
+                      <p className='text-xs text-gray-500'>{getRoleDisplayName(userInfo.role)}</p>
+                    </div>
+                  </div>
+
+                  <div className='space-y-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => {
+                        navigate('/profile')
+                        setIsMenuOpen(false)
+                      }}
+                      className='w-full justify-start'
+                    >
+                      <Settings className='h-4 w-4 mr-2' />
+                      Cập nhật hồ sơ
+                    </Button>
+
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={handleLogout}
+                      className='w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50'
+                    >
+                      <LogOut className='h-4 w-4 mr-2' />
+                      Đăng xuất
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className='px-3 py-2 space-y-2'>

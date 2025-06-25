@@ -9,9 +9,6 @@ namespace backend.Application.DTOs.BookingDetailDTO
         public Guid BookingDetailId { get; set; }
         
         [Required]
-        public Guid ServiceId { get; set; }
-        
-        [Required]
         [StringLength(100)]
         public string FirstName { get; set; } = string.Empty;
         
