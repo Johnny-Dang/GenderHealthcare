@@ -169,6 +169,7 @@ namespace backend.Infrastructure.Services
             {
                 BookingId = booking.BookingId,
                 AccountId = booking.AccountId,
+                Status = booking.Status,
                 CreateAt = booking.CreateAt,
                 UpdateAt = booking.UpdateAt,
             };

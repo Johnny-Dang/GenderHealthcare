@@ -80,6 +80,7 @@ namespace backend.Infrastructure.Services
                     ServiceId = detail.ServiceId,
                     ServiceName = detail.TestService?.ServiceName ?? string.Empty,
                     Price = detail.TestService?.Price ?? 0,
+                    Status = detail.Status,
                     FirstName = detail.FirstName,
                     LastName = detail.LastName,
                     Phone = detail.Phone,
@@ -105,6 +106,7 @@ namespace backend.Infrastructure.Services
                 ServiceId = bookingDetail.ServiceId,
                 ServiceName = bookingDetail.TestService?.ServiceName ?? string.Empty,
                 Price = bookingDetail.TestService?.Price ?? 0,
+                Status = bookingDetail.Status,
                 FirstName = bookingDetail.FirstName,
                 LastName = bookingDetail.LastName,
                 Phone = bookingDetail.Phone,
@@ -124,6 +126,7 @@ namespace backend.Infrastructure.Services
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
+            existingDetail.Status = request.Status;
             existingDetail.Phone = request.Phone;
             existingDetail.Gender = request.Gender;
 
@@ -138,6 +141,7 @@ namespace backend.Infrastructure.Services
                 ServiceId = updatedDetail.ServiceId,
                 ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
                 Price = updatedDetail.TestService?.Price ?? 0,
+                Status = updatedDetail.Status,
                 FirstName = updatedDetail.FirstName,
                 LastName = updatedDetail.LastName,
                 Phone = updatedDetail.Phone,

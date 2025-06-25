@@ -8,6 +8,8 @@ namespace backend.Domain.Entities
 
         public Guid AccountId { get; set; }
 
+        public string Status { get; set; } = "Chờ Xác Nhận";
+
         public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdateAt { get; set; }

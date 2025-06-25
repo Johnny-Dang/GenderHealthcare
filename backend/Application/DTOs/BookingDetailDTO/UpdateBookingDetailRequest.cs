@@ -18,6 +18,9 @@ namespace backend.Application.DTOs.BookingDetailDTO
         
         [Required]
         public DateOnly DateOfBirth { get; set; }
+
+        [Required]
+        public string Status { get; set; } = string.Empty;
         
         [Required]
         [StringLength(20)]
