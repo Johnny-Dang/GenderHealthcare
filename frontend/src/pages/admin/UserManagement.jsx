@@ -42,7 +42,7 @@ const UserManagement = () => {
 
       setLoading(true)
       try {
-        const response = await api.get(`/api/users`)
+        const response = await api.get(`/api/accounts`)
         const formattedData = response.data.map((user, index) => ({
           key: index.toString(),
           id: user.accountId,
@@ -103,7 +103,7 @@ const UserManagement = () => {
           }
           if (currentUser) {
             // Cập nhật thông tin người dùng
-            await api.put(`/api/users/${currentUser.id}`, {
+            await api.put(`/api/accounts/${currentUser.id}`, {
               email: values.email,
               firstName,
               lastName,
@@ -112,7 +112,7 @@ const UserManagement = () => {
             toast.success('Cập nhật người dùng thành công!')
           } else {
             // Tạo người dùng mới
-            const response = await api.post(`/api/users`, {
+            const response = await api.post(`/api/accounts`, {
               email: values.email,
               password: values.password || 'DefaultPassword123',
               firstName,
@@ -368,7 +368,7 @@ const UserManagement = () => {
         open={deleteModal.open}
         onOk={async () => {
           try {
-            await api.delete(`api/users/${deleteModal.id}`)
+            await api.delete(`api/accounts/${deleteModal.id}`)
             toast.success('Đã xóa (mềm) người dùng!')
             fetchUsers(true) // Force refresh sau khi xóa
           } catch {
