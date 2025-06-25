@@ -105,7 +105,7 @@ function App() {
       ]
     },
     {
-      path: '/consultant-schedule',
+      path: '/consultant/schedule',
       element: <ConsultantBookingSchedule />
     },
     {

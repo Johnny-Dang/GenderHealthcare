@@ -247,29 +247,35 @@ function ConsultantBookingSchedule() {
         }
       },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div style={{ padding: 8 }}>
-          <Input
-            placeholder='Tìm theo tên'
+        <div className='p-2'>
+          <input
+            className='border rounded px-2 py-1 w-full mb-2'
+            placeholder='Tìm theo số điện thoại'
             value={selectedKeys[0]}
             onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-            onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
+            onKeyDown={(e) => e.key === 'Enter' && confirm()}
           />
-          <Space>
-            <Button type='primary' onClick={() => confirm()} icon={<Search />} size='small' style={{ width: 90 }}>
+          <div className='flex gap-2'>
+            <button
+              className='bg-pink-500 text-white rounded px-3 py-1 text-sm hover:bg-pink-600'
+              onClick={() => confirm()}
+            >
               Tìm
-            </Button>
-            <Button onClick={() => clearFilters()} size='small' style={{ width: 90 }}>
+            </button>
+            <button
+              className='bg-gray-200 text-gray-700 rounded px-3 py-1 text-sm hover:bg-gray-300'
+              onClick={() => clearFilters()}
+            >
               Xóa
-            </Button>
-          </Space>
+            </button>
+          </div>
         </div>
       ),
       onFilter: (value, record) => {
-        const searchName = value.toLowerCase()
+        const searchPhone = value.toLowerCase()
         return (
-          (record.customerName && record.customerName.toLowerCase().includes(searchName)) ||
-          (record.guestName && record.guestName.toLowerCase().includes(searchName))
+          (record.customerPhone && record.customerPhone.toLowerCase().includes(searchPhone)) ||
+          (record.guestPhone && record.guestPhone.toLowerCase().includes(searchPhone))
         )
       }
     },
@@ -280,8 +286,8 @@ function ConsultantBookingSchedule() {
       width: '20%',
       render: (scheduledAt) => (
         <div className='flex items-center'>
-          <Calendar className='w-4 h-4 mr-2 text-blue-600' />
-          <Text>{formatDateTime(scheduledAt)}</Text>
+          <Calendar className='w-4 h-4 mr-2 text-pink-500' />
+          <span>{formatDateTime(scheduledAt)}</span>
         </div>
       ),
       sorter: (a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt)
@@ -293,10 +299,8 @@ function ConsultantBookingSchedule() {
       width: '30%',
       render: (message) => (
         <div className='flex'>
-          <MessageSquare className='w-4 h-4 mr-2 mt-1 text-blue-500 flex-shrink-0' />
-          <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: 'Xem thêm' }}>
-            {message || <span className='text-gray-400 italic'>Không có ghi chú</span>}
-          </Paragraph>
+          <MessageSquare className='w-4 h-4 mr-2 mt-1 text-pink-400 flex-shrink-0' />
+          <span className='truncate'>{message || <span className='text-gray-400 italic'>Không có ghi chú</span>}</span>
         </div>
       )
     },
@@ -318,39 +322,37 @@ function ConsultantBookingSchedule() {
       key: 'action',
       width: '15%',
       render: (_, record) => {
-        if (record.status === 'pending') {
-          return (
-            <Space size='small'>
-              <Popconfirm
-                title='Xác nhận chấp nhận lịch hẹn'
-                description='Bạn có chắc chắn muốn chấp nhận lịch hẹn này?'
-                onConfirm={() => updateBookingStatus(record.bookingId, 'confirmed')}
-                okText='Chấp nhận'
-                cancelText='Hủy'
-                icon={<CheckCircle className='text-green-500' />}
-              >
-                <Button type='primary' size='small' className='flex items-center gap-1 bg-blue-600 hover:bg-blue-700'>
-                  <CheckCircle className='w-3.5 h-3.5' />
-                  <span>Chấp nhận</span>
-                </Button>
-              </Popconfirm>
-              <Popconfirm
-                title='Xác nhận từ chối lịch hẹn'
-                description='Bạn có chắc chắn muốn từ chối lịch hẹn này?'
-                onConfirm={() => updateBookingStatus(record.bookingId, 'cancelled')}
-                okText='Từ chối'
-                cancelText='Hủy'
-                icon={<AlertCircle className='text-red-500' />}
-              >
-                <Button danger size='small' className='flex items-center gap-1'>
-                  <XCircle className='w-3.5 h-3.5' />
-                  <span>Từ chối</span>
-                </Button>
-              </Popconfirm>
-            </Space>
-          )
-        }
-        return null
+        // Hiển thị 2 nút luôn, mỗi nút sẽ disabled nếu trạng thái đã đúng
+        return (
+          <div className='flex gap-2'>
+            <button
+              className={`flex items-center gap-1 px-3 py-1 rounded text-sm transition font-medium ${
+                record.status === 'confirmed'
+                  ? 'bg-green-100 text-green-600 cursor-not-allowed opacity-60'
+                  : 'bg-pink-500 text-white hover:bg-pink-600'
+              }`}
+              disabled={record.status === 'confirmed'}
+              onClick={() => updateBookingStatus(record.bookingId, 'confirmed')}
+              type='button'
+            >
+              <CheckCircle className='w-4 h-4' />
+              Đánh dấu đã xác nhận
+            </button>
+            <button
+              className={`flex items-center gap-1 px-3 py-1 rounded text-sm transition font-medium ${
+                record.status === 'cancelled'
+                  ? 'bg-red-100 text-red-600 cursor-not-allowed opacity-60'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              disabled={record.status === 'cancelled'}
+              onClick={() => updateBookingStatus(record.bookingId, 'cancelled')}
+              type='button'
+            >
+              <XCircle className='w-4 h-4' />
+              Đánh dấu không thể liên hệ
+            </button>
+          </div>
+        )
       }
     }
   ]
@@ -368,22 +370,22 @@ function ConsultantBookingSchedule() {
         <div className='py-4'>
           <Row gutter={[16, 16]} className='mb-5'>
             <Col xs={24} sm={12} md={6}>
-              <Card bordered={false} className='shadow-sm'>
+              <Card variant='outlined' className='shadow-sm'>
                 <Statistic title='Tổng số lịch hẹn' value={stats.total} valueStyle={{ color: '#ec4899' }} />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card bordered={false} className='shadow-sm'>
+              <Card variant='outlined' className='shadow-sm'>
                 <Statistic title='Đang chờ xác nhận' value={stats.pending} valueStyle={{ color: '#f59e42' }} />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card bordered={false} className='shadow-sm'>
+              <Card variant='outlined' className='shadow-sm'>
                 <Statistic title='Đã chấp nhận' value={stats.confirmed} valueStyle={{ color: '#a855f7' }} />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card bordered={false} className='shadow-sm'>
+              <Card variant='outlined' className='shadow-sm'>
                 <Statistic title='Đã từ chối' value={stats.cancelled} valueStyle={{ color: '#f43f5e' }} />
               </Card>
             </Col>
@@ -459,6 +461,23 @@ function ConsultantBookingSchedule() {
     }
   ]
 
+  // Lọc dữ liệu theo trạng thái, số điện thoại, ngày
+  const filteredBookings = bookings.filter((b) => {
+    // Lọc theo trạng thái
+    if (statusFilter !== 'all' && b.status !== statusFilter) return false
+    // Lọc theo số điện thoại
+    if (searchTerm) {
+      const phone = (b.customerPhone || b.guestPhone || '').toLowerCase()
+      if (!phone.includes(searchTerm.toLowerCase())) return false
+    }
+    // Lọc theo ngày (so sánh yyyy-mm-dd)
+    if (dateFilter) {
+      const bookingDate = b.scheduledAt ? b.scheduledAt.slice(0, 10) : ''
+      if (bookingDate !== dateFilter) return false
+    }
+    return true
+  })
+
   return (
     <div className='min-h-screen flex flex-col bg-pink-50'>
       <Navigation />
@@ -473,231 +492,137 @@ function ConsultantBookingSchedule() {
               <Text className='text-pink-600'>Xem và quản lý các lịch hẹn tư vấn từ khách hàng</Text>
             </div>
             <div className='mt-4 md:mt-0 flex gap-2'>
-              <Button
-                type='primary'
-                icon={<RefreshCw className='w-4 h-4' />}
+              <button
+                className='flex items-center gap-2 px-4 py-2 rounded bg-pink-500 text-white font-medium hover:bg-pink-600 transition'
                 onClick={fetchBookings}
-                className='bg-pink-500 hover:bg-pink-600 border-none'
+                type='button'
               >
+                <RefreshCw className='w-4 h-4' />
                 Làm mới
-              </Button>
+              </button>
             </div>
           </div>
         </div>
 
         {loading ? (
-          <Card className='shadow-sm'>
-            <div className='py-20 flex flex-col items-center justify-center'>
-              <Spin spinning={true} size='large' />
-              <Text className='mt-4 text-gray-500'>Đang tải danh sách lịch đặt...</Text>
-            </div>
-          </Card>
+          <div className='shadow-sm rounded-xl bg-white p-8 flex flex-col items-center justify-center'>
+            <Spin spinning={true} size='large' />
+            <span className='mt-4 text-gray-500'>Đang tải danh sách lịch đặt...</span>
+          </div>
         ) : !userInfo ? (
-          <Card className='shadow-sm'>
-            <div className='text-center py-20'>
-              <User size={48} className='text-pink-300 mb-4' />
-              <Title level={4} className='text-pink-700'>
-                Bạn cần đăng nhập để xem lịch đặt tư vấn
-              </Title>
-              <Button type='primary' size='large' className='mt-4 bg-pink-500 hover:bg-pink-600 border-none'>
-                Đăng nhập ngay
-              </Button>
-            </div>
-          </Card>
+          <div className='shadow-sm rounded-xl bg-white p-8 flex flex-col items-center justify-center'>
+            <User size={48} className='text-pink-300 mb-4' />
+            <Title level={4} className='text-pink-700'>
+              Bạn cần đăng nhập để xem lịch đặt tư vấn
+            </Title>
+            <button
+              className='mt-4 px-6 py-2 rounded bg-pink-500 text-white font-medium hover:bg-pink-600 transition'
+              type='button'
+            >
+              Đăng nhập ngay
+            </button>
+          </div>
         ) : (
           <>
             {/* Bộ lọc */}
-            <Card className='mb-6 shadow-sm'>
-              <div className='flex flex-wrap gap-4 items-center'>
-                <Input
-                  placeholder='Tìm kiếm theo tên...'
-                  prefix={<Search className='w-4 h-4 text-pink-500' />}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  allowClear
-                  style={{ width: 220 }}
-                />
+            <div className='mb-6 shadow-sm rounded-xl bg-white p-4 flex flex-wrap gap-4 items-center'>
+              <input
+                placeholder='Tìm kiếm theo số điện thoại...'
+                className='border border-pink-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400'
+                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                style={{ width: 220 }}
+              />
+              <select
+                className='border border-pink-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400'
+                onChange={(e) => setStatusFilter(e.target.value)}
+                value={statusFilter}
+                style={{ minWidth: 150 }}
+              >
+                <option value='all'>Tất cả trạng thái</option>
+                <option value='pending'>Đang chờ</option>
+                <option value='confirmed'>Đã chấp nhận</option>
+                <option value='cancelled'>Đã từ chối</option>
+              </select>
+              <input
+                type='date'
+                className='border border-pink-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400'
+                onChange={(e) => setDateFilter(e.target.value)}
+                value={dateFilter || ''}
+                style={{ minWidth: 150 }}
+              />
+            </div>
 
-                <Select
-                  placeholder='Trạng thái'
-                  style={{ minWidth: 150 }}
-                  onChange={(value) => setStatusFilter(value)}
-                  defaultValue='all'
-                >
-                  <Select.Option value='all'>Tất cả trạng thái</Select.Option>
-                  <Select.Option value='pending'>
-                    <Badge status='warning' text='Đang chờ' />
-                  </Select.Option>
-                  <Select.Option value='confirmed'>
-                    <Badge status='success' text='Đã chấp nhận' />
-                  </Select.Option>
-                  <Select.Option value='cancelled'>
-                    <Badge status='error' text='Đã từ chối' />
-                  </Select.Option>
-                </Select>
+            {/* 
+              Nếu muốn dùng tab chuyển qua lại giữa Tổng quan/Danh sách, hãy dùng state và logic ở đây.
+              Hiện tại chỉ hiển thị 1 tab duy nhất (Tổng quan + Danh sách luôn hiển thị).
+              Để bật lại tab, hãy tham khảo code cũ ở các phiên bản trước.
+            */}
 
-                <DatePicker
-                  placeholder='Lọc theo ngày'
-                  onChange={(date) => setDateFilter(date)}
-                  format='DD/MM/YYYY'
-                  allowClear
-                  style={{ minWidth: 150 }}
-                  suffixIcon={<Calendar className='w-4 h-4 text-pink-500' />}
-                />
+            <div className='bg-white rounded-xl shadow-sm'>
+              <div className='p-6'>
+                {/* Tổng quan */}
+                <div className='mb-8 grid grid-cols-1 md:grid-cols-4 gap-4'>
+                  <div className='bg-pink-100 rounded-lg p-4 text-center'>
+                    <div className='text-2xl font-bold text-pink-600'>{stats.total}</div>
+                    <div className='text-sm text-pink-700'>Tổng số lịch hẹn</div>
+                  </div>
+                  <div className='bg-yellow-100 rounded-lg p-4 text-center'>
+                    <div className='text-2xl font-bold text-yellow-600'>{stats.pending}</div>
+                    <div className='text-sm text-yellow-700'>Đang chờ xác nhận</div>
+                  </div>
+                  <div className='bg-purple-100 rounded-lg p-4 text-center'>
+                    <div className='text-2xl font-bold text-purple-600'>{stats.confirmed}</div>
+                    <div className='text-sm text-purple-700'>Đã chấp nhận</div>
+                  </div>
+                  <div className='bg-red-100 rounded-lg p-4 text-center'>
+                    <div className='text-2xl font-bold text-red-500'>{stats.cancelled}</div>
+                    <div className='text-sm text-red-700'>Đã từ chối</div>
+                  </div>
+                </div>
+                {/* Danh sách */}
+                <div className='overflow-x-auto'>
+                  <table className='min-w-full divide-y divide-pink-100'>
+                    <thead>
+                      <tr>
+                        {columns.map((col) => (
+                          <th
+                            key={col.key}
+                            className='px-4 py-2 text-left text-xs font-semibold text-pink-700 uppercase bg-pink-50'
+                          >
+                            {col.title}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBookings.length === 0 ? (
+                        <tr>
+                          <td colSpan={columns.length} className='text-center py-8 text-gray-400'>
+                            Không tìm thấy lịch đặt nào
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredBookings.map((record) => (
+                          <tr key={record.bookingId} className={record.status === 'pending' ? 'bg-pink-50' : ''}>
+                            {columns.map((col) => (
+                              <td key={col.key} className='px-4 py-3 align-top'>
+                                {col.render ? col.render(record[col.dataIndex], record) : record[col.dataIndex]}
+                              </td>
+                            ))}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </Card>
-
-            {/* Tabs: Tổng quan & Danh sách */}
-            <Tabs
-              defaultActiveKey='dashboard'
-              type='card'
-              className='booking-tabs'
-              items={[
-                {
-                  key: 'dashboard',
-                  label: (
-                    <span className='flex items-center gap-1.5'>
-                      <CalendarDays className='w-4 h-4 text-pink-500' /> Tổng quan
-                    </span>
-                  ),
-                  children: (
-                    <div className='py-4'>
-                      <Row gutter={[16, 16]} className='mb-5'>
-                        <Col xs={24} sm={12} md={6}>
-                          <Card bordered={false} className='shadow-sm'>
-                            <Statistic title='Tổng số lịch hẹn' value={stats.total} valueStyle={{ color: '#ec4899' }} />
-                          </Card>
-                        </Col>
-                        <Col xs={24} sm={12} md={6}>
-                          <Card bordered={false} className='shadow-sm'>
-                            <Statistic
-                              title='Đang chờ xác nhận'
-                              value={stats.pending}
-                              valueStyle={{ color: '#f59e42' }}
-                            />
-                          </Card>
-                        </Col>
-                        <Col xs={24} sm={12} md={6}>
-                          <Card bordered={false} className='shadow-sm'>
-                            <Statistic title='Đã chấp nhận' value={stats.confirmed} valueStyle={{ color: '#a855f7' }} />
-                          </Card>
-                        </Col>
-                        <Col xs={24} sm={12} md={6}>
-                          <Card bordered={false} className='shadow-sm'>
-                            <Statistic title='Đã từ chối' value={stats.cancelled} valueStyle={{ color: '#f43f5e' }} />
-                          </Card>
-                        </Col>
-                      </Row>
-                      <Card
-                        title={
-                          <Title level={5} className='flex items-center m-0 text-pink-700'>
-                            <Clock className='w-5 h-5 mr-2 text-pink-500' />
-                            Lịch hẹn gần đây
-                          </Title>
-                        }
-                        className='shadow-sm'
-                        extra={
-                          <Button type='link' onClick={fetchBookings} className='text-pink-600 flex items-center'>
-                            <RefreshCw className='w-4 h-4 mr-1' />
-                            Cập nhật
-                          </Button>
-                        }
-                      >
-                        {bookings.length > 0 ? (
-                          <Table
-                            columns={columns}
-                            dataSource={bookings.slice(0, 5).map((booking) => ({ ...booking, key: booking.bookingId }))}
-                            pagination={false}
-                            size='small'
-                          />
-                        ) : (
-                          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='Chưa có lịch hẹn nào' />
-                        )}
-                      </Card>
-                    </div>
-                  )
-                },
-                {
-                  key: 'list',
-                  label: (
-                    <span className='flex items-center gap-1.5'>
-                      <List className='w-4 h-4 text-pink-500' /> Danh sách
-                    </span>
-                  ),
-                  children: (
-                    <Card className='shadow-sm'>
-                      <Table
-                        columns={columns}
-                        dataSource={bookings.map((booking) => ({ ...booking, key: booking.bookingId }))}
-                        loading={loading}
-                        pagination={{
-                          pageSize: 10,
-                          showTotal: (total) => `Tổng cộng: ${total} lịch hẹn`,
-                          showSizeChanger: true
-                        }}
-                        bordered
-                        rowClassName={(record) => (record.status === 'pending' ? 'bg-pink-50' : '')}
-                        locale={{
-                          emptyText: (
-                            <Empty
-                              image={Empty.PRESENTED_IMAGE_SIMPLE}
-                              description={
-                                <span>
-                                  Không tìm thấy lịch đặt nào
-                                  <br />
-                                  <Button type='link' onClick={fetchBookings}>
-                                    Tải lại dữ liệu
-                                  </Button>
-                                </span>
-                              }
-                            />
-                          )
-                        }}
-                      />
-                    </Card>
-                  )
-                }
-              ]}
-            />
+            </div>
           </>
         )}
       </main>
 
       <Footer />
-
-      <style jsx global>{`
-        .booking-tabs .ant-tabs-nav {
-          margin-bottom: 16px;
-        }
-        .booking-tabs .ant-tabs-tab {
-          padding: 8px 16px;
-          transition: all 0.3s;
-        }
-        .booking-tabs .ant-tabs-tab-active {
-          background-color: #fbcfe8;
-          border-bottom-color: #ec4899 !important;
-        }
-        .ant-table-row.bg-pink-50 {
-          background-color: #fdf2f8;
-        }
-        .ant-card-head-title {
-          padding: 12px 0;
-        }
-        .ant-btn-primary,
-        .ant-btn-primary:focus {
-          background: #ec4899;
-          border-color: #ec4899;
-        }
-        .ant-btn-primary:hover {
-          background: #db2777;
-          border-color: #db2777;
-        }
-        .ant-btn-link {
-          color: #ec4899;
-        }
-        .ant-btn-link:hover {
-          color: #db2777;
-        }
-      `}</style>
     </div>
   )
 }
