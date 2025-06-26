@@ -1,6 +1,7 @@
 ﻿using backend.Application.DTOs.ConsultantDTO;
 using backend.Application.Repositories;
 using backend.Infrastructure.Database;
+using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Infrastructure.Repositories
@@ -53,6 +54,18 @@ namespace backend.Infrastructure.Repositories
                     Biography = a.StaffInfo != null ? a.StaffInfo.Biography : null
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        // do trên leader chia ko đúng kiến trúc nên sai chấp nhận
+        public async Task<Account?> GetConsultantEntityByIdAsync(Guid accountId)
+        {
+            return await _context.Account
+                .Include(a => a.StaffInfo)
+                .FirstOrDefaultAsync(a => a.AccountId == accountId);
+        }
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

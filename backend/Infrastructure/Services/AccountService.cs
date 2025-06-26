@@ -3,6 +3,7 @@ using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Repositories;
+using backend.Domain.Entities;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -87,6 +88,14 @@ namespace backend.Infrastructure.Services
                 RoleId = role.RoleId,
                 CreateAt = DateTime.UtcNow
             };
+            if (!string.Equals(role.Name, "Customer", StringComparison.OrdinalIgnoreCase))
+            {
+                account.StaffInfo = new StaffInfo
+                {
+                    AccountId = account.AccountId,
+                    CreateAt = DateTime.UtcNow
+                };
+            }
 
             await _accountRepository.CreateAccountAsync(account);
 
@@ -154,7 +163,19 @@ namespace backend.Infrastructure.Services
             if (!string.IsNullOrEmpty(request.RoleName))
             {
                 var role = await _accountRepository.GetRoleByNameAsync(request.RoleName);
-                if (role != null) account.RoleId = role.RoleId;
+                if (role != null)
+                {
+                    account.RoleId = role.RoleId;
+
+                    // Nếu role khác "Customer" và chưa có StaffInfo thì tạo mới
+                    if (!string.Equals(role.Name, "Customer", StringComparison.OrdinalIgnoreCase) && account.StaffInfo == null)
+                    {
+                        account.StaffInfo = new StaffInfo
+                        {
+                            AccountId = account.AccountId,
+                        };
+                    }
+                }
             }
 
             account.UpdateAt = DateTime.UtcNow;

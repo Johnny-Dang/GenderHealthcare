@@ -6,5 +6,6 @@ namespace backend.Application.Services
     {
         Task<Result<List<ConsultantResponse>>> GetAllConsultantsAsync();
         Task<Result<ConsultantResponse>> GetConsultantByIdAsync(Guid consultantId);
+        Task<Result<ConsultantResponse>> UpdateConsultantByIdAsync(Guid consultantId, ConsultantUpdateRequest request);
     }
 }
