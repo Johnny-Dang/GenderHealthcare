@@ -48,7 +48,7 @@ const Navigation = () => {
       case 'Consultant':
         return [
           // { path: '/consultant-dashboard', label: 'Dashboard' },
-          { path: '/consultant-schedule', label: 'Lịch tư vấn' }
+          { path: '/consultant/schedule', label: 'Lịch tư vấn' }
         ]
 
       case 'Customer':

@@ -43,6 +43,7 @@ import {
   Tooltip
 } from 'antd'
 import { toast } from 'react-toastify'
+import Loading from '../../components/Loading'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -505,10 +506,7 @@ function ConsultantBookingSchedule() {
         </div>
 
         {loading ? (
-          <div className='shadow-sm rounded-xl bg-white p-8 flex flex-col items-center justify-center'>
-            <Spin spinning={true} size='large' />
-            <span className='mt-4 text-gray-500'>Đang tải danh sách lịch đặt...</span>
-          </div>
+          <Loading />
         ) : !userInfo ? (
           <div className='shadow-sm rounded-xl bg-white p-8 flex flex-col items-center justify-center'>
             <User size={48} className='text-pink-300 mb-4' />

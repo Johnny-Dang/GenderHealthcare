@@ -32,6 +32,7 @@ import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
 import BookConsultantPage from './pages/booking-consultant'
 import ConsultantBookingSchedule from './pages/booking-consultant/ConsultantBookingSchedule'
+import ProfilePage from './pages/profile'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -47,6 +48,14 @@ function App() {
     {
       path: '/register',
       element: <RegisterPage />
+    },
+    {
+      path: '/profile',
+      element: (
+        // <AuthGuard allowedRoles={['Customer', 'Staff', 'Consultant', 'Manager', 'Admin']} redirectTo='/'>
+        <ProfilePage />
+        // </AuthGuard>
+      )
     },
     //* Blog
     {
@@ -106,7 +115,11 @@ function App() {
     },
     {
       path: '/consultant/schedule',
-      element: <ConsultantBookingSchedule />
+      element: (
+        <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
+          <ConsultantBookingSchedule />
+        </AuthGuard>
+      )
     },
     {
       path: '/customer-dashboard',

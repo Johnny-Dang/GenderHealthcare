@@ -4,12 +4,12 @@ import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Calendar, MessageSquare, Star, Clock, GraduationCap, AlertCircle } from 'lucide-react'
+import { Calendar, MessageSquare, Star, Clock, GraduationCap, AlertCircle, User, Briefcase, Award } from 'lucide-react'
 
 import api from '@/configs/axios'
-import { Spin } from 'antd'
 import { toast } from 'react-toastify'
 import { useSelector } from 'react-redux'
+import Loading from '../../components/Loading'
 
 const BookingConsultant = () => {
   const [loading, setLoading] = useState(true)
@@ -148,205 +148,214 @@ const BookingConsultant = () => {
     <div className='min-h-screen'>
       <Navigation />
 
-      {/* Hero Section */}
-      <section className='bg-gradient-to-r from-blue-50 to-indigo-50 py-16'>
-        <div className='max-w-4xl mx-auto px-4 text-center'>
-          <h1 className='text-4xl font-bold text-gray-900 mb-6'>
-            Đặt lịch <span className='text-blue-600'>tư vấn trực tuyến</span>
+      {/* Hero Section - Centered with pink accents */}
+      <section className='bg-gradient-to-r from-pink-50 via-pink-100 to-pink-50 py-12 relative overflow-hidden'>
+        <div className='absolute inset-0 bg-grid-pink-100 [mask-image:linear-gradient(0deg,rgba(255,255,255,0.6),rgba(255,255,255,1))] opacity-20'></div>
+        <div className='max-w-4xl mx-auto px-4 text-center relative z-10'>
+          <div className='inline-block bg-pink-100 text-pink-800 px-4 py-1.5 rounded-full text-sm font-medium mb-4'>
+            Tư vấn sức khỏe sinh sản
+          </div>
+          <h1 className='text-3xl md:text-4xl font-bold text-gray-900 mb-4'>
+            Đặt lịch tư vấn với
+            <span className='bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-pink-600 px-2'>
+              chuyên gia
+            </span>
+            của chúng tôi
           </h1>
-          <p className='text-lg text-gray-600 mb-8'>
-            Kết nối với các chuyên gia y tế hàng đầu để được tư vấn về sức khỏe sinh sản
+          <p className='text-gray-600 max-w-2xl mx-auto text-lg'>
+            Đội ngũ chuyên gia với kinh nghiệm và chuyên môn cao sẽ giúp bạn giải đáp mọi thắc mắc
           </p>
           {!userInfo && (
-            <div className='bg-amber-50 border border-amber-200 rounded-lg p-4 max-w-md mx-auto'>
-              <div className='flex items-center gap-2 text-amber-800'>
-                <AlertCircle className='w-5 h-5' />
-                <span className='text-sm font-medium'>Không cần đăng nhập để đặt tư vấn</span>
-              </div>
+            <div className='inline-flex items-center gap-2 text-pink-700 bg-pink-50 border border-pink-200 rounded-lg px-4 py-2 text-sm mt-6'>
+              <AlertCircle className='w-4 h-4' />
+              <span>Bạn có thể đặt lịch mà không cần đăng nhập</span>
             </div>
           )}
         </div>
       </section>
 
-      {/* Consultants Section */}
-      <section className='py-16 bg-gradient-to-b from-gray-50 to-white'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+      {/* Consultants Section - Centered cards with pink theme */}
+      <section className='py-16 bg-white'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6'>
           <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-4'>
-              Đội ngũ{' '}
-              <span className='bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600'>
-                chuyên gia tư vấn
-              </span>
+            <h2 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-2'>
+              Đội ngũ
+              <span className='text-pink-600 px-2'>chuyên gia tư vấn</span>
+              của chúng tôi
             </h2>
+            <div className='w-20 h-1 bg-gradient-to-r from-pink-400 to-pink-600 mx-auto mt-3 mb-4 rounded-full'></div>
             <p className='text-gray-600 max-w-2xl mx-auto'>
-              Các chuyên gia có chuyên môn cao và kinh nghiệm lâu năm, sẵn sàng hỗ trợ bạn mọi lúc
+              Chọn chuyên gia phù hợp với nhu cầu của bạn và đặt lịch ngay hôm nay
             </p>
           </div>
 
           {loading ? (
-            <div className='flex justify-center items-center py-16'>
-              <Spin spinning={true} tip='Đang tải danh sách tư vấn viên...'>
-                <div className='min-h-[200px] flex items-center justify-center'>
-                  {/* This empty div provides space for the spinner to display properly */}
-                </div>
-              </Spin>
-            </div>
+            <Loading />
           ) : consultants.length === 0 ? (
-            <div className='text-center py-16'>
+            <div className='text-center py-16 max-w-md mx-auto'>
+              <div className='w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-pink-100'>
+                <User className='w-10 h-10 text-pink-400' />
+              </div>
               <p className='text-gray-500 text-lg'>Chưa có tư vấn viên nào trong hệ thống</p>
             </div>
           ) : (
-            <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-8'>
               {consultants.map((consultant) => (
                 <Card
                   key={consultant.id}
-                  className='group border-0 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden rounded-xl'
+                  className='group overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300'
                 >
                   <CardContent className='p-0'>
-                    {/* Phần ảnh đại diện - được thiết kế đẹp hơn */}
-                    <div className='relative h-60 overflow-hidden'>
-                      {consultant.avatarUrl ? (
-                        <img
-                          src={consultant.avatarUrl}
-                          alt={consultant.fullName}
-                          className='w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500'
-                          loading='lazy'
-                          onError={(e) => {
-                            e.target.onerror = null
-                            e.target.style.display = 'none'
-
-                            const div = document.createElement('div')
-                            div.className =
-                              'w-full h-full flex flex-col items-center justify-center bg-gradient-to-r from-blue-500 to-violet-500'
-                            div.innerHTML = `
-                              <div class="text-6xl font-bold text-white mb-2">${getInitialAvatar(consultant.fullName)}</div>
-                              <div class="text-white/80 text-sm font-medium">${consultant.department || 'Chuyên gia'}</div>
-                            `
-                            e.target.parentNode.appendChild(div)
-                          }}
-                        />
-                      ) : (
-                        <div className='w-full h-full flex flex-col items-center justify-center bg-gradient-to-r from-blue-500 to-violet-500'>
-                          <div className='text-6xl font-bold text-white mb-2'>
-                            {getInitialAvatar(consultant.fullName)}
-                          </div>
-                          <div className='text-white/80 text-sm font-medium'>
-                            {consultant.department || 'Chuyên gia'}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Badge biểu thị số năm kinh nghiệm */}
-                      {consultant.yearOfExperience > 0 && (
-                        <div className='absolute top-4 right-4 bg-white/90 shadow-md text-blue-600 rounded-full py-1.5 px-3 flex items-center gap-1.5'>
-                          <Clock className='w-4 h-4' />
-                          <span className='font-semibold'>{consultant.yearOfExperience}+ năm</span>
-                        </div>
-                      )}
-
-                      {/* Overlay gradient khi hover */}
-                      <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
-                    </div>
-
-                    {/* Phần thông tin - được thiết kế đẹp hơn */}
-                    <div className='p-6 bg-white'>
-                      <div className='flex justify-between items-start mb-4'>
-                        <div>
-                          <h3 className='text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors'>
-                            {consultant.fullName}
-                          </h3>
-
-                          {consultant.department && (
-                            <div className='flex items-center text-sm text-blue-600 font-medium mt-1'>
-                              <span className='inline-block w-1.5 h-1.5 rounded-full bg-blue-600 mr-2'></span>
-                              {consultant.department}
+                    {/* Compact consultant card design with pink accents */}
+                    <div className='p-6'>
+                      <div className='flex flex-col items-center text-center mb-4'>
+                        {/* Avatar with colored background - centered */}
+                        <div className='mb-3'>
+                          {consultant.avatarUrl ? (
+                            <img
+                              src={consultant.avatarUrl}
+                              alt={consultant.fullName}
+                              className='h-24 w-24 rounded-full object-cover border-4 border-white shadow-md'
+                              loading='lazy'
+                            />
+                          ) : (
+                            <div className='h-24 w-24 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white font-bold text-2xl shadow-md'>
+                              {getInitialAvatar(consultant.fullName)}
                             </div>
                           )}
                         </div>
 
-                        {/* Hiển thị chứng chỉ/học vấn nổi bật */}
+                        {/* Consultant name and role - centered */}
+                        <div className='text-center'>
+                          <h3 className='font-bold text-xl text-gray-900 group-hover:text-pink-600 transition-colors mb-1'>
+                            {consultant.fullName}
+                          </h3>
+
+                          {consultant.department && (
+                            <div className='inline-flex items-center gap-1 text-pink-600 font-medium text-sm'>
+                              <Briefcase className='w-3.5 h-3.5' />
+                              {consultant.department}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Qualification badges - centered */}
+                      <div className='flex justify-center flex-wrap gap-2 mb-4'>
+                        {consultant.yearOfExperience > 0 && (
+                          <div className='bg-pink-50 border border-pink-200 text-pink-700 text-xs font-medium rounded-full py-1 px-3 flex items-center'>
+                            <Award className='w-3 h-3 mr-1' />
+                            <span>{consultant.yearOfExperience}+ năm kinh nghiệm</span>
+                          </div>
+                        )}
+
                         {consultant.degree && (
-                          <div className='bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1 rounded'>
-                            {consultant.degree.split(' ').slice(-2).join(' ')}
+                          <div className='bg-pink-50 border border-pink-200 text-pink-700 text-xs font-medium rounded-full py-1 px-3 flex items-center'>
+                            <GraduationCap className='w-3 h-3 mr-1' />
+                            <span className='truncate max-w-[150px]'>{consultant.degree}</span>
                           </div>
                         )}
                       </div>
 
-                      {/* Thông tin học vấn */}
-                      {consultant.degree && (
-                        <div className='flex items-center mb-3 text-sm'>
-                          <GraduationCap className='w-4 h-4 text-gray-500 mr-2 flex-shrink-0' />
-                          <span className='text-gray-700'>{consultant.degree}</span>
-                        </div>
-                      )}
-
-                      {/* Biography với styling đẹp hơn */}
+                      {/* Biography - styled with pink accents */}
                       {consultant.biography && (
-                        <div className='mb-5 relative'>
-                          <div className='text-sm text-gray-600 italic line-clamp-2 bg-gray-50 p-3 rounded-lg border-l-2 border-blue-300'>
-                            "{consultant.biography}"
-                          </div>
+                        <div className='mb-5'>
+                          <p className='text-sm text-gray-600 italic p-3 bg-pink-50 border-l-2 border-pink-300 rounded'>
+                            "
+                            {consultant.biography.length > 120
+                              ? `${consultant.biography.slice(0, 120)}...`
+                              : consultant.biography}
+                            "
+                          </p>
                         </div>
                       )}
 
-                      {/* Button đặt lịch */}
+                      {/* Booking button with pink theme */}
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
-                            className='w-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-medium py-2.5 rounded-lg shadow-sm hover:shadow transition-all'
+                            className='w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-medium py-2 flex items-center justify-center gap-2 shadow-sm'
                             onClick={() => setSelectedConsultant(consultant)}
                           >
+                            <Calendar className='w-4 h-4' />
                             Đặt lịch tư vấn
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className='max-w-md'>
+                        <DialogContent className='max-w-md bg-white'>
                           <DialogHeader>
-                            <DialogTitle>Đặt lịch với {consultant.fullName}</DialogTitle>
+                            <DialogTitle className='flex items-center gap-2 text-pink-600 text-center w-full justify-center mb-2'>
+                              <Calendar className='w-5 h-5' />
+                              <span>Đặt lịch với {consultant.fullName}</span>
+                            </DialogTitle>
                           </DialogHeader>
-                          <form onSubmit={handleBookingSubmit} className='space-y-4'>
-                            {/* Hiện thông tin cá nhân chỉ khi chưa đăng nhập */}
+
+                          {/* Booking form with pink theme */}
+                          <form onSubmit={handleBookingSubmit} className='mt-4 space-y-4'>
+                            {/* Consultant info panel - centered */}
+                            <div className='bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg flex flex-col items-center text-center'>
+                              {consultant.avatarUrl ? (
+                                <img
+                                  src={consultant.avatarUrl}
+                                  alt={consultant.fullName}
+                                  className='h-16 w-16 rounded-full object-cover border-2 border-white shadow mb-2'
+                                />
+                              ) : (
+                                <div className='h-16 w-16 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white font-bold text-xl mb-2'>
+                                  {getInitialAvatar(consultant.fullName)}
+                                </div>
+                              )}
+                              <div>
+                                <h4 className='font-medium text-gray-900'>{consultant.fullName}</h4>
+                                <p className='text-sm text-pink-600'>{consultant.department || 'Chuyên gia tư vấn'}</p>
+                              </div>
+                            </div>
+
+                            {/* Guest info section - only shown when not logged in */}
                             {!userInfo ? (
-                              <>
-                                <div>
-                                  <label className='block text-sm font-medium text-gray-700 mb-2'>Họ và tên</label>
-                                  <input
-                                    type='text'
-                                    name='guestName'
-                                    value={formData.guestName}
-                                    onChange={handleFormChange}
-                                    required
-                                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                                  />
+                              <div className='space-y-3 border border-gray-200 rounded-lg p-4'>
+                                <h4 className='font-medium text-sm text-gray-700'>Thông tin cá nhân</h4>
+                                <div className='grid grid-cols-1 gap-3'>
+                                  <div className='space-y-1'>
+                                    <label className='text-xs font-medium text-gray-700'>Họ và tên</label>
+                                    <input
+                                      type='text'
+                                      name='guestName'
+                                      value={formData.guestName}
+                                      onChange={handleFormChange}
+                                      required
+                                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                    />
+                                  </div>
+                                  <div className='grid grid-cols-2 gap-3'>
+                                    <div className='space-y-1'>
+                                      <label className='text-xs font-medium text-gray-700'>Email</label>
+                                      <input
+                                        type='email'
+                                        name='guestEmail'
+                                        value={formData.guestEmail}
+                                        onChange={handleFormChange}
+                                        required
+                                        className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                      />
+                                    </div>
+                                    <div className='space-y-1'>
+                                      <label className='text-xs font-medium text-gray-700'>Số điện thoại</label>
+                                      <input
+                                        type='tel'
+                                        name='guestPhone'
+                                        value={formData.guestPhone}
+                                        onChange={handleFormChange}
+                                        required
+                                        className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <label className='block text-sm font-medium text-gray-700 mb-2'>Email</label>
-                                  <input
-                                    type='email'
-                                    name='guestEmail'
-                                    value={formData.guestEmail}
-                                    onChange={handleFormChange}
-                                    required
-                                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                                  />
-                                </div>
-                                <div>
-                                  <label className='block text-sm font-medium text-gray-700 mb-2'>Số điện thoại</label>
-                                  <input
-                                    type='tel'
-                                    name='guestPhone'
-                                    value={formData.guestPhone}
-                                    onChange={handleFormChange}
-                                    required
-                                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                                  />
-                                </div>
-                              </>
+                              </div>
                             ) : (
-                              // Nếu người dùng đã đăng nhập, hiển thị thông tin họ dưới dạng readonly
-                              <div className='bg-blue-50 p-3 rounded-lg'>
-                                <p className='text-sm font-medium text-gray-700'>Đặt lịch với thông tin:</p>
-                                <div className='flex items-center mt-2 gap-2'>
-                                  <div className='h-8 w-8 flex items-center justify-center rounded-full overflow-hidden bg-blue-100'>
+                              <div className='bg-pink-50 border border-pink-100 p-3 rounded-lg'>
+                                <div className='flex items-center gap-3'>
+                                  <div className='h-10 w-10 flex items-center justify-center rounded-full overflow-hidden bg-pink-100'>
                                     {userInfo.avatarUrl ? (
                                       <img
                                         src={userInfo.avatarUrl}
@@ -354,77 +363,82 @@ const BookingConsultant = () => {
                                         className='h-full w-full object-cover'
                                       />
                                     ) : (
-                                      <span className='text-sm font-medium'>{getInitialAvatar(userInfo.fullName)}</span>
+                                      <span className='text-sm font-medium text-pink-600'>
+                                        {getInitialAvatar(userInfo.fullName)}
+                                      </span>
                                     )}
                                   </div>
                                   <div>
-                                    <p className='text-sm font-medium'>{userInfo.fullName}</p>
+                                    <p className='text-sm font-medium text-gray-900'>{userInfo.fullName}</p>
                                     <p className='text-xs text-gray-500'>{userInfo.email}</p>
                                   </div>
                                 </div>
                               </div>
                             )}
 
-                            {/* Phần chọn ngày giờ - hiển thị cho tất cả */}
-                            <div>
-                              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                <Calendar className='w-4 h-4 inline mr-1' />
-                                Ngày mong muốn
-                              </label>
-                              <input
-                                type='date'
-                                name='scheduledDate'
-                                value={formData.scheduledDate}
-                                onChange={handleFormChange}
-                                min={new Date().toISOString().split('T')[0]}
-                                required
-                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                              />
-                            </div>
-                            <div>
-                              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                <Clock className='w-4 h-4 inline mr-1' />
-                                Giờ mong muốn
-                              </label>
-                              <select
-                                name='scheduledTime'
-                                value={formData.scheduledTime}
-                                onChange={handleFormChange}
-                                required
-                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
-                              >
-                                <option value=''>Chọn giờ</option>
-                                <option value='08:00'>08:00</option>
-                                <option value='09:00'>09:00</option>
-                                <option value='10:00'>10:00</option>
-                                <option value='14:00'>14:00</option>
-                                <option value='15:00'>15:00</option>
-                                <option value='16:00'>16:00</option>
-                              </select>
+                            {/* Date and time selection */}
+                            <div className='grid grid-cols-2 gap-3'>
+                              <div className='space-y-1'>
+                                <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
+                                  <Calendar className='w-3.5 h-3.5' />
+                                  Ngày tư vấn
+                                </label>
+                                <input
+                                  type='date'
+                                  name='scheduledDate'
+                                  value={formData.scheduledDate}
+                                  onChange={handleFormChange}
+                                  min={new Date().toISOString().split('T')[0]}
+                                  required
+                                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                />
+                              </div>
+                              <div className='space-y-1'>
+                                <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
+                                  <Clock className='w-3.5 h-3.5' />
+                                  Giờ tư vấn
+                                </label>
+                                <select
+                                  name='scheduledTime'
+                                  value={formData.scheduledTime}
+                                  onChange={handleFormChange}
+                                  required
+                                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                >
+                                  <option value=''>Chọn giờ</option>
+                                  <option value='08:00'>08:00</option>
+                                  <option value='09:00'>09:00</option>
+                                  <option value='10:00'>10:00</option>
+                                  <option value='14:00'>14:00</option>
+                                  <option value='15:00'>15:00</option>
+                                  <option value='16:00'>16:00</option>
+                                </select>
+                              </div>
                             </div>
 
-                            {/* Phần ghi chú - hiển thị cho tất cả */}
-                            <div>
-                              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                <MessageSquare className='w-4 h-4 inline mr-1' />
-                                Ghi chú (tùy chọn)
+                            {/* Message textarea */}
+                            <div className='space-y-1'>
+                              <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
+                                <MessageSquare className='w-3.5 h-3.5' />
+                                Nội dung cần tư vấn
                               </label>
                               <textarea
                                 name='message'
                                 value={formData.message}
                                 onChange={handleFormChange}
                                 rows={3}
-                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+                                className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
                                 placeholder='Mô tả vấn đề bạn cần tư vấn...'
                               ></textarea>
                             </div>
 
-                            {/* Hidden input để lưu staffId */}
+                            {/* Hidden input */}
                             <input type='hidden' name='staffId' value={selectedConsultant?.id || ''} />
 
+                            {/* Submit button */}
                             <Button
                               type='submit'
-                              className='w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white'
+                              className='w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-medium shadow'
                             >
                               Xác nhận đặt lịch
                             </Button>
@@ -437,6 +451,47 @@ const BookingConsultant = () => {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Feature section - pink theme */}
+      <section className='bg-pink-50 py-16'>
+        <div className='max-w-4xl mx-auto px-4'>
+          <div className='text-center mb-10'>
+            <h3 className='text-2xl font-bold text-gray-900 mb-2'>Tại sao nên đặt tư vấn với chúng tôi?</h3>
+            <div className='w-16 h-1 bg-pink-400 mx-auto mb-4 rounded-full'></div>
+            <p className='text-gray-600 max-w-2xl mx-auto'>Dịch vụ tư vấn trực tuyến tiện lợi và chuyên nghiệp</p>
+          </div>
+
+          <div className='grid sm:grid-cols-3 gap-6'>
+            {[
+              {
+                icon: <User className='h-6 w-6 text-pink-400' />,
+                title: 'Chuyên gia hàng đầu',
+                description: 'Đội ngũ chuyên gia có trình độ chuyên môn cao và kinh nghiệm thực tiễn.'
+              },
+              {
+                icon: <Calendar className='h-6 w-6 text-pink-400' />,
+                title: 'Đặt lịch linh hoạt',
+                description: 'Chọn thời gian tư vấn phù hợp với lịch trình của bạn.'
+              },
+              {
+                icon: <MessageSquare className='h-6 w-6 text-pink-400' />,
+                title: 'Tư vấn chi tiết',
+                description: 'Giải đáp mọi thắc mắc và nhận tư vấn chuyên sâu về sức khỏe.'
+              }
+            ].map((feature, idx) => (
+              <Card key={idx} className='border-0 shadow-sm text-center'>
+                <CardContent className='p-6'>
+                  <div className='h-14 w-14 rounded-full bg-pink-100 flex items-center justify-center mb-4 mx-auto'>
+                    {feature.icon}
+                  </div>
+                  <h4 className='text-lg font-semibold text-gray-900 mb-2'>{feature.title}</h4>
+                  <p className='text-gray-600'>{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -12,6 +12,7 @@ import moment from 'moment'
 import api from '../../configs/axios'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import Loading from '../../components/Loading'
 
 const { Option } = Select
 const { Title, Text } = Typography
@@ -262,11 +263,7 @@ const UserManagement = () => {
   ]
 
   if (loading) {
-    return (
-      <div className='flex items-center justify-center h-64'>
-        <Spin size='large' tip='Đang tải...' />
-      </div>
-    )
+    return <Loading />
   }
 
   return (
