@@ -37,8 +37,8 @@ export default function CycleTrackingPage() {
     // Save data to session storage
     sessionStorage.setItem('cycleData', JSON.stringify(cycleData))
 
-    // Force navigation using window.location with hash format
-    window.location.href = '#/cycle-tracking/result'
+    // Use React Router's navigate function instead of window.location.href
+    navigate('/cycle-tracking/result')
   }
 
   return (
