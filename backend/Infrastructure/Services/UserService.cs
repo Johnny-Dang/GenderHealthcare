@@ -24,7 +24,7 @@ namespace backend.Infrastructure.Services
                 FirstName = account.FirstName,
                 LastName = account.LastName,
                 Phone = account.Phone,
-                AvatarUrl = account.avatarUrl,
+                AvatarUrl = account.AvatarUrl,
                 DateOfBirth = account.DateOfBirth,
                 Gender = account.Gender,
                 RoleName = account.Role?.Name ?? "",
@@ -46,7 +46,7 @@ namespace backend.Infrastructure.Services
             account.FirstName = request.FirstName ?? account.FirstName;
             account.LastName = request.LastName ?? account.LastName;
             account.Phone = request.Phone ?? account.Phone;
-            account.avatarUrl = request.AvatarUrl ?? account.avatarUrl;
+            account.AvatarUrl = request.AvatarUrl ?? account.AvatarUrl;
             account.DateOfBirth = request.DateOfBirth ?? account.DateOfBirth;
             if (request.Gender.HasValue)
                 account.Gender = request.Gender.Value;
@@ -72,7 +72,7 @@ namespace backend.Infrastructure.Services
                 FirstName = account.FirstName,
                 LastName = account.LastName,
                 Phone = account.Phone,
-                AvatarUrl = account.avatarUrl,
+                AvatarUrl = account.AvatarUrl,
                 DateOfBirth = account.DateOfBirth,
                 Gender = account.Gender,
                 RoleName = account.Role?.Name ?? "",

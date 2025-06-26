@@ -151,7 +151,7 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
+                AvatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
                 RoleId = customerRole.RoleId,

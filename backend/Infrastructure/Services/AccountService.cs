@@ -82,7 +82,7 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
+                AvatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
                 RoleId = role.RoleId,
@@ -93,7 +93,11 @@ namespace backend.Infrastructure.Services
                 account.StaffInfo = new StaffInfo
                 {
                     AccountId = account.AccountId,
-                    CreateAt = DateTime.UtcNow
+                    CreateAt = DateTime.UtcNow,
+                    Department = "Not Specified",
+                    Degree = "Not Specified",
+                    YearOfExperience = 0,
+                    Biography = "Not Specified"
                 };
             }
 
@@ -114,7 +118,7 @@ namespace backend.Infrastructure.Services
                 AccountId = account.AccountId,
                 Email = account.Email,
                 Phone = account.Phone,
-                AvatarUrl = account.avatarUrl,
+                AvatarUrl = account.AvatarUrl,
                 DateOfBirth = account.DateOfBirth,
                 Gender = account.Gender,
                 CreateAt = account.CreateAt,
@@ -136,7 +140,7 @@ namespace backend.Infrastructure.Services
                 AccountId = acc.AccountId,
                 Email = acc.Email,
                 Phone = acc.Phone,
-                AvatarUrl = acc.avatarUrl,
+                AvatarUrl = acc.AvatarUrl,
                 DateOfBirth = acc.DateOfBirth,
                 Gender = acc.Gender,
                 CreateAt = acc.CreateAt,
@@ -156,7 +160,7 @@ namespace backend.Infrastructure.Services
             account.FirstName = request.FirstName ?? account.FirstName;
             account.LastName = request.LastName ?? account.LastName;
             account.Phone = request.Phone ?? account.Phone;
-            account.avatarUrl = request.AvatarUrl ?? account.avatarUrl;
+            account.AvatarUrl = request.AvatarUrl ?? account.AvatarUrl;
             account.DateOfBirth = request.DateOfBirth ?? account.DateOfBirth;
             account.Gender = request.Gender;
 
@@ -173,6 +177,11 @@ namespace backend.Infrastructure.Services
                         account.StaffInfo = new StaffInfo
                         {
                             AccountId = account.AccountId,
+                            CreateAt = DateTime.UtcNow,
+                            Department = "Not Specified",
+                            Degree = "Not Specified",
+                            YearOfExperience = 0,
+                            Biography = "Not Specified"
                         };
                     }
                 }
@@ -262,7 +271,7 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
+                AvatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
                 RoleId = customerRole.RoleId,

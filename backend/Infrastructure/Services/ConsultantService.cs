@@ -51,7 +51,7 @@ namespace backend.Infrastructure.Services
                 consultant.Phone = request.Phone;
 
             if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
-                consultant.avatarUrl = request.AvatarUrl;
+                consultant.AvatarUrl = request.AvatarUrl;
 
 
             if (consultant.StaffInfo != null)
@@ -81,7 +81,7 @@ namespace backend.Infrastructure.Services
                 FullName = $"{consultant.FirstName} {consultant.LastName}".Trim(),
                 Email = consultant.Email,
                 Phone = consultant.Phone,
-                AvatarUrl = consultant.avatarUrl,
+                AvatarUrl = consultant.AvatarUrl,
                 Department = consultant.StaffInfo?.Department,
                 Degree = consultant.StaffInfo?.Degree,
                 YearOfExperience = consultant.StaffInfo?.YearOfExperience ?? 0,

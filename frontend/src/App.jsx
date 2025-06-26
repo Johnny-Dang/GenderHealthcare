@@ -52,9 +52,9 @@ function App() {
     {
       path: '/profile',
       element: (
-        // <AuthGuard allowedRoles={['Customer', 'Staff', 'Consultant', 'Manager', 'Admin']} redirectTo='/'>
-        <ProfilePage />
-        // </AuthGuard>
+        <AuthGuard allowedRoles={['Customer', 'Staff', 'Consultant', 'Manager', 'Admin']} redirectTo='/'>
+          <ProfilePage />
+        </AuthGuard>
       )
     },
     //* Blog
