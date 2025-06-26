@@ -62,9 +62,12 @@ function App() {
     },
     {
       path: '/staff/blog',
-      element: <BlogManagement />
+      element: (
+        <AuthGuard allowedRoles={['Staff']} redirectTo='/'>
+          <BlogManagement />
+        </AuthGuard>
+      )
     },
-
     {
       path: '/cycle-tracking',
       element: <CycleTrackingPage />
