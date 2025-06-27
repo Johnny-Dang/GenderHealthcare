@@ -7,6 +7,7 @@
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
+        public bool IsDeleted { get; set; }
         public string Category { get; set; } = string.Empty;
     }
 }

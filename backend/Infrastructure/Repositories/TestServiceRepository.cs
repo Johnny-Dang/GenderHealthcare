@@ -43,6 +43,11 @@ namespace backend.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<TestService>> GetAllForAdminAsync()
+        {
+            return await _context.TestService.ToListAsync();
+        }
+
         // Update
         public async Task<TestService> UpdateAsync(TestService testService)
         {
@@ -58,7 +63,7 @@ namespace backend.Infrastructure.Repositories
             existingService.ImageUrl = testService.ImageUrl;
             existingService.Category = testService.Category;
             existingService.UpdatedAt = DateTime.UtcNow;
-
+            existingService.IsDeleted = testService.IsDeleted;
             await _context.SaveChangesAsync();
             return existingService;
         }

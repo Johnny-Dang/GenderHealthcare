@@ -11,6 +11,7 @@ namespace backend.Application.Repositories
         Task<List<TestService>> GetAllAsync();
         Task<TestService> GetByIdAsync(Guid id);
         Task<List<TestService>> GetByCategoryAsync(string category);
+        Task<List<TestService>> GetAllForAdminAsync();
         
         // Update
         Task<TestService> UpdateAsync(TestService testService);
