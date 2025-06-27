@@ -8,6 +8,7 @@ import { Trash2, Pencil, ShoppingCart, AlertTriangle } from 'lucide-react';
 import ServiceBookingForm from '@/components/ServiceBookingForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import Loading from '../../components/Loading';
 
 export default function CartPage() {
   const bookingId = useSelector(state => state.user.bookingId);
@@ -229,7 +230,7 @@ export default function CartPage() {
               {deleteLoading ? (
                 <>
                   <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-                  Đang xóa...
+                  <Loading/>
                 </>
               ) : (
                 <>

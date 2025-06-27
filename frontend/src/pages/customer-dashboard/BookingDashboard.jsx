@@ -25,7 +25,7 @@ const CustomerDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
-  const [paymentModal, setPaymentModal] = useState({ open: false, loading: false, data: null, error: null })
+  const [paymentModal, setPaymentModal] = useState({ open: false, loading: false, data: null, error: null, bookingId: null })
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -46,55 +46,6 @@ const CustomerDashboard = () => {
 
   if (!user || user.role !== 'Customer') {
     return <Navigate to='/login' replace />
-  }
-
-  const getStatusBadge = (status) => {
-    const variants = {
-      pending_payment: { 
-        bg: 'bg-gradient-to-r from-red-500 to-red-600', 
-        text: 'text-white', 
-        label: 'Chờ thanh toán',
-        border: 'border-red-200',
-        shadow: 'shadow-red-100'
-      },
-      paid: { 
-        bg: 'bg-gradient-to-r from-yellow-500 to-orange-500', 
-        text: 'text-white', 
-        label: 'Đã thanh toán',
-        border: 'border-yellow-200',
-        shadow: 'shadow-yellow-100'
-      },
-      confirmed: { 
-        bg: 'bg-gradient-to-r from-blue-500 to-blue-600', 
-        text: 'text-white', 
-        label: 'Đã xác nhận',
-        border: 'border-blue-200',
-        shadow: 'shadow-blue-100'
-      },
-      completed: { 
-        bg: 'bg-gradient-to-r from-green-500 to-green-600', 
-        text: 'text-white', 
-        label: 'Hoàn thành',
-        border: 'border-green-200',
-        shadow: 'shadow-green-100'
-      },
-      cancelled: { 
-        bg: 'bg-gradient-to-r from-gray-500 to-gray-600', 
-        text: 'text-white', 
-        label: 'Đã hủy',
-        border: 'border-gray-200',
-        shadow: 'shadow-gray-100'
-      }
-    }
-    const variant = variants[status]
-    if (!variant) {
-      return <Badge className='bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg'>Không xác định</Badge>
-    }
-    return (
-      <Badge className={`${variant.bg} ${variant.text} ${variant.border} ${variant.shadow} shadow-lg font-semibold px-3 py-1 text-sm`}>
-        {variant.label}
-      </Badge>
-    )
   }
 
   const getStatusIcon = (status) => {
@@ -123,25 +74,67 @@ const CustomerDashboard = () => {
     return colors[status] || 'border-l-gray-500 bg-gray-50'
   }
 
-  const handleDownloadResult = (booking) => {
-    // TODO: Implement actual file download
-    console.log('Downloading result for booking:', booking.id)
-    // Simulate download
-    const link = document.createElement('a')
-    link.href = '#'
-    link.download = booking.testResult?.fileName || 'test_result.pdf'
-    link.click()
-  }
-
   const handleShowPayment = async (bookingId) => {
-    setPaymentModal({ open: true, loading: true, data: null, error: null })
+    setPaymentModal({ open: true, loading: true, data: null, error: null, bookingId });
     try {
-      const res = await api.get(`/api/payments/booking/${bookingId}`)
-      setPaymentModal({ open: true, loading: false, data: res.data, error: null })
+      const res = await api.get(`/api/payments/booking/${bookingId}`);
+      setPaymentModal({ open: true, loading: false, data: res.data, error: null, bookingId });
     } catch (err) {
-      setPaymentModal({ open: true, loading: false, data: null, error: 'Không thể tải thông tin thanh toán.' })
+      if (err.response && err.response.status === 404) {
+        setPaymentModal({ open: true, loading: false, data: null, error: 'Bạn chưa thanh toán đơn này.', bookingId });
+      } else {
+        setPaymentModal({ open: true, loading: false, data: null, error: 'Không thể tải thông tin thanh toán.', bookingId });
+      }
     }
-  }
+  };
+
+  // Hàm thanh toán lại
+  const handleRepayment = async (bookingId) => {
+    try {
+      // Lấy tổng tiền và số dịch vụ
+      const totalRes = await api.get(`/api/booking-details/booking/${bookingId}/total`);
+      const { totalAmount } = totalRes.data;
+      if (!totalAmount || totalAmount <= 0) {
+        alert('Không có dịch vụ nào để thanh toán!');
+        return;
+      }
+      // Gọi API tạo link thanh toán
+      const res = await api.post('/api/payments/create-vnpay-url', {
+        bookingId,
+        amount: totalAmount,
+        orderDescription: 'Xét Nghiệm STis',
+        orderType: 'Xét Nghiệm',
+      });
+      if (res.data && typeof res.data === 'string') {
+        window.location.href = res.data;
+      } else if (res.data && res.data.url) {
+        window.location.href = res.data.url;
+      } else {
+        alert('Không nhận được link thanh toán!');
+      }
+    } catch (err) {
+      alert('Tạo link thanh toán thất bại!');
+    }
+  };
+
+  const getStatusBadgeContrast = (status) => {
+    let bg = 'bg-gray-400', text = 'text-white', label = status;
+    switch (status?.toLowerCase()) {
+      case 'chờ xác nhận':
+        bg = 'bg-yellow-500'; text = 'text-white'; break;
+      case 'đã hủy':
+        bg = 'bg-red-500'; text = 'text-white'; break;
+      case 'hoàn thành':
+        bg = 'bg-green-600'; text = 'text-white'; break;
+      case 'đã thanh toán':
+        bg = 'bg-blue-600'; text = 'text-white'; break;
+      default:
+        bg = 'bg-gray-400'; text = 'text-white'; break;
+    }
+    return (
+      <span className={`inline-block px-3 py-1 rounded-full font-semibold text-sm shadow ${bg} ${text}`}>{label}</span>
+    );
+  };
 
   const dashboardStats = [
     {
@@ -297,7 +290,7 @@ const CustomerDashboard = () => {
                       <div className='flex flex-col items-center gap-3'>
                         <div className='text-center'>
                           <div className='mb-2'>
-                            {getStatusBadge(booking.status)}
+                            {getStatusBadgeContrast(booking.status)}
                           </div>
                           <div className='text-xs text-gray-500 font-medium'>
                             Trạng thái hiện tại
@@ -323,8 +316,19 @@ const CustomerDashboard = () => {
                           onClick={() => handleShowPayment(booking.bookingId)}
                         >
                           <CreditCard className='h-4 w-4' />
-                          Thanh toán
+                          Lịch sử thanh toán
                         </Button>
+                        {booking.status === 'pending_payment' && (
+                          <Button
+                            size='sm'
+                            variant='destructive'
+                            className='flex items-center gap-2 hover:bg-red-50 hover:border-red-300'
+                            onClick={() => handleRepayment(booking.bookingId)}
+                          >
+                            <CreditCard className='h-4 w-4' />
+                            Thanh toán lại
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -346,24 +350,42 @@ const CustomerDashboard = () => {
               <span>Đang tải thông tin thanh toán...</span>
             </div>
           ) : paymentModal.error ? (
-            <div className='text-red-500 text-center py-8'>{paymentModal.error}</div>
+            <div className='text-center py-8'>
+              <div className='text-red-500 mb-4'>{paymentModal.error}</div>
+              {paymentModal.error === 'Bạn chưa thanh toán đơn này.' && (
+                <Button
+                  variant='destructive'
+                  className='flex items-center gap-2 mx-auto'
+                  onClick={() => handleRepayment(paymentModal.bookingId)}
+                >
+                  <CreditCard className='h-4 w-4' />
+                  Thanh toán lại
+                </Button>
+              )}
+            </div>
           ) : paymentModal.data ? (
-            <div className='space-y-3'>
-              <div>
-                <span className='font-semibold'>Mã đơn đặt lịch:</span> {paymentModal.data.bookingId}
+            <div className='flex flex-col items-center py-6'>
+              <div className='bg-green-100 rounded-full p-4 mb-4'>
+                <CreditCard className='h-10 w-10 text-green-600' />
               </div>
-              <div>
-                <span className='font-semibold'>Mã giao dịch:</span> {paymentModal.data.transactionId}
-              </div>
-              <div>
-                <span className='font-semibold'>Ngày thanh toán:</span>{' '}
-                {paymentModal.data.createdAt ? new Date(paymentModal.data.createdAt).toLocaleString('vi-VN') : ''}
-              </div>
-              <div>
-                <span className='font-semibold'>Số tiền:</span> {paymentModal.data.amount?.toLocaleString('vi-VN')} VND
-              </div>
-              <div>
-                <span className='font-semibold'>Phương thức thanh toán:</span> {paymentModal.data.paymentMethod}
+              <div className='text-2xl font-bold text-green-700 mb-2'>Đã thanh toán</div>
+              <div className='w-full max-w-md bg-gray-50 rounded-xl p-6 shadow space-y-4'>
+                <div className='flex justify-between'>
+                  <span className='font-semibold text-gray-600'>Mã giao dịch:</span>
+                  <span className='font-mono text-gray-800'>{paymentModal.data.transactionId}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='font-semibold text-gray-600'>Ngày thanh toán:</span>
+                  <span>{paymentModal.data.createdAt ? new Date(paymentModal.data.createdAt).toLocaleString('vi-VN') : ''}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='font-semibold text-gray-600'>Số tiền:</span>
+                  <span className='text-lg font-bold text-green-700'>{paymentModal.data.amount?.toLocaleString('vi-VN')} VND</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='font-semibold text-gray-600'>Phương thức:</span>
+                  <span className='text-gray-800'>{paymentModal.data.paymentMethod}</span>
+                </div>
               </div>
             </div>
           ) : (
