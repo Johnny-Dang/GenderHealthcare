@@ -69,7 +69,7 @@ namespace backend.API.Controllers
         
         // PUT: api/bookings
         [HttpPut]
-        [Authorize]
+        [Authorize(Roles = "Staff,Manager")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -83,6 +83,30 @@ namespace backend.API.Controllers
                 return NotFound();
                 
             return Ok(booking);
+        }
+        
+        // PUT: api/bookings/status?bookingId=...&status=...
+        [HttpPut("status")]
+        [Authorize(Roles = "Staff,Manager")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateStatus([FromQuery] Guid bookingId, [FromQuery] string status)
+        {
+            if (bookingId == Guid.Empty || string.IsNullOrWhiteSpace(status))
+                return BadRequest("Missing bookingId or status");
+
+            var booking = await _bookingService.GetByIdAsync(bookingId);
+            if (booking == null)
+                return NotFound();
+
+            // Only update status
+            var updated = await _bookingService.UpdateStatusAsync(bookingId, status);
+            if (!updated)
+                return BadRequest("Failed to update status");
+
+            var updatedBooking = await _bookingService.GetByIdAsync(bookingId);
+            return Ok(updatedBooking);
         }
         
         // DELETE: api/bookings/{id}

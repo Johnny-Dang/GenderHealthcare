@@ -17,6 +17,7 @@ namespace backend.Application.Services
         
         // Update
         Task<BookingResponse> UpdateAsync(UpdateBookingRequest request);
+        Task<bool> UpdateStatusAsync(Guid bookingId, string status);
         
         // Delete
         Task<bool> DeleteAsync(Guid id);

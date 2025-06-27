@@ -147,6 +147,17 @@ namespace backend.Infrastructure.Services
             return await _bookingRepository.DeleteAsync(id);
         }
         
+        // Update only status
+        public async Task<bool> UpdateStatusAsync(Guid bookingId, string status)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+                return false;
+            booking.Status = status;
+            await _bookingRepository.UpdateAsync(booking);
+            return true;
+        }
+        
         // Helper method for mapping with details
         private BookingResponse MapToDetailedResponse(Booking booking)
         {
