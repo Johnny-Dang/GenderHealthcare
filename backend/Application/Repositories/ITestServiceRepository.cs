@@ -20,6 +20,5 @@ namespace backend.Application.Repositories
         
         // Additional methods
         Task<bool> ExistsAsync(Guid id);
-        Task<int> CountAsync();
     }
 }

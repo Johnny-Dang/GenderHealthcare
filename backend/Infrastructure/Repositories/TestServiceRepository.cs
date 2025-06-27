@@ -10,7 +10,6 @@ namespace backend.Infrastructure.Repositories
     public class TestServiceRepository : ITestServiceRepository
     {
         private readonly IApplicationDbContext _context;
-        private readonly ITestServiceRepository _testServiceRepository;
         public TestServiceRepository(IApplicationDbContext context)
         {
             _context = context;
@@ -29,7 +28,7 @@ namespace backend.Infrastructure.Repositories
         // Read
         public async Task<List<TestService>> GetAllAsync()
         {
-            return await _context.TestService.ToListAsync();
+            return await _context.TestService.Where(x => x.IsDeleted != true).ToListAsync();
         }
 
         public async Task<TestService> GetByIdAsync(Guid id)
@@ -40,7 +39,7 @@ namespace backend.Infrastructure.Repositories
         public async Task<List<TestService>> GetByCategoryAsync(string category)
         {
             return await _context.TestService
-                .Where(s => s.Category == category)
+                .Where(s => s.Category == category && s.IsDeleted == false)
                 .ToListAsync();
         }
 
@@ -72,7 +71,7 @@ namespace backend.Infrastructure.Repositories
             if (service == null)
                 return false;
 
-            _context.TestService.Remove(service);
+            service.IsDeleted = true;
             await _context.SaveChangesAsync();
             
             return true;
@@ -82,11 +81,6 @@ namespace backend.Infrastructure.Repositories
         public async Task<bool> ExistsAsync(Guid id)
         {
             return await _context.TestService.AnyAsync(s => s.ServiceId == id);
-        }
-
-        public async Task<int> CountAsync()
-        {
-            return await _context.TestService.CountAsync();
         }
     }
 }
