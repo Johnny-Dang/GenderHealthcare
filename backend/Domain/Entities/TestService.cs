@@ -9,6 +9,7 @@
         public string? ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        public bool IsDeleted {  get; set; }
         public string Category { get; set; } = default!;
 
         public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
