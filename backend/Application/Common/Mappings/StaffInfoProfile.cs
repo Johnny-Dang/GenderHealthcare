@@ -13,7 +13,7 @@ namespace backend.Application.Common.Mappings
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => 
                     $"{src.Account.FirstName} {src.Account.LastName}".Trim()))
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Account.Phone))
-                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Account.avatarUrl));
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Account.AvatarUrl));
 
             CreateMap<CreateStaffInfoRequest, StaffInfo>();
             CreateMap<UpdateStaffInfoRequest, StaffInfo>();

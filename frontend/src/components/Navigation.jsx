@@ -25,9 +25,9 @@ const Navigation = () => {
       return [
         ...baseItems,
         { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
+        { path: '/booking-consultant', label: 'Đặt tư vấn' }, // Thêm đường dẫn tư vấn cho khách
         { path: '/blog', label: 'Blog' },
-        { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' },
-        { path: '/booking', label: 'Đặt tư vấn' }
+        { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
       ]
     }
 
@@ -47,16 +47,15 @@ const Navigation = () => {
 
       case 'Consultant':
         return [
-          { path: '/consultant-dashboard', label: 'Dashboard' },
-          { path: '/tu-van', label: 'Lịch tư vấn' },
-          { path: '/blog', label: 'Blog' }
+          // { path: '/consultant-dashboard', label: 'Dashboard' },
+          { path: '/consultant/schedule', label: 'Lịch tư vấn' }
         ]
 
       case 'Customer':
         return [
           { path: '/customer-dashboard', label: 'Dashboard' },
           { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
-          { path: '/tu-van', label: 'Đặt tư vấn' },
+          { path: '/booking-consultant', label: 'Đặt tư vấn' },
           { path: '/blog', label: 'Blog' },
           { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
         ]
@@ -149,6 +148,7 @@ const Navigation = () => {
   const guestNavItems = [
     { path: '/', label: 'Trang chủ' },
     { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
+    { path: '/booking-consultant', label: 'Đặt tư vấn' }, // Thêm đặt tư vấn vào đây
     { path: '/blog', label: 'Blog' },
     { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
   ]

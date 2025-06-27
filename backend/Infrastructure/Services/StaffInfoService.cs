@@ -106,7 +106,7 @@ namespace backend.Infrastructure.Services
                 Email = staffInfo.Account.Email,
                 FullName = $"{staffInfo.Account.FirstName} {staffInfo.Account.LastName}".Trim(),
                 Phone = staffInfo.Account.Phone,
-                AvatarUrl = staffInfo.Account.avatarUrl
+                AvatarUrl = staffInfo.Account.AvatarUrl
             };
         }
     }

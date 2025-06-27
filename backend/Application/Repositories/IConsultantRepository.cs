@@ -1,4 +1,5 @@
 ﻿using backend.Application.DTOs.ConsultantDTO;
+using DeployGenderSystem.Domain.Entity;
 
 namespace backend.Application.Repositories
 {
@@ -6,5 +7,8 @@ namespace backend.Application.Repositories
     {
         Task<List<ConsultantResponse>> GetAllConsultantsAsync();
         Task<ConsultantResponse?> GetConsultantByIdAsync(Guid consultantId);
+
+        Task<Account?> GetConsultantEntityByIdAsync(Guid accountId);
+        Task SaveChangesAsync();
     }
 }

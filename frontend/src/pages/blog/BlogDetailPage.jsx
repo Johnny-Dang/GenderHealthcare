@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, User, Loader, Clock, Tag } from 'lucide-react'
 import api from '@/configs/axios'
+import Loading from '../../components/Loading'
 
 const BlogDetailPage = () => {
   const { id } = useParams()
@@ -84,12 +85,7 @@ const BlogDetailPage = () => {
     return (
       <div className='min-h-screen bg-gradient-soft'>
         <Navigation />
-        <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col items-center justify-center'>
-          <div className='animate-spin mb-4'>
-            <Loader size={40} className='text-primary-500' />
-          </div>
-          <p className='text-gray-600'>Đang tải bài viết...</p>
-        </div>
+        <Loading />
         <Footer />
       </div>
     )

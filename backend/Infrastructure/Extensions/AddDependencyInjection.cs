@@ -32,7 +32,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IPaymentService, PaymentService>();
             serviceCollection.AddScoped<IFeedbackService, FeedbackService>();
             serviceCollection.AddScoped<IStaffInfoService, StaffInfoService>();
-            
+            serviceCollection.AddScoped<IUserService, UserService>();
+
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
             serviceCollection.AddScoped<IBookingRepository, BookingRepository>();
