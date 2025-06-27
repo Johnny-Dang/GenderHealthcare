@@ -84,7 +84,7 @@ namespace backend.API.Controllers
         }
 
         // GET: api/services/all-admin
-        [HttpGet("all-admin")]
+        [HttpGet("admin")]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> GetAllForAdmin()
         {
