@@ -78,10 +78,14 @@ const CustomerDashboard = () => {
     link.click()
   }
 
-  const handleFeedbackSubmitted = () => {
-    setShowFeedback(false)
-    // Update booking to mark feedback as given
-    // TODO: Update via API
+  const handleShowPayment = async (bookingId) => {
+    setPaymentModal({ open: true, loading: true, data: null, error: null })
+    try {
+      const res = await api.get(`/api/payments/booking/${bookingId}`)
+      setPaymentModal({ open: true, loading: false, data: res.data, error: null })
+    } catch (err) {
+      setPaymentModal({ open: true, loading: false, data: null, error: 'Không thể tải thông tin thanh toán.' })
+    }
   }
 
   const dashboardStats = [
