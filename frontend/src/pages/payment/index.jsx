@@ -1,1 +1,1 @@
-export { default as VnPayReturn } from './VnPayReturn'; 
+// export { default as VnPayReturn } from './VnPayReturn'; 

@@ -149,6 +149,40 @@ namespace backend.Infrastructure.Services
                 Gender = updatedDetail.Gender
             };
         }
+
+        public async Task<BookingDetailResponse> UpdateInfoOnlyAsync(UpdateBookingDetailRequest request)
+        {
+            // Check if booking detail exists
+            var existingDetail = await _bookingDetailRepository.GetByIdAsync(request.BookingDetailId);
+            if (existingDetail == null)
+                return null;
+
+            // Update allowed fields only (không update status)
+            existingDetail.FirstName = request.FirstName;
+            existingDetail.LastName = request.LastName;
+            existingDetail.DateOfBirth = request.DateOfBirth;
+            existingDetail.Phone = request.Phone;
+            existingDetail.Gender = request.Gender;
+
+            // Save changes
+            var updatedDetail = await _bookingDetailRepository.UpdateAsync(existingDetail);
+
+            // Map to response
+            return new BookingDetailResponse
+            {
+                BookingDetailId = updatedDetail.BookingDetailId,
+                BookingId = updatedDetail.BookingId,
+                ServiceId = updatedDetail.ServiceId,
+                ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
+                Price = updatedDetail.TestService?.Price ?? 0,
+                Status = updatedDetail.Status,
+                FirstName = updatedDetail.FirstName,
+                LastName = updatedDetail.LastName,
+                Phone = updatedDetail.Phone,
+                DateOfBirth = updatedDetail.DateOfBirth,
+                Gender = updatedDetail.Gender
+            };
+        }
         
         public async Task<BookingTotalAmountResponse> CalculateTotalAmountByBookingIdAsync(Guid bookingId)
         {

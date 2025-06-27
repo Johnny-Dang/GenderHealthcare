@@ -71,17 +71,22 @@ namespace backend.API.Controllers
         
         // PUT: api/booking-details
         [HttpPut]
-        [Authorize]
-        public async Task<IActionResult> Update([FromBody] UpdateBookingDetailRequest request)
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> Update([FromQuery] Guid bookingDetailId, [FromBody] UpdateBookingDetailRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-                
-            var updatedBookingDetail = await _bookingDetailService.UpdateAsync(request);
-            
+
+            // Đảm bảo bookingDetailId từ query và body khớp nhau
+            if (bookingDetailId == Guid.Empty || bookingDetailId != request.BookingDetailId)
+                return BadRequest("Thiếu hoặc sai bookingDetailId");
+
+            // Gọi service update nhưng không update status
+            var updatedBookingDetail = await _bookingDetailService.UpdateInfoOnlyAsync(request);
+
             if (updatedBookingDetail == null)
                 return NotFound();
-                
+
             return Ok(updatedBookingDetail);
         }
         
