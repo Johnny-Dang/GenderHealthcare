@@ -16,5 +16,6 @@ namespace backend.Application.Repositories
         Task<Account> CreateAccountAsync(Account account);
         Task<bool> UpdateAccountAsync(Account account);
         Task<bool> DeleteAccountAsync(Guid id);
+        Task<Account?> GetAccountByIdWithRoleAndStaffInfoAsync(Guid id);
     }
 }

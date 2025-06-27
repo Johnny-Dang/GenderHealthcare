@@ -49,7 +49,7 @@ const Login = () => {
             navigate('/staff/dashboard')
             break
           case 'Consultant':
-            navigate('/consultant/dashboard')
+            navigate('/consultant/schedule')
             break
           case 'Manager':
             navigate('/manager/dashboard')

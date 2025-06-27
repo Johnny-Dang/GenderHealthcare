@@ -69,17 +69,29 @@ namespace backend.Infrastructure.Repositories
         public async Task<bool> UpdateAccountAsync(Account account)
         {
             _context.Account.Update(account);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _context.SaveChangesAsync() > 0;
+            
         }
 
         public async Task<bool> DeleteAccountAsync(Guid id)
         {
             var account = await _context.Account.FindAsync(id);
             if (account == null) return false;
+
             account.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            return true;
+            _context.Account.Update(account);
+
+            var affectedRows = await _context.SaveChangesAsync();
+            return affectedRows > 0;
+
+        }
+
+        public async Task<Account?> GetAccountByIdWithRoleAndStaffInfoAsync(Guid id)
+        {
+            return await _context.Account
+                .Include(a => a.Role)
+                .Include(a => a.StaffInfo)
+                .FirstOrDefaultAsync(a => a.AccountId == id);
         }
     }
 }

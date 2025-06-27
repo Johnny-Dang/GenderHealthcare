@@ -38,7 +38,8 @@ namespace backend.Infrastructure.Repositories
                 StaffName = staff != null ? $"{staff.FirstName} {staff.LastName}".Trim() : null,
                 ScheduledAt = booking.ScheduledAt,
                 Status = booking.Status,
-                Message = booking.Message
+                Message = booking.Message,
+                CreatedAt = booking.CreatedAt,
             };
 
             return response;
@@ -75,6 +76,7 @@ namespace backend.Infrastructure.Repositories
                     ScheduledAt = booking.ScheduledAt,
                     Status = booking.Status,
                     Message = booking.Message,
+                    CreatedAt = booking.CreatedAt,
                 })
                 .ToListAsync();
         }

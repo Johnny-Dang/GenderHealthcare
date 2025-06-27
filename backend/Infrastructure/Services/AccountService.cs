@@ -3,6 +3,7 @@ using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
 using backend.Application.Interfaces;
 using backend.Application.Repositories;
+using backend.Domain.Entities;
 using DeployGenderSystem.Application.Helpers;
 using DeployGenderSystem.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -81,12 +82,24 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
+                AvatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
                 RoleId = role.RoleId,
                 CreateAt = DateTime.UtcNow
             };
+            if (!string.Equals(role.Name, "Customer", StringComparison.OrdinalIgnoreCase))
+            {
+                account.StaffInfo = new StaffInfo
+                {
+                    AccountId = account.AccountId,
+                    CreateAt = DateTime.UtcNow,
+                    Department = "Not Specified",
+                    Degree = "Not Specified",
+                    YearOfExperience = 0,
+                    Biography = "Not Specified"
+                };
+            }
 
             await _accountRepository.CreateAccountAsync(account);
 
@@ -105,7 +118,7 @@ namespace backend.Infrastructure.Services
                 AccountId = account.AccountId,
                 Email = account.Email,
                 Phone = account.Phone,
-                AvatarUrl = account.avatarUrl,
+                AvatarUrl = account.AvatarUrl,
                 DateOfBirth = account.DateOfBirth,
                 Gender = account.Gender,
                 CreateAt = account.CreateAt,
@@ -127,7 +140,7 @@ namespace backend.Infrastructure.Services
                 AccountId = acc.AccountId,
                 Email = acc.Email,
                 Phone = acc.Phone,
-                AvatarUrl = acc.avatarUrl,
+                AvatarUrl = acc.AvatarUrl,
                 DateOfBirth = acc.DateOfBirth,
                 Gender = acc.Gender,
                 CreateAt = acc.CreateAt,
@@ -147,14 +160,31 @@ namespace backend.Infrastructure.Services
             account.FirstName = request.FirstName ?? account.FirstName;
             account.LastName = request.LastName ?? account.LastName;
             account.Phone = request.Phone ?? account.Phone;
-            account.avatarUrl = request.AvatarUrl ?? account.avatarUrl;
+            account.AvatarUrl = request.AvatarUrl ?? account.AvatarUrl;
             account.DateOfBirth = request.DateOfBirth ?? account.DateOfBirth;
             account.Gender = request.Gender;
 
             if (!string.IsNullOrEmpty(request.RoleName))
             {
                 var role = await _accountRepository.GetRoleByNameAsync(request.RoleName);
-                if (role != null) account.RoleId = role.RoleId;
+                if (role != null)
+                {
+                    account.RoleId = role.RoleId;
+
+                    // Nếu role khác "Customer" và chưa có StaffInfo thì tạo mới
+                    if (!string.Equals(role.Name, "Customer", StringComparison.OrdinalIgnoreCase) && account.StaffInfo == null)
+                    {
+                        account.StaffInfo = new StaffInfo
+                        {
+                            AccountId = account.AccountId,
+                            CreateAt = DateTime.UtcNow,
+                            Department = "Not Specified",
+                            Degree = "Not Specified",
+                            YearOfExperience = 0,
+                            Biography = "Not Specified"
+                        };
+                    }
+                }
             }
 
             account.UpdateAt = DateTime.UtcNow;
@@ -241,7 +271,7 @@ namespace backend.Infrastructure.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Phone = request.Phone,
-                avatarUrl = request.AvatarUrl,
+                AvatarUrl = request.AvatarUrl,
                 DateOfBirth = request.DateOfBirth,
                 Gender = request.Gender,
                 RoleId = customerRole.RoleId,
