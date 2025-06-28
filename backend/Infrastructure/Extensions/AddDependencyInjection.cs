@@ -21,7 +21,7 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IGoogleCredentialService, GoogleCredentialService>();
             serviceCollection.AddScoped<IEmailService, SendGridEmailService>();
             serviceCollection.AddScoped<IVerificationCodeService, VerificationCodeService>();
-            serviceCollection.AddScoped<ITestServiceService, TestService>();
+            serviceCollection.AddScoped<ITestServiceService, TestServiceService>();
             serviceCollection.AddScoped<IBlogService, BlogService>();
             serviceCollection.AddScoped<IBlogCategoryService, BlogCategoryService>();
             serviceCollection.AddScoped<IConsultationBookingService, ConsultationBookingService>();
@@ -32,7 +32,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IPaymentService, PaymentService>();
             serviceCollection.AddScoped<IFeedbackService, FeedbackService>();
             serviceCollection.AddScoped<IStaffInfoService, StaffInfoService>();
-            
+            serviceCollection.AddScoped<IUserService, UserService>();
+
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
             serviceCollection.AddScoped<IBookingRepository, BookingRepository>();

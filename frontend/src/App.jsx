@@ -30,11 +30,16 @@ import UserManagement from './pages/admin/UserManagement'
 import TestServiceManagement from './pages/admin/TestServiceManagement'
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
+
 import ManagerDashboard from './pages/manager-dashboard'
 import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
 import ManagerPaymentManagement from './pages/manager-dashboard/payment'
 import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
+
+import BookConsultantPage from './pages/booking-consultant'
+import ConsultantBookingSchedule from './pages/booking-consultant/ConsultantBookingSchedule'
+import ProfilePage from './pages/profile'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -51,10 +56,22 @@ function App() {
       path: '/register',
       element: <RegisterPage />
     },
+    {
+      path: '/profile',
+      element: (
+        <AuthGuard allowedRoles={['Customer', 'Staff', 'Consultant', 'Manager', 'Admin']} redirectTo='/'>
+          <ProfilePage />
+        </AuthGuard>
+      )
+    },
     //* Blog
     {
       path: '/blog',
       element: <BlogPage />
+    },
+    {
+      path: '/booking-consultant',
+      element: <BookConsultantPage />
     },
     {
       path: '/blog/:id',
@@ -135,6 +152,14 @@ function App() {
           element: <ManagerTestServiceManagement />
         }
       ]
+    },
+    {
+      path: '/consultant/schedule',
+      element: (
+        <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
+          <ConsultantBookingSchedule />
+        </AuthGuard>
+      )
     },
 
     {

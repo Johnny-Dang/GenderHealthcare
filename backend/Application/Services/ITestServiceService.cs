@@ -17,5 +17,6 @@ namespace backend.Application.Services
         Task<TestServiceResponse> UpdateAsync(Guid id, UpdateTestServiceRequest request);
         Task<bool> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
+        Task<List<TestServiceAdminResponse>> GetAllForAdminAsync();
     }
 } 

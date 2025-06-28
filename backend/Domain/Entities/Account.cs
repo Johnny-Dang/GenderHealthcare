@@ -12,7 +12,7 @@ namespace DeployGenderSystem.Domain.Entity
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Phone { get; set; }
-        public string? avatarUrl { get; set; }
+        public string? AvatarUrl { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public bool Gender { get; set; }
         public bool IsDeleted { get; set; } = false;

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Heart, Calendar } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const Hero = () => {
   return (
@@ -26,9 +27,10 @@ const Hero = () => {
             </p>
 
             <div className='flex flex-col sm:flex-row gap-4'>
-              <Button size='lg' className='bg-gradient-primary hover:opacity-90 text-white px-8'>
-                Đặt lịch tư vấn
+              <Button asChild size='lg' className='bg-gradient-primary hover:opacity-90 text-white px-8'>
+                <Link to='/booking-consultant'>Đặt lịch tư vấn</Link>
               </Button>
+
               <Button size='lg' variant='outline' className='border-primary-200 text-primary-600 hover:bg-primary-50'>
                 Tìm hiểu thêm
               </Button>

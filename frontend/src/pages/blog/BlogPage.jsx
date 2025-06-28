@@ -7,6 +7,7 @@ import { Calendar, User, Loader, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import api from '@/configs/axios'
 import { useToast } from '@/hooks/use-toast'
+import Loading from '../../components/Loading'
 
 const BlogPage = () => {
   const { toast } = useToast()
@@ -153,12 +154,7 @@ const BlogPage = () => {
       <section className='py-16'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           {loading ? (
-            <div className='flex flex-col items-center justify-center py-12'>
-              <div className='animate-spin mb-4'>
-                <Loader size={40} className='text-primary-500' />
-              </div>
-              <p className='text-gray-600'>Đang tải bài viết...</p>
-            </div>
+            <Loading />
           ) : error ? (
             <div className='text-center p-12 bg-red-50 rounded-lg'>
               <p className='text-red-600'>{error}</p>

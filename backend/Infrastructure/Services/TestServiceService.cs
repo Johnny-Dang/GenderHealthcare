@@ -7,11 +7,11 @@ using SendGrid.Helpers.Mail;
 
 namespace backend.Infrastructure.Services
 {
-    public class TestService : ITestServiceService
+    public class TestServiceService : ITestServiceService
     {
         private readonly ITestServiceRepository _testServiceRepository;
         
-        public TestService(ITestServiceRepository testServiceRepository)
+        public TestServiceService(ITestServiceRepository testServiceRepository)
         {
             _testServiceRepository = testServiceRepository;
         }
@@ -75,9 +75,15 @@ namespace backend.Infrastructure.Services
             existingService.Category = request.Category;
             existingService.ImageUrl = request.ImageUrl;
             existingService.UpdatedAt = DateTime.UtcNow;
-            
+            existingService.IsDeleted = request.IsDeleted;
             var updatedService = await _testServiceRepository.UpdateAsync(existingService);
             return MapToResponse(updatedService);
+        }
+
+        public async Task<List<TestServiceAdminResponse>> GetAllForAdminAsync()
+        {
+            var services = await _testServiceRepository.GetAllForAdminAsync();
+            return services.Select(MapToAdminResponse).ToList();
         }
         
         // Helper method to map Service to TestServiceResponse
@@ -93,6 +99,22 @@ namespace backend.Infrastructure.Services
                 ImageUrl = service.ImageUrl,
                 CreatedAt = service.CreatedAt,
                 UpdatedAt = service.UpdatedAt
+            };
+        }
+
+        private TestServiceAdminResponse MapToAdminResponse(Domain.Entities.TestService service)
+        {
+            return new TestServiceAdminResponse
+            {
+                ServiceId = service.ServiceId,
+                ServiceName = service.ServiceName,
+                Description = service.Description,
+                Price = service.Price,
+                Category = service.Category,
+                ImageUrl = service.ImageUrl,
+                CreatedAt = service.CreatedAt,
+                UpdatedAt = service.UpdatedAt,
+                IsDeleted = service.IsDeleted
             };
         }
     }
