@@ -108,7 +108,11 @@ function App() {
     },
     {
       path: '/manager/dashboard',
-      element: <ManagerDashboard />,
+      element: (
+        <AuthGuard allowedRoles={['Manager', 'Admin']} redirectTo='/'>
+          <ManagerDashboard />
+        </AuthGuard>
+      ),
       children: [
         {
           index: true,
@@ -132,10 +136,7 @@ function App() {
         }
       ]
     },
-    {
-      path: '/manager-dashboard',
-      element: <Navigate to='/manager/dashboard' replace />
-    },
+
     {
       path: '/customer-dashboard',
       element: <CustomerDashboard />
