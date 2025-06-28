@@ -44,7 +44,9 @@ const ManagerFeedbackManagement = () => {
   const fetchFeedbacks = async () => {
     setLoading(true)
     try {
-      const response = await api.get('api/Feedback')
+      console.log('Fetching feedbacks...')
+      const response = await api.get('/api/Feedback')
+      console.log('Feedback data:', response.data)
 
       // Transform API response to match component structure
       const transformedFeedbacks = response.data.map((feedback) => ({
@@ -83,32 +85,119 @@ const ManagerFeedbackManagement = () => {
     setSearchText(value)
   }
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`api/Feedback/${id}`)
-      setFeedbacks(feedbacks.filter((item) => item.id !== id))
-      message.success('Đã xoá đánh giá thành công')
-
-      // Update statistics
-      const newTotal = stats.total - 1
-      const deletedFeedback = feedbacks.find((f) => f.id === id)
-      const newFiveStars = deletedFeedback.rating === 5 ? stats.fiveStars - 1 : stats.fiveStars
-      const newAverage = newTotal > 0 ? (stats.average * stats.total - deletedFeedback.rating) / newTotal : 0
-
-      setStats({
-        total: newTotal,
-        fiveStars: newFiveStars,
-        average: parseFloat(newAverage.toFixed(1))
-      })
-    } catch (error) {
-      console.error('Error deleting feedback:', error)
-      message.error('Không thể xóa đánh giá. Vui lòng thử lại sau.')
+  const handleDelete = (id) => {
+    const feedbackToDelete = feedbacks.find((item) => item.id === id)
+    if (!feedbackToDelete) {
+      message.error('Không tìm thấy đánh giá này')
+      return
     }
+
+    Modal.confirm({
+      title: 'Xác nhận xoá',
+      content: `Bạn có chắc chắn muốn xoá đánh giá của "${feedbackToDelete.customerName}" không?`,
+      okText: 'Xoá',
+      okType: 'danger',
+      cancelText: 'Huỷ',
+      async onOk() {
+        try {
+          // Kiểm tra token trước khi gọi API
+          const token = localStorage.getItem('token')
+          if (!token) {
+            message.error('Bạn cần đăng nhập để thực hiện chức năng này')
+            return
+          }
+
+          console.log(`🗑️ Deleting feedback with ID: ${id}`)
+          console.log(`URL: ${api.defaults.baseURL}/api/Feedback/${id}`)
+
+          // Hiển thị loading message
+          const loadingMessage = message.loading('Đang xoá đánh giá...', 0)
+
+          try {
+            // Gọi API DELETE với headers rõ ràng để đảm bảo token được gửi đi
+            const response = await api.delete(`/api/Feedback/${id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            })
+            console.log('✅ Delete response:', response)
+
+            // Đóng loading message
+            loadingMessage()
+
+            // Cập nhật danh sách feedback sau khi xóa
+            const updatedFeedbacks = feedbacks.filter((item) => item.id !== id)
+            setFeedbacks(updatedFeedbacks)
+
+            // Cập nhật thống kê
+            const newTotal = stats.total - 1
+            const newFiveStars = feedbackToDelete.rating === 5 ? stats.fiveStars - 1 : stats.fiveStars
+            const newAverage = newTotal > 0 ? (stats.average * stats.total - feedbackToDelete.rating) / newTotal : 0
+
+            setStats({
+              total: newTotal,
+              fiveStars: newFiveStars,
+              average: parseFloat(newAverage.toFixed(1))
+            })
+
+            message.success('Đã xoá đánh giá thành công')
+          } catch (apiError) {
+            console.error('❌ API Error:', apiError)
+
+            if (apiError.response) {
+              console.error('Response status:', apiError.response.status)
+              console.error('Response data:', apiError.response.data)
+
+              // Xử lý các trường hợp lỗi HTTP
+              if (apiError.response.status === 401) {
+                message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+                setTimeout(() => {
+                  localStorage.removeItem('token')
+                  window.location.href = '/login'
+                }, 2000)
+              } else if (apiError.response.status === 403) {
+                message.error('Bạn không có quyền xóa đánh giá này')
+              } else if (apiError.response.status === 404) {
+                message.error('Đánh giá không tồn tại hoặc đã bị xoá trước đó')
+                // Xóa khỏi UI nếu không tồn tại trên server
+                setFeedbacks(feedbacks.filter((item) => item.id !== id))
+              } else {
+                message.error(
+                  `Lỗi khi xoá đánh giá: ${apiError.response.statusText || 'Lỗi không xác định'} (${apiError.response.status})`
+                )
+              }
+            } else if (apiError.request) {
+              console.error('No response received:', apiError.request)
+              message.error('Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng.')
+            } else {
+              console.error('Error message:', apiError.message)
+              message.error(`Lỗi: ${apiError.message}`)
+            }
+
+            loadingMessage() // Đảm bảo đóng loading message nếu có lỗi
+          }
+        } catch (error) {
+          console.error('❌ Unexpected error:', error)
+          message.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc khởi động lại backend.')
+
+          // Hỏi người dùng có muốn xóa khỏi UI không
+          Modal.confirm({
+            title: 'Lỗi kết nối',
+            content: 'Không thể kết nối đến server. Bạn có muốn xóa đánh giá này khỏi giao diện (chỉ UI)?',
+            onOk: () => {
+              setFeedbacks(feedbacks.filter((item) => item.id !== id))
+              message.warning('Đã xóa đánh giá khỏi giao diện (dữ liệu trên server không bị ảnh hưởng)')
+            }
+          })
+        }
+      }
+    })
   }
 
   const handleUpdateFeedback = async (id, detail, rating) => {
     try {
-      await api.put('api/Feedback', {
+      await api.put('/api/Feedback', {
         feedbackId: id,
         detail: detail,
         rating: rating
@@ -292,20 +381,16 @@ const ManagerFeedbackManagement = () => {
             <Divider />
 
             <div className='flex justify-end'>
-              <Popconfirm
-                title='Xóa đánh giá này?'
-                description='Bạn có chắc chắn muốn xóa đánh giá này không?'
-                onConfirm={() => {
+              <Button
+                danger
+                icon={<Trash2 size={14} />}
+                onClick={() => {
                   handleDelete(selectedFeedback.id)
                   closeDetailModal()
                 }}
-                okText='Có'
-                cancelText='Không'
               >
-                <Button danger icon={<Trash2 size={14} />}>
-                  Xóa đánh giá
-                </Button>
-              </Popconfirm>
+                Xóa đánh giá
+              </Button>
             </div>
           </div>
         )}

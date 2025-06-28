@@ -15,7 +15,8 @@ import {
   Row,
   Col,
   Statistic,
-  Divider
+  Divider,
+  message
 } from 'antd'
 import { Search, UserPlus, Edit, Trash2, User, Mail, Phone, Calendar, MapPin, Briefcase, Check } from 'lucide-react'
 
@@ -138,7 +139,17 @@ const StaffManagement = () => {
   }
 
   const handleDelete = (id) => {
-    setStaffList(staffList.filter((staff) => staff.id !== id))
+    Modal.confirm({
+      title: 'Xác nhận xoá',
+      content: 'Bạn có chắc chắn muốn xoá nhân viên này không?',
+      okText: 'Xoá',
+      okType: 'danger',
+      cancelText: 'Huỷ',
+      onOk() {
+        setStaffList(staffList.filter((staff) => staff.id !== id))
+        message.success('Đã xoá nhân viên thành công')
+      }
+    })
   }
 
   const handleSearch = (value) => {
