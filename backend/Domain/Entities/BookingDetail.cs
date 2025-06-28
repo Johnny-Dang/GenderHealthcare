@@ -1,4 +1,6 @@
-﻿namespace backend.Domain.Entities
+﻿using Microsoft.Identity.Client;
+
+namespace backend.Domain.Entities
 {
     public class BookingDetail
     {
@@ -13,6 +15,9 @@
         public string LastName { get; set; } = default!;
         
         public string Phone { get; set; } = default!;   
+
+        public string Status { get; set; } = "chưa xét nghiệm";
+
         public DateOnly DateOfBirth {  get; set; }  
 
         public bool Gender { get; set; } = false;

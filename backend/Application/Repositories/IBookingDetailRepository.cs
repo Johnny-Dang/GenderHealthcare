@@ -26,5 +26,7 @@ namespace backend.Application.Repositories
         
         // Calculate total amount for a booking
         Task<decimal> CalculateTotalAmountByBookingIdAsync(Guid bookingId);
+
+        Task<BookingDetail> UpdateStatusAsync(Guid bookingDetailId, string status);
     }
 }

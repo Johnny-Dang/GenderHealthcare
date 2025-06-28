@@ -23,12 +23,6 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .WithMany(r => r.Accounts)
                 .HasForeignKey(a => a.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(a => a.RefreshTokens)
-                .WithOne(r => r.Account)
-                .HasForeignKey(r => r.AccountId)
-                .OnDelete(DeleteBehavior.Cascade);
-
         }
     }
 }

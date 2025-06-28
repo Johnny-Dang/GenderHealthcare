@@ -1,4 +1,4 @@
-using DeployGenderSystem.Domain.Entity;
+﻿using DeployGenderSystem.Domain.Entity;
 
 namespace backend.Domain.Entities
 {
@@ -7,9 +7,9 @@ namespace backend.Domain.Entities
         public Guid ResultId { get; set; }
         public Guid BookingDetailId { get; set; }
         public string? Result { get; set; } = string.Empty;
-        public bool? Status { get; set; }
+        public string? Status { get; set; } = "chưa có kết quả";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-        public virtual BookingDetail BookingDetail { get; set; } = default!;
+        public virtual BookingDetail BookingDetail { get; set;} = default!;
     }
 }

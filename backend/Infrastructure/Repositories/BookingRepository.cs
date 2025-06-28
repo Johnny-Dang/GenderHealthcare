@@ -60,6 +60,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.Booking
                 .Where(b => b.AccountId == accountId)
+                .Include(b => b.Payment)
                 .ToListAsync();
         }
 
@@ -150,6 +151,19 @@ namespace backend.Infrastructure.Repositories
         public async Task<bool> ExistsAsync(Guid id)
         {
             return await _context.Booking.AnyAsync(b => b.BookingId == id);
+        }
+
+        // Update only status
+        public async Task<bool> UpdateStatusAsync(Guid bookingId, string status)
+        {
+            var booking = await _context.Booking.FirstOrDefaultAsync(b => b.BookingId == bookingId);
+            if (booking == null)
+                return false;
+            booking.Status = status;
+            booking.UpdateAt = DateTime.UtcNow;
+            _context.Booking.Update(booking);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

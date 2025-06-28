@@ -39,7 +39,7 @@ namespace backend.Infrastructure.Repositories
         public async Task<List<TestService>> GetByCategoryAsync(string category)
         {
             return await _context.TestService
-                .Where(s => s.Category == category && s.IsDeleted == false)
+                .Where(s => s.Category.Contains(category) && s.IsDeleted == false)
                 .ToListAsync();
         }
 
