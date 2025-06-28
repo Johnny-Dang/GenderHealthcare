@@ -115,7 +115,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.TestResult
                 .Include(tr => tr.BookingDetail)
-                    .ThenInclude(bd => bd.TestService)
+                .ThenInclude(bd => bd.TestService)
                 .Where(tr => tr.BookingDetail.Phone == phone)
                 .OrderByDescending(tr => tr.CreatedAt)
                 .ToListAsync();

@@ -36,8 +36,6 @@ const BookingConsultant = () => {
   // Cập nhật formData khi component mount và khi userInfo thay đổi
   useEffect(() => {
     if (userInfo) {
-      // Nếu là người dùng đã đăng nhập, chỉ cần chuẩn bị dữ liệu gửi lên
-      // Không cần hiển thị trường nhập thông tin cá nhân
       setFormData((prevData) => ({
         ...prevData,
         // Vẫn lưu thông tin để hiển thị trong form (optional)

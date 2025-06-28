@@ -1,5 +1,5 @@
 import React from 'react'
-import { RouterProvider, createBrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
+import { RouterProvider, createBrowserRouter, Navigate, Routes, Route, Outlet } from 'react-router-dom'
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
@@ -118,20 +118,22 @@ function App() {
       ]
     },
     {
-      path: '/consultant/schedule',
+      path: '/consultant',
       element: (
         <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
-          <ConsultantBookingSchedule />
+          <Outlet />
         </AuthGuard>
-      )
-    },
-    {
-      path: '/consultant/test-results',
-      element: (
-        <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
-          <TestResultsPage />
-        </AuthGuard>
-      )
+      ),
+      children: [
+        {
+          path: 'schedule',
+          element: <ConsultantBookingSchedule />
+        },
+        {
+          path: 'test-results',
+          element: <TestResultsPage />
+        }
+      ]
     },
     {
       path: '/customer-dashboard',

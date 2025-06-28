@@ -1,22 +1,6 @@
 import React, { useState } from 'react'
-import {
-  Layout,
-  Typography,
-  Input,
-  Button,
-  Table,
-  Space,
-  Spin,
-  Alert,
-  Form,
-  Card,
-  Badge,
-  Empty,
-  Row,
-  Col,
-  Statistic
-} from 'antd'
-import { Search, Calendar, FileText, User, Phone, CheckCircle, XCircle, RefreshCw, Tag } from 'lucide-react'
+import { Layout, Typography, Input, Button, Table, Spin, Alert, Form, Card, Badge, Empty, Tag } from 'antd'
+import { Search, FileText, User, Phone, CheckCircle, Clock, RefreshCw } from 'lucide-react'
 import api from '../../configs/axios'
 import Navigation from '../../components/Navigation'
 import Footer from '../../components/Footer'
@@ -31,18 +15,6 @@ const TestResultsPage = () => {
   const [error, setError] = useState('')
   const [searched, setSearched] = useState(false)
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   const handleSearch = async (e) => {
     e.preventDefault()
     if (!phoneNumber.trim()) {
@@ -56,25 +28,33 @@ const TestResultsPage = () => {
 
     try {
       const response = await api.get(`/api/TestResult/by-phone/${phoneNumber}`)
-
-      const responseData = response.data
-      if (Array.isArray(responseData)) {
-        setResults(responseData)
-        if (responseData.length === 0) {
-          setError('Không tìm thấy kết quả xét nghiệm cho số điện thoại này')
-        }
-      } else if (responseData && typeof responseData === 'object') {
-        setResults([responseData])
-      } else {
-        setError('Định dạng dữ liệu không đúng. Vui lòng thử lại sau.')
-        setResults([])
-      }
+      setResults(response.data || [])
     } catch (err) {
-      setError('Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.')
+      setError(err.response?.data?.message || err.response?.data || 'Có lỗi xảy ra khi tìm kiếm')
       setResults([])
     } finally {
       setLoading(false)
     }
+  }
+
+  const getStatusTag = (status) => {
+    let color = 'default'
+    let icon = <Clock className='w-4 h-4 mr-1 text-orange-500' />
+    let text = status || 'Đang xử lý'
+
+    if (status && status.toLowerCase().includes('kết quả')) {
+      color = 'success'
+      icon = <CheckCircle className='w-4 h-4 mr-1 text-green-500' />
+    }
+
+    return (
+      <Tag color={color}>
+        <span className='flex items-center'>
+          {icon}
+          {text}
+        </span>
+      </Tag>
+    )
   }
 
   const columns = [
@@ -82,18 +62,18 @@ const TestResultsPage = () => {
       title: 'Thông tin khách hàng',
       dataIndex: 'customerName',
       key: 'customerName',
-      width: '25%',
-      render: (name, record) => (
+      width: '30%',
+      render: (name) => (
         <div className='flex flex-col gap-1'>
           <div className='flex items-center gap-2'>
             <Badge dot status='processing' />
             <Text strong>{name}</Text>
           </div>
           <div className='flex items-center text-gray-500 text-sm'>
-            <Phone className='w-3.5 h-3.5 mr-1.5 text-blue-500' />
+            <Phone className='w-3.5 h-3.5 mr-1.5 text-pink-500' />
             <Text type='secondary'>{phoneNumber}</Text>
           </div>
-          <Tag color='blue' style={{ marginTop: '4px' }}>
+          <Tag color='pink' style={{ marginTop: '4px' }}>
             <span className='flex items-center'>
               <User className='w-3.5 h-3.5 mr-1' />
               Khách hàng
@@ -106,7 +86,7 @@ const TestResultsPage = () => {
       title: 'Dịch vụ',
       dataIndex: 'serviceName',
       key: 'serviceName',
-      width: '25%',
+      width: '30%',
       render: (serviceName) => (
         <div className='flex items-center'>
           <FileText className='w-4 h-4 mr-2 text-pink-500' />
@@ -130,26 +110,15 @@ const TestResultsPage = () => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      width: '20%',
-      render: (status) => (
-        <Tag color={status ? 'success' : 'warning'}>
-          <span className='flex items-center'>
-            {status ? (
-              <CheckCircle className='w-4 h-4 mr-1 text-pink-500' />
-            ) : (
-              <XCircle className='w-4 h-4 mr-1 text-pink-500' />
-            )}
-            {status ? 'Hoàn thành' : 'Đang xử lý'}
-          </span>
-        </Tag>
-      )
+      width: '10%',
+      render: (status) => getStatusTag(status)
     }
   ]
 
   const stats = {
     total: results.length,
-    completed: results.filter((r) => r.status).length,
-    processing: results.filter((r) => !r.status).length
+    completed: results.filter((r) => r.status && r.status.toLowerCase().includes('kết quả')).length,
+    processing: results.filter((r) => !r.status || !r.status.toLowerCase().includes('kết quả')).length
   }
 
   return (
