@@ -83,7 +83,7 @@ namespace backend.API.Controllers
         }
 
         [HttpGet("by-phone/{phone}")]
-        //[Authorize(Roles = "Admin,Staff,Customer,Consultant")]
+        [Authorize(Roles = "Admin,Staff,Consultant")]
         public async Task<IActionResult> GetTestResultsByPhone(string phone)
         {
             // validate phone number format
