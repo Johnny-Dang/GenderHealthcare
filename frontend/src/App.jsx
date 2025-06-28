@@ -1,5 +1,5 @@
 import React from 'react'
-import { RouterProvider, createBrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
+import { RouterProvider, createBrowserRouter, Navigate, Routes, Route, Outlet } from 'react-router-dom'
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
@@ -38,8 +38,9 @@ import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
 
 import BookConsultantPage from './pages/booking-consultant'
-import ConsultantBookingSchedule from './pages/booking-consultant/ConsultantBookingSchedule'
+import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSchedule'
 import ProfilePage from './pages/profile'
+import TestResultsPage from './pages/consultant/TestResultsPage'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -154,12 +155,22 @@ function App() {
       ]
     },
     {
-      path: '/consultant/schedule',
+      path: '/consultant',
       element: (
         <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
-          <ConsultantBookingSchedule />
+          <Outlet />
         </AuthGuard>
-      )
+      ),
+      children: [
+        {
+          path: 'schedule',
+          element: <ConsultantBookingSchedule />
+        },
+        {
+          path: 'test-results',
+          element: <TestResultsPage />
+        }
+      ]
     },
 
     {
