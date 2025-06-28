@@ -13,10 +13,11 @@ namespace backend.Application.Services
         // Read
         Task<BookingResponse> GetByIdAsync(Guid id);
         Task<List<BookingResponse>> GetAllAsync();
-        Task<IEnumerable<BookingResponse>> GetByAccountIdAsync(Guid accountId);
+        Task<IEnumerable<BookingWithPaymentResponse>> GetByAccountIdAsync(Guid accountId);
         
         // Update
         Task<BookingResponse> UpdateAsync(UpdateBookingRequest request);
+        Task<bool> UpdateStatusAsync(Guid bookingId, string status);
         
         // Delete
         Task<bool> DeleteAsync(Guid id);

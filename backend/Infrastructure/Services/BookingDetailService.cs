@@ -80,6 +80,7 @@ namespace backend.Infrastructure.Services
                     ServiceId = detail.ServiceId,
                     ServiceName = detail.TestService?.ServiceName ?? string.Empty,
                     Price = detail.TestService?.Price ?? 0,
+                    Status = detail.Status,
                     FirstName = detail.FirstName,
                     LastName = detail.LastName,
                     Phone = detail.Phone,
@@ -105,6 +106,7 @@ namespace backend.Infrastructure.Services
                 ServiceId = bookingDetail.ServiceId,
                 ServiceName = bookingDetail.TestService?.ServiceName ?? string.Empty,
                 Price = bookingDetail.TestService?.Price ?? 0,
+                Status = bookingDetail.Status,
                 FirstName = bookingDetail.FirstName,
                 LastName = bookingDetail.LastName,
                 Phone = bookingDetail.Phone,
@@ -113,14 +115,14 @@ namespace backend.Infrastructure.Services
             };
         }
 
-        public async Task<BookingDetailResponse> UpdateAsync(UpdateBookingDetailRequest request)
+        public async Task<BookingDetailResponse> UpdateInfoOnlyAsync(Guid bookingDetailId, UpdateBookingDetailRequest request)
         {
             // Check if booking detail exists
-            var existingDetail = await _bookingDetailRepository.GetByIdAsync(request.BookingDetailId);
+            var existingDetail = await _bookingDetailRepository.GetByIdAsync(bookingDetailId);
             if (existingDetail == null)
                 return null;
 
-            // Update allowed fields only
+            // Update allowed fields only (không update status)
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
@@ -138,6 +140,7 @@ namespace backend.Infrastructure.Services
                 ServiceId = updatedDetail.ServiceId,
                 ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
                 Price = updatedDetail.TestService?.Price ?? 0,
+                Status = updatedDetail.Status,
                 FirstName = updatedDetail.FirstName,
                 LastName = updatedDetail.LastName,
                 Phone = updatedDetail.Phone,
@@ -164,6 +167,27 @@ namespace backend.Infrastructure.Services
                 BookingId = bookingId,
                 TotalAmount = totalAmount,
                 ServiceCount = bookingDetails.Count
+            };
+        }
+
+        public async Task<BookingDetailResponse> UpdateStatusAsync(Guid bookingDetailId, string status)
+        {
+            var updatedDetail = await _bookingDetailRepository.UpdateStatusAsync(bookingDetailId, status);
+            if (updatedDetail == null)
+                return null;
+            return new BookingDetailResponse
+            {
+                BookingDetailId = updatedDetail.BookingDetailId,
+                BookingId = updatedDetail.BookingId,
+                ServiceId = updatedDetail.ServiceId,
+                ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
+                Price = updatedDetail.TestService?.Price ?? 0,
+                Status = updatedDetail.Status,
+                FirstName = updatedDetail.FirstName,
+                LastName = updatedDetail.LastName,
+                Phone = updatedDetail.Phone,
+                DateOfBirth = updatedDetail.DateOfBirth,
+                Gender = updatedDetail.Gender
             };
         }
     }

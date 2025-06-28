@@ -144,10 +144,15 @@ export default function VnPayReturn() {
             </>
           )}
           <Button className='w-full mt-2' onClick={() => navigate('/test-service')}>
-            Tiếp tục mua sắm
+            Tiếp tục đặt dịch vụ
+          </Button>
+          <Button className='w-full mt-2' variant='outline' onClick={() => navigate('/')}> 
+            Trở về trang chủ
           </Button>
         </div>
       </Card>
     </div>
   )
 }
+
+export {VnPayReturn}

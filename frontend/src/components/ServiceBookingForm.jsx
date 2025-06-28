@@ -49,7 +49,7 @@ export default function ServiceBookingForm({ open, onOpenChange, serviceId, book
     try {
       if (isEdit) {
         // Chế độ chỉnh sửa
-        await axios.put(`/api/booking-details?bookingDetailId=${bookingDetail.bookingDetailId}`, {
+        await axios.put(`/api/booking-details/${bookingDetail.bookingDetailId}`, {
           bookingDetailId: bookingDetail.bookingDetailId,
           ...form
         })

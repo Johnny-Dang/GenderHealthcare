@@ -139,12 +139,8 @@ const BookingDetailPage = () => {
                           <span className='text-primary-600 font-bold'>{detail.price?.toLocaleString()} VND</span>
                         </div>
                         <div className='mb-2 flex items-center gap-2 text-gray-700'>
-                          <span className='font-medium'>Mã dịch vụ:</span>
-                          <span>{detail.serviceId}</span>
-                        </div>
-                        <div className='mb-2 flex items-center gap-2 text-gray-700'>
-                          <span className='font-medium'>Mã chi tiết:</span>
-                          <span>{detail.bookingDetailId}</span>
+                          <span className='font-medium'>Trạng thái:</span>
+                          <span>{detail.status}</span>
                         </div>
                         <div className='mb-2 flex items-center gap-2 text-gray-700'>
                           <span className='font-medium'>Số điện thoại:</span>

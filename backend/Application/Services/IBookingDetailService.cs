@@ -15,7 +15,8 @@ namespace backend.Application.Services
         Task<List<BookingDetailResponse>> GetByBookingIdAsync(Guid bookingId);
         
         // Update
-        Task<BookingDetailResponse> UpdateAsync(UpdateBookingDetailRequest request);
+        Task<BookingDetailResponse> UpdateInfoOnlyAsync(Guid bookingDetailId, UpdateBookingDetailRequest request);
+        Task<BookingDetailResponse> UpdateStatusAsync(Guid bookingDetailId, string status);
         
         // Delete
         Task<bool> DeleteAsync(Guid id);

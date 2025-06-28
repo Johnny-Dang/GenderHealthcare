@@ -112,5 +112,15 @@ namespace backend.Infrastructure.Repositories
             
             return totalAmount;
         }
+
+        public async Task<BookingDetail> UpdateStatusAsync(Guid bookingDetailId, string status)
+        {
+            var existingDetail = await _context.BookingDetail.FindAsync(bookingDetailId);
+            if (existingDetail == null)
+                return null;
+            existingDetail.Status = status;
+            await _context.SaveChangesAsync();
+            return existingDetail;
+        }
     }
 }
