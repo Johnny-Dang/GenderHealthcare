@@ -10,5 +10,6 @@ namespace backend.Application.Services
         Task<Result<TestResultResponse>> CreateTestResultAsync(CreateTestResultRequest request);
         Task<Result<TestResultResponse>> UpdateTestResultAsync(Guid resultId, UpdateTestResultRequest request);
         Task<Result<bool>> DeleteTestResultAsync(Guid resultId);
+        Task<Result<List<TestResultResponse>>> GetTestResultsByPhoneAsync(string phone);
     }
 }

@@ -2,6 +2,7 @@
 using backend.Application.Repositories;
 using backend.Application.Services;
 using backend.Domain.Entities;
+using backend.Infrastructure.Repositories;
 
 namespace backend.Infrastructure.Services
 {
@@ -115,6 +116,28 @@ namespace backend.Infrastructure.Services
             }
 
             return Result<TestResultResponse>.Success(updatedResult);
+        }
+
+        public async Task<Result<List<TestResultResponse>>> GetTestResultsByPhoneAsync(string phone)
+        {
+            var testResults = await _repository.GetTestResultsByPhoneAsync(phone);
+
+            if (!testResults.Any())
+                return Result<List<TestResultResponse>>.Failure("No test results found for this phone number");
+
+            var response = testResults.Select(tr => new TestResultResponse
+            {
+                ResultId = tr.ResultId,
+                BookingDetailId = tr.BookingDetailId,
+                Result = tr.Result,
+                Status = tr.Status,
+                CreatedAt = tr.CreatedAt,
+                UpdatedAt = tr.UpdatedAt,
+                CustomerName = $"{tr.BookingDetail.FirstName} {tr.BookingDetail.LastName}".Trim(),
+                ServiceName = tr.BookingDetail.TestService?.ServiceName
+            }).ToList();
+
+            return Result<List<TestResultResponse>>.Success(response);
         }
     }
 }

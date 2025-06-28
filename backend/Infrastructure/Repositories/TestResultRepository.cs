@@ -110,5 +110,15 @@ namespace backend.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<TestResult>> GetTestResultsByPhoneAsync(string phone)
+        {
+            return await _context.TestResult
+                .Include(tr => tr.BookingDetail)
+                    .ThenInclude(bd => bd.TestService)
+                .Where(tr => tr.BookingDetail.Phone == phone)
+                .OrderByDescending(tr => tr.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

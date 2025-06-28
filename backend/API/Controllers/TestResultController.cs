@@ -81,5 +81,25 @@ namespace backend.API.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("by-phone/{phone}")]
+        //[Authorize(Roles = "Admin,Staff,Customer,Consultant")]
+        public async Task<IActionResult> GetTestResultsByPhone(string phone)
+        {
+            // validate phone number format
+            if (string.IsNullOrWhiteSpace(phone))
+                return BadRequest("Phone number is required.");
+
+            var phonePattern = @"^(0\d{9}|(\+84)\d{9})$";
+            if (!System.Text.RegularExpressions.Regex.IsMatch(phone, phonePattern))
+                return BadRequest("Phone number must be a valid Vietnamese phone number (10 digits starting with 0 or +84).");
+
+            // get test results by phone
+            var result = await _testResultService.GetTestResultsByPhoneAsync(phone);
+            if (!result.IsSuccess)
+                return NotFound(result.Error);
+
+            return Ok(result.Data);
+        }
     }
 }

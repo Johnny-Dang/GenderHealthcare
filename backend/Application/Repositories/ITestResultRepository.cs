@@ -13,5 +13,6 @@ namespace backend.Application.Repositories
         Task<bool> DeleteTestResultAsync(Guid resultId);
         Task<TestResult?> GetTestResultEntityByIdAsync(Guid resultId);
         Task<BookingDetail?> GetBookingDetailByIdAsync(Guid bookingDetailId);
+        Task<List<TestResult>> GetTestResultsByPhoneAsync(string phone);
     }
 }
