@@ -16,7 +16,7 @@ namespace backend.Domain.Entities
         
         public string Phone { get; set; } = default!;   
 
-        public string Status { get; set; } = "Chưa Xét Nghiệm";
+        public string Status { get; set; } = "chưa xét nghiệm";
 
         public DateOnly DateOfBirth {  get; set; }  
 

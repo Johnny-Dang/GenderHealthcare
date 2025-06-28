@@ -46,7 +46,7 @@ namespace backend.API.Controllers
         // GET: api/bookings/account/{accountId}
         [HttpGet("account/{accountId}")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<BookingWithPaymentResponse>))]
         public async Task<IActionResult> GetByAccountId(Guid accountId)
         {
             var result = await _bookingService.GetByAccountIdAsync(accountId);

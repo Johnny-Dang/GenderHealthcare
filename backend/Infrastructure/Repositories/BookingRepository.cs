@@ -60,6 +60,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.Booking
                 .Where(b => b.AccountId == accountId)
+                .Include(b => b.Payment)
                 .ToListAsync();
         }
 
