@@ -30,6 +30,9 @@ const BookingConsultant = () => {
     message: ''
   })
 
+  const [formErrors, setFormErrors] = useState({})
+  const [apiError, setApiError] = useState('')
+
   // Cập nhật formData khi component mount và khi userInfo thay đổi
   useEffect(() => {
     if (userInfo) {
@@ -71,23 +74,84 @@ const BookingConsultant = () => {
     fetchConsultants()
   }, [])
 
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {}
+
+    // Guest information validation (only if not logged in)
+    if (!userInfo) {
+      if (!formData.guestName.trim()) {
+        errors.guestName = 'Họ tên không được để trống'
+      }
+
+      if (!formData.guestEmail.trim()) {
+        errors.guestEmail = 'Email không được để trống'
+      } else if (!/\S+@\S+\.\S+/.test(formData.guestEmail)) {
+        errors.guestEmail = 'Email không đúng định dạng'
+      }
+
+      if (!formData.guestPhone.trim()) {
+        errors.guestPhone = 'Số điện thoại không được để trống'
+      } else if (!/^[0-9]{10,11}$/.test(formData.guestPhone.replace(/\s/g, ''))) {
+        errors.guestPhone = 'Số điện thoại không hợp lệ'
+      }
+    }
+
+    // Booking information validation
+    if (!formData.scheduledDate) {
+      errors.scheduledDate = 'Vui lòng chọn ngày'
+    } else {
+      const selectedDate = new Date(formData.scheduledDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (selectedDate < today) {
+        errors.scheduledDate = 'Không thể chọn ngày trong quá khứ'
+      }
+    }
+
+    if (!formData.scheduledTime) {
+      errors.scheduledTime = 'Vui lòng chọn giờ'
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target
+
+    // Clear error for this field when user makes changes
+    setFormErrors({
+      ...formErrors,
+      [name]: undefined
+    })
+
+    // Clear API error when user makes any changes
+    setApiError('')
+
+    setFormData({
+      ...formData,
+      [name]: value
+    })
+  }
+
   // Cập nhật hàm handleBookingSubmit để xử lý theo API mới
   const handleBookingSubmit = async (e) => {
     e.preventDefault()
 
+    // Reset errors
+    setApiError('')
+
+    // Validate all fields first
+    if (!validateForm()) {
+      toast.error('Vui lòng điền đầy đủ thông tin!')
+      return
+    }
+
     // Kiểm tra dữ liệu bắt buộc
     if (!selectedConsultant) {
       toast.error('Vui lòng chọn tư vấn viên!')
-      return
-    }
-
-    if (!userInfo && (!formData.guestName || !formData.guestEmail || !formData.guestPhone)) {
-      toast.error('Vui lòng điền đầy đủ thông tin cá nhân!')
-      return
-    }
-
-    if (!formData.scheduledDate || !formData.scheduledTime) {
-      toast.error('Vui lòng chọn ngày và giờ tư vấn!')
       return
     }
 
@@ -107,10 +171,8 @@ const BookingConsultant = () => {
         message: formData.message
       }
 
-      console.log('Sending booking data:', payload)
-
       // Gọi API đặt lịch
-      await api.post('/api/ConsultationBooking/book', payload)
+      const response = await api.post('/api/ConsultationBooking/book', payload)
 
       toast.success('Đặt lịch thành công! Chúng tôi sẽ liên hệ bạn sớm nhất.')
 
@@ -125,18 +187,33 @@ const BookingConsultant = () => {
         message: ''
       })
       setSelectedConsultant(null)
+      setFormErrors({})
+      setApiError('')
     } catch (error) {
       console.error('Booking error:', error)
-      toast.error('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
-    }
-  }
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value
-    })
+      // Extract error message from API response
+      if (error.response?.data?.message) {
+        setApiError(error.response.data.message)
+        toast.error(error.response.data.message)
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors from API if returned in this format
+        const serverErrors = error.response.data.errors
+        const newErrors = {}
+
+        // Map server validation errors to form fields
+        Object.keys(serverErrors).forEach((key) => {
+          const fieldName = key.charAt(0).toLowerCase() + key.slice(1)
+          newErrors[fieldName] = serverErrors[key][0]
+        })
+
+        setFormErrors(newErrors)
+        toast.error('Đã có lỗi khi đặt lịch. Vui lòng kiểm tra lại thông tin.')
+      } else {
+        setApiError('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
+        toast.error('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
+      }
+    }
   }
 
   const getInitialAvatar = (name) => {
@@ -291,6 +368,14 @@ const BookingConsultant = () => {
 
                           {/* Booking form with pink theme */}
                           <form onSubmit={handleBookingSubmit} className='mt-4 space-y-4'>
+                            {/* API Error message at the top of the form */}
+                            {apiError && (
+                              <div className='bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm'>
+                                <p className='font-medium'>Lỗi:</p>
+                                <p>{apiError}</p>
+                              </div>
+                            )}
+
                             {/* Consultant info panel - centered */}
                             <div className='bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg flex flex-col items-center text-center'>
                               {consultant.avatarUrl ? (
@@ -323,8 +408,13 @@ const BookingConsultant = () => {
                                       value={formData.guestName}
                                       onChange={handleFormChange}
                                       required
-                                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                      className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500 ${
+                                        formErrors.guestName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                      }`}
                                     />
+                                    {formErrors.guestName && (
+                                      <p className='text-red-600 text-xs mt-1'>{formErrors.guestName}</p>
+                                    )}
                                   </div>
                                   <div className='grid grid-cols-2 gap-3'>
                                     <div className='space-y-1'>
@@ -335,8 +425,13 @@ const BookingConsultant = () => {
                                         value={formData.guestEmail}
                                         onChange={handleFormChange}
                                         required
-                                        className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                        className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500 ${
+                                          formErrors.guestEmail ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                        }`}
                                       />
+                                      {formErrors.guestEmail && (
+                                        <p className='text-red-600 text-xs mt-1'>{formErrors.guestEmail}</p>
+                                      )}
                                     </div>
                                     <div className='space-y-1'>
                                       <label className='text-xs font-medium text-gray-700'>Số điện thoại</label>
@@ -346,8 +441,13 @@ const BookingConsultant = () => {
                                         value={formData.guestPhone}
                                         onChange={handleFormChange}
                                         required
-                                        className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                        className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500 ${
+                                          formErrors.guestPhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                        }`}
                                       />
+                                      {formErrors.guestPhone && (
+                                        <p className='text-red-600 text-xs mt-1'>{formErrors.guestPhone}</p>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -390,8 +490,13 @@ const BookingConsultant = () => {
                                   onChange={handleFormChange}
                                   min={new Date().toISOString().split('T')[0]}
                                   required
-                                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                  className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500 ${
+                                    formErrors.scheduledDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                  }`}
                                 />
+                                {formErrors.scheduledDate && (
+                                  <p className='text-red-600 text-xs mt-1'>{formErrors.scheduledDate}</p>
+                                )}
                               </div>
                               <div className='space-y-1'>
                                 <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
@@ -403,7 +508,9 @@ const BookingConsultant = () => {
                                   value={formData.scheduledTime}
                                   onChange={handleFormChange}
                                   required
-                                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500'
+                                  className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500 ${
+                                    formErrors.scheduledTime ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                  }`}
                                 >
                                   <option value=''>Chọn giờ</option>
                                   <option value='08:00'>08:00</option>
@@ -413,6 +520,9 @@ const BookingConsultant = () => {
                                   <option value='15:00'>15:00</option>
                                   <option value='16:00'>16:00</option>
                                 </select>
+                                {formErrors.scheduledTime && (
+                                  <p className='text-red-600 text-xs mt-1'>{formErrors.scheduledTime}</p>
+                                )}
                               </div>
                             </div>
 

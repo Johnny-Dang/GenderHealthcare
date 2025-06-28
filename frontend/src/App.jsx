@@ -31,8 +31,9 @@ import TestServiceManagement from './pages/admin/TestServiceManagement'
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
 import BookConsultantPage from './pages/booking-consultant'
-import ConsultantBookingSchedule from './pages/booking-consultant/ConsultantBookingSchedule'
+import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSchedule'
 import ProfilePage from './pages/profile'
+import TestResultsPage from './pages/consultant/TestResultsPage'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -121,6 +122,14 @@ function App() {
       element: (
         <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
           <ConsultantBookingSchedule />
+        </AuthGuard>
+      )
+    },
+    {
+      path: '/consultant/test-results',
+      element: (
+        <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
+          <TestResultsPage />
         </AuthGuard>
       )
     },

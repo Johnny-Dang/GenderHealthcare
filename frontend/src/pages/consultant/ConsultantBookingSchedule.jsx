@@ -337,7 +337,7 @@ function ConsultantBookingSchedule() {
               type='button'
             >
               <CheckCircle className='w-4 h-4' />
-              Đánh dấu đã xác nhận
+              Đã xác nhận
             </button>
             <button
               className={`flex items-center gap-1 px-3 py-1 rounded text-sm transition font-medium ${
@@ -350,7 +350,7 @@ function ConsultantBookingSchedule() {
               type='button'
             >
               <XCircle className='w-4 h-4' />
-              Đánh dấu không thể liên hệ
+              không thể liên hệ
             </button>
           </div>
         )
@@ -479,6 +479,9 @@ function ConsultantBookingSchedule() {
     return true
   })
 
+  // Nếu không có userInfo thì return luôn (không render gì cả)
+  if (!userInfo) return null
+
   return (
     <div className='min-h-screen flex flex-col bg-pink-50'>
       <Navigation />
@@ -507,19 +510,6 @@ function ConsultantBookingSchedule() {
 
         {loading ? (
           <Loading />
-        ) : !userInfo ? (
-          <div className='shadow-sm rounded-xl bg-white p-8 flex flex-col items-center justify-center'>
-            <User size={48} className='text-pink-300 mb-4' />
-            <Title level={4} className='text-pink-700'>
-              Bạn cần đăng nhập để xem lịch đặt tư vấn
-            </Title>
-            <button
-              className='mt-4 px-6 py-2 rounded bg-pink-500 text-white font-medium hover:bg-pink-600 transition'
-              type='button'
-            >
-              Đăng nhập ngay
-            </button>
-          </div>
         ) : (
           <>
             {/* Bộ lọc */}
@@ -551,12 +541,6 @@ function ConsultantBookingSchedule() {
               />
             </div>
 
-            {/* 
-              Nếu muốn dùng tab chuyển qua lại giữa Tổng quan/Danh sách, hãy dùng state và logic ở đây.
-              Hiện tại chỉ hiển thị 1 tab duy nhất (Tổng quan + Danh sách luôn hiển thị).
-              Để bật lại tab, hãy tham khảo code cũ ở các phiên bản trước.
-            */}
-
             <div className='bg-white rounded-xl shadow-sm'>
               <div className='p-6'>
                 {/* Tổng quan */}
@@ -578,42 +562,22 @@ function ConsultantBookingSchedule() {
                     <div className='text-sm text-red-700'>Đã từ chối</div>
                   </div>
                 </div>
-                {/* Danh sách */}
-                <div className='overflow-x-auto'>
-                  <table className='min-w-full divide-y divide-pink-100'>
-                    <thead>
-                      <tr>
-                        {columns.map((col) => (
-                          <th
-                            key={col.key}
-                            className='px-4 py-2 text-left text-xs font-semibold text-pink-700 uppercase bg-pink-50'
-                          >
-                            {col.title}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredBookings.length === 0 ? (
-                        <tr>
-                          <td colSpan={columns.length} className='text-center py-8 text-gray-400'>
-                            Không tìm thấy lịch đặt nào
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredBookings.map((record) => (
-                          <tr key={record.bookingId} className={record.status === 'pending' ? 'bg-pink-50' : ''}>
-                            {columns.map((col) => (
-                              <td key={col.key} className='px-4 py-3 align-top'>
-                                {col.render ? col.render(record[col.dataIndex], record) : record[col.dataIndex]}
-                              </td>
-                            ))}
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+
+                <Table
+                  columns={columns}
+                  dataSource={filteredBookings.map((booking) => ({ ...booking, key: booking.bookingId }))}
+                  loading={loading}
+                  pagination={{
+                    pageSize: 10,
+                    showTotal: (total) => `Tổng cộng: ${total} lịch hẹn`,
+                    showSizeChanger: true
+                  }}
+                  bordered
+                  rowClassName={(record) => (record.status === 'pending' ? 'bg-pink-50' : '')}
+                  locale={{
+                    emptyText: 'Không tìm thấy lịch đặt nào'
+                  }}
+                />
               </div>
             </div>
           </>
