@@ -27,7 +27,8 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .HasDefaultValue("pending");
 
             builder.Property(x => x.Message)
-                .HasColumnType("text");
+                .HasColumnType("nvarchar(max)")
+                .IsUnicode(true);
 
             builder.Property(x => x.CreatedAt)
                 .IsRequired();

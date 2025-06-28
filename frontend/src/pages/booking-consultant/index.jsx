@@ -162,7 +162,7 @@ const BookingConsultant = () => {
       // Tạo payload theo định dạng API yêu cầu
       const payload = {
         // Nếu đã đăng nhập thì dùng customerId, nếu không thì dùng thông tin guest
-        customerId: userInfo ? userInfo.id : null,
+        customerId: userInfo ? userInfo.accountId : null,
         guestName: !userInfo ? formData.guestName : null,
         guestEmail: !userInfo ? formData.guestEmail : null,
         guestPhone: !userInfo ? formData.guestPhone : null,
