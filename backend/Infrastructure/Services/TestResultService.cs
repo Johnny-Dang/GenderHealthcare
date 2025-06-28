@@ -31,8 +31,7 @@ namespace backend.Infrastructure.Services
                 BookingDetailId = request.BookingDetailId,
                 Result = request.Result,
                 Status = request.Status,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow
             };
 
             // Save to database

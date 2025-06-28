@@ -13,7 +13,7 @@ const Navigation = () => {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo)
   const dispatch = useDispatch()
   const isGuest = !userInfo
 

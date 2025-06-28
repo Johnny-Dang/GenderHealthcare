@@ -18,6 +18,7 @@ namespace backend.Application.Repositories
         
         // Update
         Task<Booking> UpdateAsync(Booking booking);
+        Task<bool> UpdateStatusAsync(Guid bookingId, string status);
         
         // Delete
         Task<bool> DeleteAsync(Guid id);

@@ -73,10 +73,17 @@ namespace backend.Infrastructure.Services
         }
         
         // Get bookings by account ID
-        public async Task<IEnumerable<BookingResponse>> GetByAccountIdAsync(Guid accountId)
+        public async Task<IEnumerable<BookingWithPaymentResponse>> GetByAccountIdAsync(Guid accountId)
         {
             var bookings = await _bookingRepository.GetByAccountIdAsync(accountId);
-            return _mapper.Map<IEnumerable<BookingResponse>>(bookings);
+            var responses = new List<BookingWithPaymentResponse>();
+            
+            foreach (var booking in bookings)
+            {
+                responses.Add(MapToBookingWithPaymentResponse(booking));
+            }
+            
+            return responses;
         }
         
         // Update booking
@@ -147,6 +154,17 @@ namespace backend.Infrastructure.Services
             return await _bookingRepository.DeleteAsync(id);
         }
         
+        // Update only status
+        public async Task<bool> UpdateStatusAsync(Guid bookingId, string status)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+                return false;
+            booking.Status = status;
+            await _bookingRepository.UpdateAsync(booking);
+            return true;
+        }
+        
         // Helper method for mapping with details
         private BookingResponse MapToDetailedResponse(Booking booking)
         {
@@ -169,9 +187,32 @@ namespace backend.Infrastructure.Services
             {
                 BookingId = booking.BookingId,
                 AccountId = booking.AccountId,
+                Status = booking.Status,
                 CreateAt = booking.CreateAt,
                 UpdateAt = booking.UpdateAt,
             };
+            return response;
+        }
+        
+        // Helper method for mapping booking with payment information
+        private BookingWithPaymentResponse MapToBookingWithPaymentResponse(Booking booking)
+        {
+            if (booking == null) return null;
+            
+            var response = new BookingWithPaymentResponse
+            {
+                BookingId = booking.BookingId,
+                AccountId = booking.AccountId,
+                Status = booking.Status,
+                CreateAt = booking.CreateAt,
+                UpdateAt = booking.UpdateAt,
+                HasPayment = booking.Payment != null,
+                PaymentAmount = booking.Payment?.Amount,
+                PaymentMethod = booking.Payment?.PaymentMethod,
+                TransactionId = booking.Payment?.TransactionId,
+                PaymentCreatedAt = booking.Payment?.CreatedAt
+            };
+            
             return response;
         }
     }

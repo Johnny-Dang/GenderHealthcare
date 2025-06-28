@@ -3,9 +3,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import axios from '@/configs/axios';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { setCartCount, setCartShouldReload } from '@/redux/features/userSlice';
-import { Trash2, Pencil } from 'lucide-react';
+import { setCartCount, setCartShouldReload, resetCart } from '@/redux/features/userSlice';
+import { Trash2, Pencil, ShoppingCart, AlertTriangle } from 'lucide-react';
 import ServiceBookingForm from '@/components/ServiceBookingForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import Loading from '../../components/Loading';
 
 export default function CartPage() {
   const bookingId = useSelector(state => state.user.bookingId);
@@ -15,6 +18,8 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [deleteCartModal, setDeleteCartModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchServices = () => {
     if (bookingId) {
@@ -51,6 +56,27 @@ export default function CartPage() {
     }
   };
 
+  const handleDeleteCart = async () => {
+    if (!bookingId) {
+      alert('Không có giỏ hàng để xóa!');
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      await axios.delete(`/api/bookings/${bookingId}`);
+      dispatch(resetCart());
+      setServices([]);
+      setDeleteCartModal(false);
+      alert('Đã xóa giỏ hàng thành công! Bạn có thể tạo giỏ hàng mới.');
+    } catch (error) {
+      console.error('Error deleting cart:', error);
+      alert('Xóa giỏ hàng thất bại! Vui lòng thử lại.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   // Tính tổng tiền
   const total = services.reduce((sum, s) => sum + (s.price || 0), 0);
 
@@ -82,7 +108,20 @@ export default function CartPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-pink-50">
       <Navigation />
       <div className="max-w-4xl mx-auto py-12 px-4">
-        <h2 className="text-3xl font-bold mb-8 text-center text-primary-700">Dịch vụ trong giỏ hàng</h2>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <h2 className="text-3xl font-bold text-primary-700">Dịch vụ trong giỏ hàng</h2>
+          {services.length > 0 && (
+            <Button
+              variant="destructive"
+              className="flex items-center gap-2 mt-4 md:mt-0"
+              onClick={() => setDeleteCartModal(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              Xóa toàn bộ giỏ hàng
+            </Button>
+          )}
+        </div>
+        
         {loading ? (
           <div className="flex flex-col items-center py-12">
             <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mb-4"></span>
@@ -90,12 +129,9 @@ export default function CartPage() {
           </div>
         ) : services.length === 0 ? (
           <div className="flex flex-col items-center py-16">
-            <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
-              <path d="M6 6h15l-1.5 9h-13z" stroke="#888" strokeWidth="1.5" />
-              <circle cx="9" cy="21" r="1" fill="#888" />
-              <circle cx="20" cy="21" r="1" fill="#888" />
-            </svg>
+            <ShoppingCart className="w-16 h-16 text-gray-400 mb-4" />
             <p className="mt-4 text-gray-500 text-lg">Bạn chưa thêm dịch vụ nào vào giỏ hàng.</p>
+            <p className="text-gray-400 text-sm mt-2">Hãy chọn dịch vụ để bắt đầu đặt lịch xét nghiệm.</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
@@ -163,6 +199,49 @@ export default function CartPage() {
           }}
         />
       )}
+
+      {/* Delete Cart Confirmation Modal */}
+      <Dialog open={deleteCartModal} onOpenChange={setDeleteCartModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Xác nhận xóa giỏ hàng
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng hiện tại không? 
+              Hành động này sẽ xóa tất cả dịch vụ đã chọn và không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteCartModal(false)}
+              disabled={deleteLoading}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCart}
+              disabled={deleteLoading}
+              className="flex items-center gap-2"
+            >
+              {deleteLoading ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                  <Loading/>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Xóa giỏ hàng
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
