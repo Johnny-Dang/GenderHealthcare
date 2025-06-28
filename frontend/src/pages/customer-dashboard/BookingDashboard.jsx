@@ -48,30 +48,41 @@ const CustomerDashboard = () => {
     return <Navigate to='/login' replace />
   }
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending_payment':
-        return <AlertCircle className='h-5 w-5 text-red-500' />
-      case 'paid':
+  const getStatusIcon = (booking) => {
+    // Nếu chưa thanh toán thì hiển thị icon cảnh báo
+    if (!booking.hasPayment) {
+      return <AlertCircle className='h-5 w-5 text-red-500' />
+    }
+    
+    // Nếu đã thanh toán thì dựa vào trạng thái booking
+    switch (booking.status) {
+      case 'chờ xác nhận':
         return <Clock className='h-5 w-5 text-yellow-500' />
-      case 'confirmed':
+      case 'đã xác nhận':
         return <Calendar className='h-5 w-5 text-blue-500' />
-      case 'completed':
+      case 'hoàn thành':
         return <CheckCircle className='h-5 w-5 text-green-500' />
+      case 'đã hủy':
+        return <AlertCircle className='h-5 w-5 text-gray-500' />
       default:
         return <AlertCircle className='h-5 w-5 text-gray-500' />
     }
   }
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending_payment: 'border-l-red-500 bg-red-50',
-      paid: 'border-l-yellow-500 bg-yellow-50',
-      confirmed: 'border-l-blue-500 bg-blue-50',
-      completed: 'border-l-green-500 bg-green-50',
-      cancelled: 'border-l-gray-500 bg-gray-50'
+  const getStatusColor = (booking) => {
+    // Nếu chưa thanh toán thì hiển thị màu đỏ
+    if (!booking.hasPayment) {
+      return 'border-l-red-500 bg-red-50';
     }
-    return colors[status] || 'border-l-gray-500 bg-gray-50'
+    
+    // Nếu đã thanh toán thì dựa vào trạng thái booking
+    const colors = {
+      'chờ xác nhận': 'border-l-yellow-500 bg-yellow-50',
+      'đã xác nhận': 'border-l-blue-500 bg-blue-50',
+      'hoàn thành': 'border-l-green-500 bg-green-50',
+      'đã hủy': 'border-l-gray-500 bg-gray-50'
+    }
+    return colors[booking.status] || 'border-l-gray-500 bg-gray-50'
   }
 
   const handleShowPayment = async (bookingId) => {
@@ -117,9 +128,19 @@ const CustomerDashboard = () => {
     }
   };
 
-  const getStatusBadgeContrast = (status) => {
-    let bg = 'bg-gray-400', text = 'text-white', label = status;
-    switch (status?.toLowerCase()) {
+  const getStatusBadgeContrast = (booking) => {
+    // Kiểm tra trạng thái thanh toán trước
+    if (!booking.hasPayment) {
+      return (
+        <span className="inline-block px-3 py-1 rounded-full font-semibold text-sm shadow bg-red-500 text-white">
+          Chưa thanh toán
+        </span>
+      );
+    }
+    
+    // Nếu đã thanh toán thì hiển thị trạng thái booking
+    let bg = 'bg-gray-400', text = 'text-white', label = booking.status;
+    switch (booking.status?.toLowerCase()) {
       case 'chờ xác nhận':
         bg = 'bg-yellow-500'; text = 'text-white'; break;
       case 'đã hủy':
@@ -144,22 +165,22 @@ const CustomerDashboard = () => {
       color: 'text-blue-600'
     },
     {
-      title: 'Đã hoàn thành',
-      value: bookings.filter((b) => b.status === 'completed').length.toString(),
+      title: 'Đã thanh toán',
+      value: bookings.filter((b) => b.hasPayment).length.toString(),
       icon: CheckCircle,
       color: 'text-green-600'
     },
     {
-      title: 'Kết quả có sẵn',
-      value: bookings.filter((b) => b.testResult?.available).length.toString(),
-      icon: FileText,
-      color: 'text-purple-600'
+      title: 'Chưa thanh toán',
+      value: bookings.filter((b) => !b.hasPayment).length.toString(),
+      icon: AlertCircle,
+      color: 'text-red-600'
     },
     {
-      title: 'Chờ xác nhận',
-      value: bookings.filter((b) => ['paid', 'confirmed'].includes(b.status)).length.toString(),
-      icon: Clock,
-      color: 'text-yellow-600'
+      title: 'Đã hoàn thành',
+      value: bookings.filter((b) => b.status === 'hoàn thành').length.toString(),
+      icon: FileText,
+      color: 'text-purple-600'
     }
   ]
 
@@ -259,7 +280,7 @@ const CustomerDashboard = () => {
                 {bookings.map((booking, index) => (
                   <div
                     key={booking.bookingId}
-                    className={`p-6 rounded-xl border-l-4 shadow-lg hover:shadow-xl transition-all duration-300 ${getStatusColor(booking.status)}`}
+                    className={`p-6 rounded-xl border-l-4 shadow-lg hover:shadow-xl transition-all duration-300 ${getStatusColor(booking)}`}
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'>
@@ -267,7 +288,7 @@ const CustomerDashboard = () => {
                       <div className='flex-1'>
                         <div className='flex items-center gap-3 mb-3'>
                           <div className='flex items-center gap-2'>
-                            {getStatusIcon(booking.status)}
+                            {getStatusIcon(booking)}
                             <span className='text-sm font-medium text-gray-600'>Mã đặt lịch: {booking.bookingId}</span>
                           </div>
                         </div>
@@ -283,6 +304,22 @@ const CustomerDashboard = () => {
                               Cập nhật: {booking.updateAt ? new Date(booking.updateAt).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
                             </span>
                           </div>
+                          {/* Thêm thông tin thanh toán */}
+                          {booking.hasPayment && (
+                            <>
+                              <div className='flex items-center gap-2'>
+                                <CreditCard className='h-4 w-4 text-green-500' />
+                                <span className='text-sm text-gray-600'>
+                                  Đã thanh toán: {booking.paymentAmount?.toLocaleString()} VND
+                                </span>
+                              </div>
+                              <div className='flex items-center gap-2'>
+                                <span className='text-sm text-gray-600'>
+                                  Phương thức: {booking.paymentMethod}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -290,7 +327,7 @@ const CustomerDashboard = () => {
                       <div className='flex flex-col items-center gap-3'>
                         <div className='text-center'>
                           <div className='mb-2'>
-                            {getStatusBadgeContrast(booking.status)}
+                            {getStatusBadgeContrast(booking)}
                           </div>
                           <div className='text-xs text-gray-500 font-medium'>
                             Trạng thái hiện tại
@@ -309,16 +346,18 @@ const CustomerDashboard = () => {
                           <Eye className='h-4 w-4' />
                           Chi tiết
                         </Button>
-                        <Button 
-                          size='sm' 
-                          variant='secondary'
-                          className='flex items-center gap-2 hover:bg-yellow-50 hover:border-yellow-300'
-                          onClick={() => handleShowPayment(booking.bookingId)}
-                        >
-                          <CreditCard className='h-4 w-4' />
-                          Lịch sử thanh toán
-                        </Button>
-                        {booking.status === 'pending_payment' && (
+                        {booking.hasPayment && (
+                          <Button 
+                            size='sm' 
+                            variant='secondary'
+                            className='flex items-center gap-2 hover:bg-yellow-50 hover:border-yellow-300'
+                            onClick={() => handleShowPayment(booking.bookingId)}
+                          >
+                            <CreditCard className='h-4 w-4' />
+                            Lịch sử thanh toán
+                          </Button>
+                        )}
+                        {!booking.hasPayment && (
                           <Button
                             size='sm'
                             variant='destructive'
@@ -326,7 +365,7 @@ const CustomerDashboard = () => {
                             onClick={() => handleRepayment(booking.bookingId)}
                           >
                             <CreditCard className='h-4 w-4' />
-                            Thanh toán lại
+                            Thanh toán ngay
                           </Button>
                         )}
                       </div>
@@ -359,37 +398,47 @@ const CustomerDashboard = () => {
                   onClick={() => handleRepayment(paymentModal.bookingId)}
                 >
                   <CreditCard className='h-4 w-4' />
-                  Thanh toán lại
+                  Thanh toán ngay
                 </Button>
               )}
             </div>
           ) : paymentModal.data ? (
-            <div className='flex flex-col items-center py-6'>
-              <div className='bg-green-100 rounded-full p-4 mb-4'>
-                <CreditCard className='h-10 w-10 text-green-600' />
-              </div>
-              <div className='text-2xl font-bold text-green-700 mb-2'>Đã thanh toán</div>
-              <div className='w-full max-w-md bg-gray-50 rounded-xl p-6 shadow space-y-4'>
-                <div className='flex justify-between'>
-                  <span className='font-semibold text-gray-600'>Mã giao dịch:</span>
-                  <span className='font-mono text-gray-800'>{paymentModal.data.transactionId}</span>
+            <div className='p-6'>
+              <div className='space-y-4'>
+                <div className='flex justify-between items-center'>
+                  <span className='font-medium'>Trạng thái:</span>
+                  <span className='text-green-600 font-semibold'>Đã thanh toán</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='font-semibold text-gray-600'>Ngày thanh toán:</span>
-                  <span>{paymentModal.data.createdAt ? new Date(paymentModal.data.createdAt).toLocaleString('vi-VN') : ''}</span>
+                <div className='flex justify-between items-center'>
+                  <span className='font-medium'>Số tiền:</span>
+                  <span className='font-semibold'>{paymentModal.data.amount?.toLocaleString()} VND</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='font-semibold text-gray-600'>Số tiền:</span>
-                  <span className='text-lg font-bold text-green-700'>{paymentModal.data.amount?.toLocaleString('vi-VN')} VND</span>
+                <div className='flex justify-between items-center'>
+                  <span className='font-medium'>Phương thức:</span>
+                  <span>{paymentModal.data.paymentMethod}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='font-semibold text-gray-600'>Phương thức:</span>
-                  <span className='text-gray-800'>{paymentModal.data.paymentMethod}</span>
+                <div className='flex justify-between items-center'>
+                  <span className='font-medium'>Mã giao dịch:</span>
+                  <span className='text-sm text-gray-600'>{paymentModal.data.transactionId}</span>
+                </div>
+                <div className='flex justify-between items-center'>
+                  <span className='font-medium'>Ngày thanh toán:</span>
+                  <span>{new Date(paymentModal.data.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className='text-gray-500 text-center py-8'>Không có dữ liệu thanh toán.</div>
+            <div className='text-center py-8'>
+              <div className='text-red-500 mb-4'>Bạn chưa thanh toán đơn này.</div>
+              <Button
+                variant='destructive'
+                className='flex items-center gap-2 mx-auto'
+                onClick={() => handleRepayment(paymentModal.bookingId)}
+              >
+                <CreditCard className='h-4 w-4' />
+                Thanh toán ngay
+              </Button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
