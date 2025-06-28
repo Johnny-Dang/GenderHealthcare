@@ -26,6 +26,8 @@ const ProfilePage = () => {
   })
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
+  const [formErrors, setFormErrors] = useState({})
+  const [apiError, setApiError] = useState('')
 
   // Lấy thông tin user mới nhất từ API khi vào trang
   const fetchedRef = useRef(false)
@@ -69,6 +71,16 @@ const ProfilePage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+
+    // Clear error for this field when user makes changes
+    setFormErrors({
+      ...formErrors,
+      [name]: undefined
+    })
+
+    // Clear API error when user makes any changes
+    setApiError('')
+
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -76,8 +88,57 @@ const ProfilePage = () => {
     ['Staff', 'Consultant', 'Manager'].includes(userInfo.role) ||
     ['Staff', 'Consultant', 'Manager'].includes(form.roleName)
 
+  const validateForm = () => {
+    const errors = {}
+
+    // Validate required fields
+    if (!form.firstName.trim()) errors.firstName = 'Tên không được để trống'
+    if (!form.lastName.trim()) errors.lastName = 'Họ không được để trống'
+    if (!form.phone.trim()) errors.phone = 'Số điện thoại không được để trống'
+    if (!form.dateOfBirth) errors.dateOfBirth = 'Ngày sinh không được để trống'
+    if (!form.gender) errors.gender = 'Vui lòng chọn giới tính'
+
+    // Phone number validation
+    if (form.phone && !/^[0-9]{10,11}$/.test(form.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Số điện thoại không hợp lệ'
+    }
+
+    // Date of birth validation - ensure user is at least 12 years old
+    if (form.dateOfBirth) {
+      const birthDate = new Date(form.dateOfBirth)
+      const today = new Date()
+      const minAgeDate = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate())
+
+      if (birthDate > today) {
+        errors.dateOfBirth = 'Ngày sinh không thể ở tương lai'
+      } else if (birthDate > minAgeDate) {
+        errors.dateOfBirth = 'Người dùng phải đủ 12 tuổi trở lên'
+      }
+    }
+
+    // Validate staff/consultant specific fields if applicable
+    if (isStaffOrConsultant) {
+      if (form.yearOfExperience && (isNaN(form.yearOfExperience) || form.yearOfExperience < 0)) {
+        errors.yearOfExperience = 'Số năm kinh nghiệm không hợp lệ'
+      }
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Clear API error
+    setApiError('')
+
+    // Validate form
+    if (!validateForm()) {
+      toast.error('Vui lòng kiểm tra lại thông tin đã nhập!')
+      return
+    }
+
     setLoading(true)
     try {
       // Tạo payload theo yêu cầu API
@@ -104,9 +165,32 @@ const ProfilePage = () => {
 
       await api.put(`/api/users/${userInfo.accountId}`, payload)
       toast.success('Cập nhật thông tin thành công!')
+      setFormErrors({})
+      setApiError('')
     } catch (error) {
       console.log('Error updating profile:', error)
-      toast.error(error.response?.data?.message || 'Cập nhật thất bại')
+
+      // Extract error message from API response
+      if (error.response?.data?.message) {
+        setApiError(error.response.data.message)
+        toast.error(error.response.data.message)
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors from API if returned in this format
+        const serverErrors = error.response.data.errors
+        const newErrors = {}
+
+        // Map server validation errors to form fields
+        Object.keys(serverErrors).forEach((key) => {
+          const fieldName = key.charAt(0).toLowerCase() + key.slice(1)
+          newErrors[fieldName] = serverErrors[key][0]
+        })
+
+        setFormErrors(newErrors)
+        toast.error('Vui lòng kiểm tra lại thông tin đã nhập!')
+      } else {
+        setApiError('Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại sau.')
+        toast.error('Cập nhật thất bại')
+      }
     } finally {
       setLoading(false)
     }
@@ -191,6 +275,14 @@ const ProfilePage = () => {
             {/* Profile Form */}
             <div className='p-6 sm:p-8 bg-white'>
               <form onSubmit={handleSubmit} className='space-y-6'>
+                {/* API Error message at the top of the form */}
+                {apiError && (
+                  <div className='bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg'>
+                    <p className='font-medium'>Lỗi từ hệ thống:</p>
+                    <p>{apiError}</p>
+                  </div>
+                )}
+
                 {/* Personal Information Section */}
                 <div>
                   <h3 className='text-xl font-semibold text-gray-800 mb-4 flex items-center'>
@@ -206,20 +298,30 @@ const ProfilePage = () => {
                         onChange={handleChange}
                         required
                         placeholder='Nhập họ'
-                        className='border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200 transition-all'
+                        className={`border focus:ring focus:ring-pink-200 transition-all ${
+                          formErrors.lastName ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-pink-500'
+                        }`}
                       />
+                      {formErrors.lastName && <p className='text-red-600 text-xs mt-1'>{formErrors.lastName}</p>}
                     </div>
                     <div className='space-y-1'>
-                      <label className='block text-sm font-medium text-gray-700'>Tên</label>
+                      <label className='block text-sm font-medium text-gray-700'>
+                        Tên <span className='text-red-500'>*</span>
+                      </label>
                       <Input
                         name='firstName'
                         value={form.firstName}
                         onChange={handleChange}
                         required
                         placeholder='Nhập tên'
-                        className='border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200 transition-all'
+                        className={`border focus:ring focus:ring-pink-200 transition-all ${
+                          formErrors.firstName ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-pink-500'
+                        }`}
                       />
+                      {formErrors.firstName && <p className='text-red-600 text-xs mt-1'>{formErrors.firstName}</p>}
                     </div>
+
+                    {/* Similar validation for other fields */}
                     <div className='space-y-1'>
                       <label className='block text-sm font-medium text-gray-700'>Email</label>
                       <Input
@@ -234,40 +336,57 @@ const ProfilePage = () => {
                       />
                     </div>
                     <div className='space-y-1'>
-                      <label className='block text-sm font-medium text-gray-700'>Số điện thoại</label>
+                      <label className='block text-sm font-medium text-gray-700'>
+                        Số điện thoại <span className='text-red-500'>*</span>
+                      </label>
                       <Input
                         name='phone'
                         value={form.phone}
                         onChange={handleChange}
                         required
                         placeholder='Nhập số điện thoại'
-                        className='border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200 transition-all'
+                        className={`border focus:ring focus:ring-pink-200 transition-all ${
+                          formErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-pink-500'
+                        }`}
                       />
+                      {formErrors.phone && <p className='text-red-600 text-xs mt-1'>{formErrors.phone}</p>}
                     </div>
                     <div className='space-y-1'>
-                      <label className='block text-sm font-medium text-gray-700'>Ngày sinh</label>
+                      <label className='block text-sm font-medium text-gray-700'>
+                        Ngày sinh <span className='text-red-500'>*</span>
+                      </label>
                       <Input
                         name='dateOfBirth'
                         type='date'
                         value={form.dateOfBirth}
                         onChange={handleChange}
                         required
-                        className='border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200 transition-all'
+                        className={`border focus:ring focus:ring-pink-200 transition-all ${
+                          formErrors.dateOfBirth ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-pink-500'
+                        }`}
                       />
+                      {formErrors.dateOfBirth && <p className='text-red-600 text-xs mt-1'>{formErrors.dateOfBirth}</p>}
                     </div>
                     <div className='space-y-1'>
-                      <label className='block text-sm font-medium text-gray-700'>Giới tính</label>
+                      <label className='block text-sm font-medium text-gray-700'>
+                        Giới tính <span className='text-red-500'>*</span>
+                      </label>
                       <select
                         name='gender'
                         value={form.gender}
                         onChange={handleChange}
-                        className='w-full border border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200 rounded-md px-3 py-2 transition-all'
+                        className={`w-full border rounded-md px-3 py-2 transition-all ${
+                          formErrors.gender
+                            ? 'border-red-500 bg-red-50'
+                            : 'border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200'
+                        }`}
                         required
                       >
                         <option value=''>Chọn giới tính</option>
                         <option value='male'>Nam</option>
                         <option value='female'>Nữ</option>
                       </select>
+                      {formErrors.gender && <p className='text-red-600 text-xs mt-1'>{formErrors.gender}</p>}
                     </div>
                     <div className='md:col-span-2 space-y-1'>
                       <label className='block text-sm font-medium text-gray-700'>Ảnh đại diện (URL)</label>
