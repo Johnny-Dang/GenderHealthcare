@@ -1,28 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Table,
-  Card,
-  Space,
-  Button,
-  Input,
-  Typography,
-  Badge,
-  Avatar,
-  Tag,
-  Modal,
-  Form,
-  Select,
-  Row,
-  Col,
-  Statistic,
-  Divider,
-  message
-} from 'antd'
-import { Search, UserPlus, Edit, Trash2, User, Mail, Phone, Calendar, MapPin, Briefcase, Check } from 'lucide-react'
+import { Table, Card, Space, Button, Input, Typography, Avatar, Tag, Modal, Row, Col, Statistic, message } from 'antd'
+import { Search, Eye, User, Users, RefreshCw } from 'lucide-react'
+import api from '../../../configs/axios'
 
 const { Title, Text } = Typography
 const { Search: SearchInput } = Input
-const { Option } = Select
 
 const StaffManagement = () => {
   const [staffList, setStaffList] = useState([])
@@ -30,225 +12,106 @@ const StaffManagement = () => {
   const [searchText, setSearchText] = useState('')
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [editingStaff, setEditingStaff] = useState(null)
-  const [form] = Form.useForm()
 
-  // Mock data for demonstration
-  useEffect(() => {
-    // In a real application, you'd fetch this from your API
-    const mockStaff = [
-      {
-        id: 1,
-        name: 'Nguyễn Văn A',
-        email: 'nguyenvana@example.com',
-        phone: '0987654321',
-        role: 'Bác sĩ',
-        department: 'Khoa Nội',
-        status: 'active',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        address: 'Hà Nội',
-        hireDate: '2020-05-12',
-        specialization: 'Nội tiết'
-      },
-      {
-        id: 2,
-        name: 'Trần Thị B',
-        email: 'tranthib@example.com',
-        phone: '0912345678',
-        role: 'Y tá',
-        department: 'Khoa Nội',
-        status: 'active',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-        address: 'Hồ Chí Minh',
-        hireDate: '2021-02-15',
-        specialization: 'Chăm sóc hậu phẫu'
-      },
-      {
-        id: 3,
-        name: 'Lê Văn C',
-        email: 'levanc@example.com',
-        phone: '0978123456',
-        role: 'Bác sĩ',
-        department: 'Khoa Ngoại',
-        status: 'on_leave',
-        avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
-        address: 'Đà Nẵng',
-        hireDate: '2019-11-01',
-        specialization: 'Phẫu thuật tổng quát'
-      },
-      {
-        id: 4,
-        name: 'Phạm Thị D',
-        email: 'phamthid@example.com',
-        phone: '0934567890',
-        role: 'Y tá',
-        department: 'Khoa Nhi',
-        status: 'active',
-        avatar: 'https://randomuser.me/api/portraits/women/24.jpg',
-        address: 'Hải Phòng',
-        hireDate: '2022-01-10',
-        specialization: 'Chăm sóc trẻ sơ sinh'
-      },
-      {
-        id: 5,
-        name: 'Hoàng Văn E',
-        email: 'hoangvane@example.com',
-        phone: '0945678901',
-        role: 'Kỹ thuật viên',
-        department: 'Khoa Xét nghiệm',
-        status: 'inactive',
-        avatar: 'https://randomuser.me/api/portraits/men/36.jpg',
-        address: 'Cần Thơ',
-        hireDate: '2020-08-20',
-        specialization: 'Xét nghiệm máu'
+  // Fetch data from API
+  const fetchStaffInfo = async () => {
+    setLoading(true)
+    try {
+      console.log('Fetching staff information from API...')
+      const response = await api.get('/api/StaffInfo')
+      console.log('API Response:', response.data)
+
+      if (response.data && Array.isArray(response.data)) {
+        setStaffList(response.data)
+        message.success(`Đã tải ${response.data.length} thông tin nhân viên từ hệ thống`)
+      } else {
+        console.error('Unexpected API response format:', response.data)
+        setStaffList([])
+        message.error('Dữ liệu API không đúng định dạng')
       }
-    ]
+    } catch (error) {
+      console.error('Error fetching staff information:', error)
+      console.error('Error details:', error.response?.data)
+      setStaffList([])
+      message.error('Không thể kết nối tới API. Vui lòng kiểm tra kết nối hoặc thử lại sau.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    setStaffList(mockStaff)
-    setLoading(false)
+  useEffect(() => {
+    fetchStaffInfo()
   }, [])
 
   const showModal = (staff = null) => {
     setEditingStaff(staff)
-    if (staff) {
-      form.setFieldsValue(staff)
-    } else {
-      form.resetFields()
-    }
     setIsModalVisible(true)
   }
 
   const handleCancel = () => {
     setIsModalVisible(false)
-    form.resetFields()
-  }
-
-  const handleSubmit = (values) => {
-    if (editingStaff) {
-      // Update existing staff
-      setStaffList(staffList.map((staff) => (staff.id === editingStaff.id ? { ...staff, ...values } : staff)))
-    } else {
-      // Add new staff
-      const newStaff = {
-        ...values,
-        id: Math.max(...staffList.map((s) => s.id)) + 1,
-        avatar: 'https://randomuser.me/api/portraits/men/85.jpg' // Default avatar
-      }
-      setStaffList([...staffList, newStaff])
-    }
-    setIsModalVisible(false)
-  }
-
-  const handleDelete = (id) => {
-    Modal.confirm({
-      title: 'Xác nhận xoá',
-      content: 'Bạn có chắc chắn muốn xoá nhân viên này không?',
-      okText: 'Xoá',
-      okType: 'danger',
-      cancelText: 'Huỷ',
-      onOk() {
-        setStaffList(staffList.filter((staff) => staff.id !== id))
-        message.success('Đã xoá nhân viên thành công')
-      }
-    })
   }
 
   const handleSearch = (value) => {
     setSearchText(value)
   }
 
+  // Filter staff based on search text
   const filteredStaff = staffList.filter(
     (item) =>
-      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      (item.fullName && item.fullName.toLowerCase().includes(searchText.toLowerCase())) ||
       item.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.role.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.department.toLowerCase().includes(searchText.toLowerCase())
+      item.department.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.degree.toLowerCase().includes(searchText.toLowerCase())
   )
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return <Badge status='success' text='Đang làm việc' />
-      case 'on_leave':
-        return <Badge status='warning' text='Nghỉ phép' />
-      case 'inactive':
-        return <Badge status='error' text='Không hoạt động' />
-      default:
-        return <Badge status='default' text='Không xác định' />
-    }
-  }
-
+  // Define columns for the table
   const columns = [
     {
       title: 'Nhân viên',
-      dataIndex: 'name',
-      key: 'name',
+      key: 'staff',
       render: (_, record) => (
         <div className='flex items-center'>
-          <Avatar src={record.avatar} size={40} className='mr-3' />
+          <Avatar src={record.avatarUrl || null} size={40} className='mr-3' icon={<User size={24} />} />
           <div>
-            <Text strong>{record.name}</Text>
+            <Text strong>{record.fullName || 'N/A'}</Text>
             <div className='text-gray-500 text-sm'>{record.email}</div>
           </div>
         </div>
       )
     },
     {
-      title: 'SĐT',
-      dataIndex: 'phone',
-      key: 'phone'
-    },
-    {
-      title: 'Chức vụ',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role) => <Tag color={role === 'Bác sĩ' ? 'blue' : role === 'Y tá' ? 'green' : 'orange'}>{role}</Tag>,
-      filters: [
-        { text: 'Bác sĩ', value: 'Bác sĩ' },
-        { text: 'Y tá', value: 'Y tá' },
-        { text: 'Kỹ thuật viên', value: 'Kỹ thuật viên' }
-      ],
-      onFilter: (value, record) => record.role === value
-    },
-    {
       title: 'Phòng ban',
       dataIndex: 'department',
       key: 'department',
-      filters: [
-        { text: 'Khoa Nội', value: 'Khoa Nội' },
-        { text: 'Khoa Ngoại', value: 'Khoa Ngoại' },
-        { text: 'Khoa Nhi', value: 'Khoa Nhi' },
-        { text: 'Khoa Xét nghiệm', value: 'Khoa Xét nghiệm' }
-      ],
+      filters: Array.from(new Set(staffList.map((s) => s.department))).map((dept) => ({ text: dept, value: dept })),
       onFilter: (value, record) => record.department === value
     },
     {
-      title: 'Chuyên môn',
-      dataIndex: 'specialization',
-      key: 'specialization',
-      ellipsis: true
+      title: 'Học vị',
+      dataIndex: 'degree',
+      key: 'degree',
+      render: (degree) => <Tag color='blue'>{degree}</Tag>
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => getStatusBadge(status),
-      filters: [
-        { text: 'Đang làm việc', value: 'active' },
-        { text: 'Nghỉ phép', value: 'on_leave' },
-        { text: 'Không hoạt động', value: 'inactive' }
-      ],
-      onFilter: (value, record) => record.status === value
+      title: 'Số năm kinh nghiệm',
+      dataIndex: 'yearOfExperience',
+      key: 'yearOfExperience',
+      sorter: (a, b) => a.yearOfExperience - b.yearOfExperience
+    },
+    {
+      title: 'Số điện thoại',
+      dataIndex: 'phone',
+      key: 'phone',
+      render: (phone) => phone || 'Chưa cập nhật'
     },
     {
       title: 'Hành động',
       key: 'action',
       render: (_, record) => (
         <Space size='middle'>
-          <Button type='primary' size='small' icon={<Edit size={14} />} onClick={() => showModal(record)}>
-            Sửa
-          </Button>
-          <Button danger size='small' icon={<Trash2 size={14} />} onClick={() => handleDelete(record.id)}>
-            Xoá
+          <Button type='primary' size='small' icon={<Eye size={14} />} onClick={() => showModal(record)}>
+            Chi tiết
           </Button>
         </Space>
       )
@@ -260,6 +123,9 @@ const StaffManagement = () => {
       <div className='flex justify-between items-center mb-6'>
         <Title level={4}>Quản lý Nhân viên</Title>
         <Space>
+          <Button icon={<RefreshCw size={16} />} onClick={fetchStaffInfo}>
+            Làm mới
+          </Button>
           <SearchInput
             placeholder='Tìm kiếm nhân viên...'
             onSearch={handleSearch}
@@ -267,51 +133,42 @@ const StaffManagement = () => {
             prefix={<Search size={16} />}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <Button type='primary' icon={<UserPlus size={16} />} onClick={() => showModal()}>
-            Thêm nhân viên
-          </Button>
         </Space>
       </div>
 
       {/* Staff Statistics */}
       <Row gutter={16} className='mb-6'>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title='Tổng số nhân viên'
               value={staffList.length}
               valueStyle={{ color: '#1677ff' }}
-              prefix={<User size={18} />}
+              prefix={<Users size={18} />}
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
-              title='Đang làm việc'
-              value={staffList.filter((s) => s.status === 'active').length}
+              title='Số năm kinh nghiệm TB'
+              value={
+                staffList.length > 0
+                  ? Math.round(staffList.reduce((acc, curr) => acc + curr.yearOfExperience, 0) / staffList.length)
+                  : 0
+              }
+              suffix='năm'
+              precision={0}
               valueStyle={{ color: '#52c41a' }}
-              prefix={<Check size={18} />}
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
-              title='Số bác sĩ'
-              value={staffList.filter((s) => s.role === 'Bác sĩ').length}
+              title='Số phòng ban'
+              value={new Set(staffList.map((s) => s.department)).size}
               valueStyle={{ color: '#722ed1' }}
-              prefix={<Briefcase size={18} />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title='Số y tá'
-              value={staffList.filter((s) => s.role === 'Y tá').length}
-              valueStyle={{ color: '#eb2f96' }}
-              prefix={<Briefcase size={18} />}
             />
           </Card>
         </Col>
@@ -320,123 +177,87 @@ const StaffManagement = () => {
       <Table
         columns={columns}
         dataSource={filteredStaff}
-        rowKey='id'
+        rowKey='accountId'
         loading={loading}
         pagination={{
           pageSize: 10,
           showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`
         }}
+        expandable={{
+          expandedRowRender: (record) => (
+            <div className='p-4'>
+              <Text strong>Tiểu sử:</Text>
+              <p>{record.biography}</p>
+            </div>
+          )
+        }}
       />
 
       <Modal
-        title={editingStaff ? 'Sửa thông tin nhân viên' : 'Thêm nhân viên mới'}
+        title='Chi tiết nhân viên'
         open={isModalVisible}
         onCancel={handleCancel}
-        footer={null}
+        footer={[
+          <Button key='back' onClick={handleCancel}>
+            Đóng
+          </Button>
+        ]}
         width={800}
       >
-        <Form form={form} layout='vertical' onFinish={handleSubmit}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name='name' label='Họ và tên' rules={[{ required: true, message: 'Vui lòng nhập họ tên!' }]}>
-                <Input prefix={<User size={16} />} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name='email'
-                label='Email'
-                rules={[
-                  { required: true, message: 'Vui lòng nhập email!' },
-                  { type: 'email', message: 'Email không hợp lệ!' }
-                ]}
-              >
-                <Input prefix={<Mail size={16} />} />
-              </Form.Item>
-            </Col>
-          </Row>
+        {editingStaff && (
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div>
+              <div className='flex flex-col items-center mb-6'>
+                <Avatar src={editingStaff.avatarUrl || null} size={100} icon={<User size={64} />} className='mb-3' />
+                <Text strong className='text-xl'>
+                  {editingStaff.fullName || 'N/A'}
+                </Text>
+                <Text className='text-gray-500'>{editingStaff.email}</Text>
+              </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name='phone'
-                label='Số điện thoại'
-                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
-              >
-                <Input prefix={<Phone size={16} />} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name='role' label='Chức vụ' rules={[{ required: true, message: 'Vui lòng chọn chức vụ!' }]}>
-                <Select>
-                  <Option value='Bác sĩ'>Bác sĩ</Option>
-                  <Option value='Y tá'>Y tá</Option>
-                  <Option value='Kỹ thuật viên'>Kỹ thuật viên</Option>
-                  <Option value='Hành chính'>Hành chính</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+              <div className='mb-4'>
+                <Text strong>ID Tài khoản:</Text>
+                <div>{editingStaff.accountId}</div>
+              </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name='department'
-                label='Phòng ban'
-                rules={[{ required: true, message: 'Vui lòng chọn phòng ban!' }]}
-              >
-                <Select>
-                  <Option value='Khoa Nội'>Khoa Nội</Option>
-                  <Option value='Khoa Ngoại'>Khoa Ngoại</Option>
-                  <Option value='Khoa Nhi'>Khoa Nhi</Option>
-                  <Option value='Khoa Xét nghiệm'>Khoa Xét nghiệm</Option>
-                  <Option value='Hành chính'>Hành chính</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name='status'
-                label='Trạng thái'
-                rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-              >
-                <Select>
-                  <Option value='active'>Đang làm việc</Option>
-                  <Option value='on_leave'>Nghỉ phép</Option>
-                  <Option value='inactive'>Không hoạt động</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+              <div className='mb-4'>
+                <Text strong>Phòng ban:</Text>
+                <div>{editingStaff.department}</div>
+              </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name='address' label='Địa chỉ'>
-                <Input prefix={<MapPin size={16} />} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name='hireDate' label='Ngày tuyển dụng'>
-                <Input prefix={<Calendar size={16} />} />
-              </Form.Item>
-            </Col>
-          </Row>
+              <div className='mb-4'>
+                <Text strong>Học vị:</Text>
+                <div>
+                  <Tag color='blue'>{editingStaff.degree}</Tag>
+                </div>
+              </div>
+            </div>
 
-          <Form.Item name='specialization' label='Chuyên môn'>
-            <Input />
-          </Form.Item>
+            <div>
+              <div className='mb-4'>
+                <Text strong>Số năm kinh nghiệm:</Text>
+                <div>{editingStaff.yearOfExperience} năm</div>
+              </div>
 
-          <Divider />
+              <div className='mb-4'>
+                <Text strong>Số điện thoại:</Text>
+                <div>{editingStaff.phone || 'Chưa cập nhật'}</div>
+              </div>
 
-          <div className='flex justify-end'>
-            <Button className='mr-2' onClick={handleCancel}>
-              Huỷ
-            </Button>
-            <Button type='primary' htmlType='submit'>
-              {editingStaff ? 'Cập nhật' : 'Tạo mới'}
-            </Button>
+              <div className='mb-4'>
+                <Text strong>Ngày tạo:</Text>
+                <div>
+                  {editingStaff.createdAt ? new Date(editingStaff.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                </div>
+              </div>
+
+              <div>
+                <Text strong>Tiểu sử:</Text>
+                <p className='mt-2 text-justify'>{editingStaff.biography}</p>
+              </div>
+            </div>
           </div>
-        </Form>
+        )}
       </Modal>
     </div>
   )

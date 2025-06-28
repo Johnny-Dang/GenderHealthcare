@@ -133,7 +133,7 @@ function App() {
       children: [
         {
           index: true,
-          element: null
+          element: <Navigate to='.' replace />
         },
         {
           path: 'feedback',

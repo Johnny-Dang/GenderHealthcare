@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react'
-import { Link, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
+import { Link, Routes, Route, Navigate, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import FeedbackManagement from './feedback'
 import PaymentManagement from './payment'
 import StaffManagement from './staff'
 import TestServiceManagement from './test-service'
-import { Layout, Menu, theme, Avatar, Badge, Typography, Button, Breadcrumb, Card, Row, Col, Statistic } from 'antd'
+import {
+  Layout,
+  Menu,
+  theme,
+  Avatar,
+  Badge,
+  Typography,
+  Button,
+  Breadcrumb,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Spin,
+  Dropdown
+} from 'antd'
 import {
   MessageSquare,
   CreditCard,
@@ -17,8 +32,15 @@ import {
   Heart,
   TrendingUp,
   Star,
-  Calendar
+  Calendar,
+  LogOut,
+  Settings,
+  ChevronDown
 } from 'lucide-react'
+import api from '../../configs/axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../../redux/features/userSlice'
+import { toast } from 'react-toastify'
 
 const { Header, Content, Footer, Sider } = Layout
 const { Title, Text } = Typography
@@ -45,6 +67,20 @@ const ManagerDashboard = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [breadcrumbItems, setBreadcrumbItems] = useState([])
   const location = useLocation()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const userInfo = useSelector((state) => state.user?.userInfo)
+
+  // États pour les données du dashboard
+  const [dashboardStats, setDashboardStats] = useState({
+    feedback: { total: 0, fiveStars: 0, average: 0, loading: true },
+    payment: { total: 0, totalAmount: 0, loading: true },
+    staff: { total: 0, departments: 0, loading: true },
+    services: { total: 0, active: 0, loading: true }
+  })
+  const [recentFeedbacks, setRecentFeedbacks] = useState([])
+  const [recentPayments, setRecentPayments] = useState([])
+  const [loadingRecent, setLoadingRecent] = useState(true)
 
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -70,6 +106,13 @@ const ManagerDashboard = () => {
     ]
   }
 
+  // Fetch dashboard data
+  useEffect(() => {
+    if (location.pathname === '/manager/dashboard' || location.pathname === '/manager/dashboard/') {
+      fetchDashboardData()
+    }
+  }, [location.pathname])
+
   // Update breadcrumb based on current path
   useEffect(() => {
     const path = location.pathname
@@ -77,6 +120,165 @@ const ManagerDashboard = () => {
     const breadcrumb = breadcrumbMap[exactPath] || breadcrumbMap['/manager-dashboard']
     setBreadcrumbItems(breadcrumb)
   }, [location])
+
+  const fetchDashboardData = async () => {
+    // Récupérer les données de feedback
+    fetchFeedbackStats()
+    // Récupérer les données de paiement
+    fetchPaymentStats()
+    // Récupérer les données de staff
+    fetchStaffStats()
+    // Récupérer les données de services
+    fetchServiceStats()
+    // Récupérer les données récentes
+    fetchRecentData()
+  }
+
+  const fetchFeedbackStats = async () => {
+    try {
+      const response = await api.get('/api/Feedback')
+      if (response.data && Array.isArray(response.data)) {
+        const feedbacks = response.data
+        const total = feedbacks.length
+        const fiveStars = feedbacks.filter((f) => f.rating === 5).length
+        const average = total ? parseFloat((feedbacks.reduce((a, b) => a + b.rating, 0) / total).toFixed(1)) : 0
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          feedback: { total, fiveStars, average, loading: false }
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching feedback stats:', error)
+      setDashboardStats((prev) => ({
+        ...prev,
+        feedback: { ...prev.feedback, loading: false }
+      }))
+    }
+  }
+
+  const fetchPaymentStats = async () => {
+    try {
+      const response = await api.get('/api/payments')
+      if (response.data && Array.isArray(response.data)) {
+        const payments = response.data
+        const total = payments.length
+        const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0)
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          payment: { total, totalAmount, loading: false }
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching payment stats:', error)
+      setDashboardStats((prev) => ({
+        ...prev,
+        payment: { ...prev.payment, loading: false }
+      }))
+    }
+  }
+
+  const fetchStaffStats = async () => {
+    try {
+      const response = await api.get('/api/StaffInfo')
+      if (response.data && Array.isArray(response.data)) {
+        const staffs = response.data
+        const total = staffs.length
+        const departments = new Set(staffs.map((s) => s.department)).size
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          staff: { total, departments, loading: false }
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching staff stats:', error)
+      setDashboardStats((prev) => ({
+        ...prev,
+        staff: { ...prev.staff, loading: false }
+      }))
+    }
+  }
+
+  const fetchServiceStats = async () => {
+    try {
+      const response = await api.get('/api/services/admin')
+      if (response.data && Array.isArray(response.data)) {
+        const services = response.data
+        const total = services.length
+        const active = services.filter((s) => !s.isDeleted).length
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          services: { total, active, loading: false }
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching service stats:', error)
+      setDashboardStats((prev) => ({
+        ...prev,
+        services: { ...prev.services, loading: false }
+      }))
+    }
+  }
+
+  const fetchRecentData = async () => {
+    setLoadingRecent(true)
+    try {
+      // Récupérer les feedbacks récents
+      const feedbackResponse = await api.get('/api/Feedback')
+      if (feedbackResponse.data && Array.isArray(feedbackResponse.data)) {
+        // Trier par date et prendre les 5 plus récents
+        const sortedFeedbacks = feedbackResponse.data
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5)
+          .map((fb) => ({
+            id: fb.feedbackId,
+            customerName: fb.accountName,
+            serviceName: fb.serviceName,
+            rating: fb.rating,
+            date: new Date(fb.createdAt)
+          }))
+        setRecentFeedbacks(sortedFeedbacks)
+      }
+
+      // Récupérer les paiements récents
+      const paymentResponse = await api.get('/api/payments')
+      if (paymentResponse.data && Array.isArray(paymentResponse.data)) {
+        // Trier par date et prendre les 4 plus récents
+        const sortedPayments = await Promise.all(
+          paymentResponse.data
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 3)
+            .map(async (payment) => {
+              let bookingDetails = null
+              try {
+                const bookingResponse = await api.get(`/api/bookings/${payment.bookingId}`)
+                if (bookingResponse.data) {
+                  bookingDetails = bookingResponse.data
+                }
+              } catch (error) {
+                console.error(`Error fetching booking details for ${payment.bookingId}:`, error)
+              }
+
+              return {
+                id: payment.transactionId,
+                amount: payment.amount,
+                customerName: bookingDetails?.customerName || 'N/A',
+                serviceName: bookingDetails?.serviceName || 'N/A',
+                date: new Date(payment.createdAt)
+              }
+            })
+        )
+        setRecentPayments(sortedPayments)
+      }
+    } catch (error) {
+      console.error('Error fetching recent data:', error)
+    } finally {
+      setLoadingRecent(false)
+    }
+  }
 
   // Xác định menu active
   const getActiveMenu = () => {
@@ -87,6 +289,35 @@ const ManagerDashboard = () => {
     if (path.includes('/staff')) return 'staff'
     if (path.includes('/test-service')) return 'test-service'
     return ''
+  }
+
+  // Format date for display
+  const formatDate = (date) => {
+    if (!date) return 'N/A'
+
+    const now = new Date()
+    const diff = now - date
+
+    // Si moins d'une heure
+    if (diff < 3600000) {
+      const mins = Math.floor(diff / 60000)
+      return `${mins} phút trước`
+    }
+
+    // Si moins d'un jour
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000)
+      return `${hours} giờ trước`
+    }
+
+    // Si moins d'une semaine
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000)
+      return `${days} ngày trước`
+    }
+
+    // Sinon retourner la date formatée
+    return date.toLocaleDateString('vi-VN')
   }
 
   // Dashboard overview content
@@ -102,44 +333,68 @@ const ManagerDashboard = () => {
           <Row gutter={16} className='mb-6'>
             <Col span={6}>
               <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
-                <Statistic
-                  title='Tổng số Feedback'
-                  value={124}
-                  valueStyle={{ color: '#3f8600' }}
-                  prefix={<MessageSquare size={18} className='mr-2' />}
-                />
+                {dashboardStats.feedback.loading ? (
+                  <div className='flex justify-center items-center p-4'>
+                    <Spin />
+                  </div>
+                ) : (
+                  <Statistic
+                    title='Tổng số Feedback'
+                    value={dashboardStats.feedback.total}
+                    valueStyle={{ color: '#3f8600' }}
+                    prefix={<MessageSquare size={18} className='mr-2' />}
+                  />
+                )}
               </Card>
             </Col>
             <Col span={6}>
               <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
-                <Statistic
-                  title='Thanh toán tháng này'
-                  value={45200000}
-                  precision={0}
-                  valueStyle={{ color: '#cf1322' }}
-                  prefix={<CreditCard size={18} className='mr-2' />}
-                  suffix='VND'
-                />
+                {dashboardStats.payment.loading ? (
+                  <div className='flex justify-center items-center p-4'>
+                    <Spin />
+                  </div>
+                ) : (
+                  <Statistic
+                    title='Tổng thanh toán'
+                    value={dashboardStats.payment.totalAmount}
+                    precision={0}
+                    valueStyle={{ color: '#cf1322' }}
+                    prefix={<CreditCard size={18} className='mr-2' />}
+                    suffix='VND'
+                  />
+                )}
               </Card>
             </Col>
             <Col span={6}>
               <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
-                <Statistic
-                  title='Tổng số Nhân viên'
-                  value={18}
-                  valueStyle={{ color: '#1677ff' }}
-                  prefix={<Users size={18} className='mr-2' />}
-                />
+                {dashboardStats.staff.loading ? (
+                  <div className='flex justify-center items-center p-4'>
+                    <Spin />
+                  </div>
+                ) : (
+                  <Statistic
+                    title='Tổng số Nhân viên'
+                    value={dashboardStats.staff.total}
+                    valueStyle={{ color: '#1677ff' }}
+                    prefix={<Users size={18} className='mr-2' />}
+                  />
+                )}
               </Card>
             </Col>
             <Col span={6}>
               <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
-                <Statistic
-                  title='Dịch vụ có sẵn'
-                  value={24}
-                  valueStyle={{ color: '#722ed1' }}
-                  prefix={<Stethoscope size={18} className='mr-2' />}
-                />
+                {dashboardStats.services.loading ? (
+                  <div className='flex justify-center items-center p-4'>
+                    <Spin />
+                  </div>
+                ) : (
+                  <Statistic
+                    title='Dịch vụ có sẵn'
+                    value={dashboardStats.services.active}
+                    valueStyle={{ color: '#722ed1' }}
+                    prefix={<Stethoscope size={18} className='mr-2' />}
+                  />
+                )}
               </Card>
             </Col>
           </Row>
@@ -193,39 +448,33 @@ const ManagerDashboard = () => {
                 title='Đánh giá gần đây'
                 extra={<Link to='/manager/dashboard/feedback'>Xem tất cả</Link>}
                 className='h-64'
+                loading={loadingRecent}
               >
-                <div className='space-y-3'>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <Text strong>Nguyễn Văn A</Text>
-                      <div className='flex items-center'>
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={14}
-                            className={i < 4 ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}
-                          />
-                        ))}
+                {recentFeedbacks.length > 0 ? (
+                  <div className='space-y-3'>
+                    {recentFeedbacks.map((feedback, index) => (
+                      <div key={index} className='flex items-center justify-between'>
+                        <div>
+                          <Text strong>{feedback.customerName}</Text>
+                          <div className='flex items-center'>
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={14}
+                                className={i < feedback.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <Text type='secondary'>{formatDate(feedback.date)}</Text>
                       </div>
-                    </div>
-                    <Text type='secondary'>1 giờ trước</Text>
+                    ))}
                   </div>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <Text strong>Trần Thị B</Text>
-                      <div className='flex items-center'>
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={14}
-                            className={i < 5 ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <Text type='secondary'>3 giờ trước</Text>
+                ) : (
+                  <div className='flex justify-center items-center h-40'>
+                    <Text type='secondary'>Không có đánh giá nào</Text>
                   </div>
-                </div>
+                )}
               </Card>
             </Col>
             <Col span={8}>
@@ -233,49 +482,74 @@ const ManagerDashboard = () => {
                 title='Thanh toán gần đây'
                 extra={<Link to='/manager/dashboard/payment'>Xem tất cả</Link>}
                 className='h-64'
+                loading={loadingRecent}
               >
-                <div className='space-y-3'>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <Text strong>Gói khám sức khỏe 1</Text>
-                      <Text type='secondary' className='block'>
-                        Trần Văn C
-                      </Text>
-                    </div>
-                    <Text type='success'>2,500,000đ</Text>
+                {recentPayments.length > 0 ? (
+                  <div className='space-y-3'>
+                    {recentPayments.map((payment, index) => (
+                      <div key={index} className='flex items-center justify-between'>
+                        <div>
+                          <Text strong>{payment.id}</Text>
+                        </div>
+                        <Text type='success'>{payment.amount.toLocaleString('vi-VN')}đ</Text>
+                      </div>
+                    ))}
                   </div>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <Text strong>Gói khám sức khỏe 2</Text>
-                      <Text type='secondary' className='block'>
-                        Lê Thị D
-                      </Text>
-                    </div>
-                    <Text type='success'>3,500,000đ</Text>
+                ) : (
+                  <div className='flex justify-center items-center h-40'>
+                    <Text type='secondary'>Không có thanh toán nào</Text>
                   </div>
-                </div>
+                )}
               </Card>
             </Col>
             <Col span={8}>
-              <Card title='Lịch hẹn hôm nay' extra={<a href='#'>Xem tất cả</a>} className='h-64'>
+              <Card title='Thông tin hệ thống' className='h-64'>
                 <div className='space-y-3'>
                   <div className='flex items-center justify-between'>
                     <div>
-                      <Text strong>Phạm Văn E</Text>
+                      <Text strong>Đánh giá trung bình</Text>
                       <Text type='secondary' className='block'>
-                        Xét nghiệm máu
+                        Mức độ hài lòng chung
                       </Text>
                     </div>
-                    <Text type='secondary'>09:30</Text>
+                    <div className='flex items-center'>
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          className={
+                            i < Math.round(dashboardStats.feedback.average)
+                              ? 'text-yellow-500 fill-yellow-500'
+                              : 'text-gray-300'
+                          }
+                        />
+                      ))}
+                      <Text className='ml-2' strong>
+                        {dashboardStats.feedback.average.toFixed(1)}
+                      </Text>
+                    </div>
                   </div>
                   <div className='flex items-center justify-between'>
                     <div>
-                      <Text strong>Vũ Thị F</Text>
+                      <Text strong>Tổng phòng ban</Text>
                       <Text type='secondary' className='block'>
-                        Tư vấn sức khỏe
+                        Số phòng ban hoạt động
                       </Text>
                     </div>
-                    <Text type='secondary'>14:00</Text>
+                    <Text>{dashboardStats.staff.departments}</Text>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <Text strong>Đánh giá 5 sao</Text>
+                      <Text type='secondary' className='block'>
+                        Tỉ lệ
+                      </Text>
+                    </div>
+                    <Text>
+                      {dashboardStats.feedback.total > 0
+                        ? `${((dashboardStats.feedback.fiveStars / dashboardStats.feedback.total) * 100).toFixed(1)}%`
+                        : '0%'}
+                    </Text>
                   </div>
                 </div>
               </Card>
@@ -286,6 +560,54 @@ const ManagerDashboard = () => {
     }
     return null
   }
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      // Get token
+      const token = localStorage.getItem('token')
+      if (token) {
+        await api.post(
+          '/Account/logout',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      // Clear user data regardless of API response
+      dispatch(logout())
+      localStorage.removeItem('token')
+      navigate('/')
+      toast.success('Đã đăng xuất thành công')
+    }
+  }
+
+  // Profile dropdown items
+  const profileMenuItems = [
+    {
+      key: 'profile',
+      label: 'Cập nhật hồ sơ',
+      icon: <Settings size={16} />,
+      onClick: () => navigate('/profile')
+    },
+    {
+      type: 'divider'
+    },
+    {
+      key: 'logout',
+      label: 'Đăng xuất',
+      icon: <LogOut size={16} />,
+      onClick: handleLogout,
+      danger: true
+    }
+  ]
 
   return (
     <Layout className='min-h-screen'>
@@ -335,16 +657,35 @@ const ManagerDashboard = () => {
             <Breadcrumb className='my-4' items={breadcrumbItems} />
           </div>
 
-          <div className='flex items-center gap-6'>
-            <Badge count={3} size='small' color='#eb2f96'>
-              <Bell size={18} className='cursor-pointer text-slate-600 hover:text-pink-500' />
-            </Badge>
-            <div className='flex items-center gap-3'>
-              <Avatar size={36} className='bg-gradient-to-r from-pink-500 to-red-500' icon={<UserCircle size={20} />} />
-              <Text strong className='text-slate-700'>
-                Manager
-              </Text>
-            </div>
+          <div className='flex items-center gap-4'>
+            <Dropdown
+              menu={{
+                items: profileMenuItems
+              }}
+              placement='bottomRight'
+              trigger={['click']}
+            >
+              <div className='flex items-center gap-3 cursor-pointer hover:bg-pink-50 px-3 py-1.5 rounded-full transition-all border border-pink-100'>
+                <Avatar
+                  size={38}
+                  className='bg-gradient-to-r from-pink-400 to-pink-600 border-2 border-white shadow-sm'
+                  icon={<UserCircle size={22} />}
+                />
+                <div className='hidden md:block'>
+                  <Text strong className='text-gray-800 leading-tight block'>
+                    {userInfo
+                      ? userInfo.firstName && userInfo.lastName
+                        ? `${userInfo.lastName} ${userInfo.firstName}`
+                        : userInfo.fullName || userInfo.email || 'Manager'
+                      : 'Manager'}
+                  </Text>
+                  <div className='flex items-center text-xs text-gray-500'>
+                    <span>Quản lý</span>
+                    <ChevronDown size={12} className='ml-1' />
+                  </div>
+                </div>
+              </div>
+            </Dropdown>
           </div>
         </Header>
 
