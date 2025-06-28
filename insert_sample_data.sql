@@ -27,16 +27,16 @@ VALUES
   (N'10000000-0000-0000-0000-000000000005', N'Khoa W', N'Cử nhân', 3, N'Nhân viên mới',GETDATE());
 
 -- Insert 5 TestService
-INSERT INTO TestService(ServiceId, ServiceName, Description, Price, ImageUrl, CreatedAt, Category)
+INSERT INTO TestService(ServiceId, ServiceName, Description, Price, ImageUrl, CreatedAt, Category, IsDeleted)
 VALUES 
-  (N'20000000-0000-0000-0000-000000000001', N'Xét nghiệm máu', N'Kiểm tra các chỉ số máu cơ bản', 200000, NULL, GETDATE(), N'Xét nghiệm'),
-  (N'20000000-0000-0000-0000-000000000002', N'Xét nghiệm nước tiểu', N'Kiểm tra chức năng thận', 150000, NULL, GETDATE(), N'Xét nghiệm'),
-  (N'20000000-0000-0000-0000-000000000003', N'Chụp X-quang', N'Chẩn đoán hình ảnh', 300000, NULL, GETDATE(), N'Chẩn đoán'),
-  (N'20000000-0000-0000-0000-000000000004', N'Siêu âm', N'Kiểm tra tổng quát', 250000, NULL, GETDATE(), N'Chẩn đoán'),
-  (N'20000000-0000-0000-0000-000000000005', N'Khám tổng quát', N'Tư vấn sức khỏe', 100000, NULL, GETDATE(), N'Tư vấn'),
-  (N'20000000-0000-0000-0000-000000000006', N'Xét nghiệm hormone', N'Kiểm tra nồng độ hormone', 350000, NULL, GETDATE(), N'Xét nghiệm'),
-  (N'20000000-0000-0000-0000-000000000007', N'Xét nghiệm di truyền', N'Phân tích ADN', 500000, NULL, GETDATE(), N'Xét nghiệm'),
-  (N'20000000-0000-0000-0000-000000000008', N'Đo mật độ xương', N'Kiểm tra sức khỏe xương', 280000, NULL, GETDATE(), N'Chẩn đoán');
+  (N'20000000-0000-0000-0000-000000000001', N'Xét nghiệm máu', N'Kiểm tra các chỉ số máu cơ bản', 200000, NULL, GETDATE(), N'Xét nghiệm', 0),
+  (N'20000000-0000-0000-0000-000000000002', N'Xét nghiệm nước tiểu', N'Kiểm tra chức năng thận', 150000, NULL, GETDATE(), N'Xét nghiệm', 0),
+  (N'20000000-0000-0000-0000-000000000003', N'Chụp X-quang', N'Chẩn đoán hình ảnh', 300000, NULL, GETDATE(), N'Chẩn đoán', 0),
+  (N'20000000-0000-0000-0000-000000000004', N'Siêu âm', N'Kiểm tra tổng quát', 250000, NULL, GETDATE(), N'Chẩn đoán', 0),
+  (N'20000000-0000-0000-0000-000000000005', N'Khám tổng quát', N'Tư vấn sức khỏe', 100000, NULL, GETDATE(), N'Tư vấn', 0),
+  (N'20000000-0000-0000-0000-000000000006', N'Xét nghiệm hormone', N'Kiểm tra nồng độ hormone', 350000, NULL, GETDATE(), N'Xét nghiệm', 0),
+  (N'20000000-0000-0000-0000-000000000007', N'Xét nghiệm di truyền', N'Phân tích ADN', 500000, NULL, GETDATE(), N'Xét nghiệm', 0),
+  (N'20000000-0000-0000-0000-000000000008', N'Đo mật độ xương', N'Kiểm tra sức khỏe xương', 280000, NULL, GETDATE(), N'Chẩn đoán', 0);
 
 -- Insert 10 ConsultationBooking (5 từ khách hàng đã đăng ký, 3 từ khách vãng lai)
 INSERT INTO ConsultationBooking (BookingId, CustomerId, GuestName, GuestEmail, GuestPhone, StaffId, ScheduledAt, Status, Message, CreatedAt, UpdatedAt)

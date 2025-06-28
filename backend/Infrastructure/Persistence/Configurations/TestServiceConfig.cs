@@ -16,7 +16,7 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.Property(ts => ts.ImageUrl).HasMaxLength(500);
             builder.Property(ts => ts.CreatedAt).IsRequired();
             builder.Property(ts => ts.Category).IsRequired().HasMaxLength(100);
-
+            builder.Property(ts => ts.IsDeleted).HasDefaultValue(false);
         }
     }
 }
