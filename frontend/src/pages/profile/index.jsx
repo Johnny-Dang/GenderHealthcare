@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
+import CloudinaryUpload from '@/components/CloudinaryUpload'
+import Avatar from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -112,6 +114,10 @@ const ProfilePage = () => {
     }
   }
 
+  const handleAvatarUpload = (uploadedUrl) => {
+    setForm(prev => ({ ...prev, avatarUrl: uploadedUrl }))
+  }
+
   if (!userInfo) {
     return (
       <div className='min-h-screen flex flex-col'>
@@ -161,20 +167,14 @@ const ProfilePage = () => {
           <Card className='overflow-hidden border-none shadow-lg'>
             {/* Profile Card Header with Avatar */}
             <div className='bg-gradient-to-r from-pink-400 to-pink-600 p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 text-white'>
-              <div className='relative'>
-                {form.avatarUrl ? (
-                  <img
-                    src={form.avatarUrl}
-                    alt='Avatar'
-                    className='w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-md'
-                  />
-                ) : (
-                  <div className='w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white flex items-center justify-center text-pink-500 font-bold text-3xl border-4 border-white shadow-md'>
-                    {form.firstName ? form.firstName.charAt(0) : ''}
-                    {form.lastName ? form.lastName.charAt(0) : ''}
-                  </div>
-                )}
-              </div>
+              <Avatar
+                src={form.avatarUrl}
+                alt="Avatar"
+                size="2xl"
+                fallbackText={`${form.firstName || ''} ${form.lastName || ''}`}
+                className="border-white"
+                clickable={true}
+              />
               <div className='text-center sm:text-left'>
                 <h2 className='text-2xl sm:text-3xl font-bold mb-1'>
                   {form.lastName} {form.firstName}
@@ -270,13 +270,11 @@ const ProfilePage = () => {
                       </select>
                     </div>
                     <div className='md:col-span-2 space-y-1'>
-                      <label className='block text-sm font-medium text-gray-700'>Ảnh đại diện (URL)</label>
-                      <Input
-                        name='avatarUrl'
-                        value={form.avatarUrl}
-                        onChange={handleChange}
-                        placeholder='Dán link ảnh đại diện'
-                        className='border-gray-300 focus:border-pink-500 focus:ring focus:ring-pink-200 transition-all'
+                      <label className='block text-sm font-medium text-gray-700'>Ảnh đại diện</label>
+                      <CloudinaryUpload
+                        onUploadSuccess={handleAvatarUpload}
+                        currentAvatarUrl={form.avatarUrl}
+                        className="mt-2"
                       />
                     </div>
                   </div>
