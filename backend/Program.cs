@@ -12,6 +12,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -27,7 +28,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(
     option =>
     {
@@ -51,22 +52,27 @@ builder.Services.AddSwaggerGen(
                 Id = "Bearer"
             }
         };
-
         option.AddSecurityDefinition("Bearer", securityScheme);
 
         option.AddSecurityRequirement(new OpenApiSecurityRequirement
-{
-    { securityScheme, new string[] { } }
-});
+        {
+            { securityScheme, new string[] { } }
+        });
+        
+        option.OperationFilter<FileUploadOperation>();
     });
-builder.Services.AddDbContext<IApplicationDbContext, ApplicationDbContext>();
-
 
 builder.Services.AddMemoryCache();
 
+// Configure settings
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-
 builder.Services.Configure<JwtSettings>(jwtSettings);
+
+var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
+builder.Services.Configure<CloudinarySettings>(cloudinarySettings);
+
+var geminiSettings = builder.Configuration.GetSection("Gemini");
+builder.Services.Configure<GeminiSettings>(geminiSettings);
 
 builder.Services.AddAuthentication(option =>
 {
@@ -76,13 +82,13 @@ builder.Services.AddAuthentication(option =>
 {
     option.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,//Kiểm tra Issuer (người phát hành token) có hợp lệ không
-        ValidateAudience = true,//Kiểm tra Audience (người nhận token) có đúng không
-        ValidateLifetime = true,//	Kiểm tra token còn hạn hay không
-        ValidateIssuerSigningKey = true,//Kiểm tra chữ ký token có hợp lệ không
-        ClockSkew = TimeSpan.Zero,//Dung sai thời gian. TimeSpan.Zero nghĩa là không cho sai số, token hết hạn là hết luôn
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.Zero,
         IssuerSigningKey = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(jwtSettings["SecretKey"])),
+            Encoding.UTF8.GetBytes(jwtSettings["SecretKey"])),
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"]
     };
@@ -100,7 +106,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile), typeof(StaffInfoProfile));
 
-
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 
 // Configure CORS
@@ -108,7 +113,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // domain React
+        policy.WithOrigins("http://localhost:3000") // domain React và Vite
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -123,6 +128,7 @@ app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
