@@ -211,14 +211,10 @@ const BlogManagement = () => {
       slug: slug,
       content: formData.content,
       excerpt: excerpt,
-      authorId: user?.accountId || user?.id, // Sử dụng ID người dùng đã đăng nhập
-      categoryId: formData.categoryId,
+      authorId: user?.userInfo?.accountId || user?.accountId || '207a7ab3-c403-41c5-8dbe-34e97dd5e7dd',
+      categoryId: formData.categoryId, // Đã được set đúng từ handleEditPost
       featuredImageUrl: formData.image || DEFAULT_IMAGE,
       isPublished: !isDraft
-    }
-
-    if (isUpdate && editingPost) {
-      postData.blogId = editingPost.id
     }
 
     // Log để debug
@@ -308,13 +304,27 @@ const BlogManagement = () => {
   }
 
   function handleEditPost(post) {
+    // Tìm categoryId dựa trên categoryName
+    const categoryId = post.categoryName
+      ? categories.find((c) => c.name === post.categoryName)?.categoryId
+      : categories[0]?.categoryId
+
+    if (!categoryId) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xác định danh mục cho bài viết này',
+        variant: 'destructive'
+      })
+      return
+    }
+
     setEditingPost(post)
     setFormData({
       title: post.title,
       excerpt: post.excerpt,
       content: post.content,
       image: post.image,
-      categoryId: post.categoryId || (categories.length > 0 ? categories[0].categoryId : '')
+      categoryId: categoryId // Sử dụng categoryId đã tìm được
     })
     setShowEditModal(true)
   }
