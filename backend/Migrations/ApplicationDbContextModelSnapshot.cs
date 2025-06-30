@@ -28,6 +28,10 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
 
@@ -68,10 +72,6 @@ namespace backend.Migrations
 
                     b.Property<DateTime?>("UpdateAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("avatarUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("AccountId");
 
@@ -164,6 +164,10 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("UpdateAt")
                         .HasColumnType("datetime2");
 
@@ -205,6 +209,10 @@ namespace backend.Migrations
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("BookingDetailId");
 
                     b.HasIndex("BookingId");
@@ -239,7 +247,8 @@ namespace backend.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Message")
-                        .HasColumnType("text");
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ScheduledAt")
                         .HasColumnType("datetime2");
@@ -313,8 +322,9 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BookingId");
 
@@ -421,8 +431,8 @@ namespace backend.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<bool?>("Status")
-                        .HasColumnType("bit");
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -457,6 +467,11 @@ namespace backend.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -574,7 +589,7 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Domain.Entities.Payment", b =>
                 {
                     b.HasOne("backend.Domain.Entities.Booking", "Booking")
-                        .WithOne("PaymentHistory")
+                        .WithOne("Payment")
                         .HasForeignKey("backend.Domain.Entities.Payment", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -634,7 +649,7 @@ namespace backend.Migrations
                 {
                     b.Navigation("BookingDetails");
 
-                    b.Navigation("PaymentHistory")
+                    b.Navigation("Payment")
                         .IsRequired();
                 });
 

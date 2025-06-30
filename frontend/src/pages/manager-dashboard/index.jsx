@@ -658,6 +658,9 @@ const ManagerDashboard = () => {
           </div>
 
           <div className='flex items-center gap-4'>
+            <Badge count={3} size='small' color='#eb2f96'>
+              <Bell size={18} className='cursor-pointer text-slate-600 hover:text-pink-500' />
+            </Badge>
             <Dropdown
               menu={{
                 items: profileMenuItems
