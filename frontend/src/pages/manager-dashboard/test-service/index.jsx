@@ -1,0 +1,563 @@
+import React, { useState, useEffect } from 'react'
+
+import {
+  Table,
+  Card,
+  Space,
+  Button,
+  Input,
+  Typography,
+  Tag,
+  Statistic,
+  Modal,
+  Form,
+  InputNumber,
+  Select,
+  Row,
+  Col,
+  Upload,
+  message,
+  Switch
+} from 'antd'
+import {
+  Search,
+  PlusSquare,
+  Edit,
+  Trash2,
+  Image,
+  Package,
+  FilePlus,
+  DollarSign,
+  PieChart,
+  Stethoscope,
+  RefreshCw
+} from 'lucide-react'
+// Removed unused UploadOutlined import
+import api from '../../../configs/axios'
+
+const { Title, Text, Paragraph } = Typography
+const { Search: SearchInput } = Input
+const { TextArea } = Input
+const { Option } = Select
+
+const TestServiceManagement = () => {
+  const [services, setServices] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchText, setSearchText] = useState('')
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [editingService, setEditingService] = useState(null)
+  const [form] = Form.useForm()
+  // Removed unused image preview states
+
+  // Fetch data from API
+  const fetchServices = async () => {
+    setLoading(true)
+    try {
+      console.log('Fetching services from API...')
+
+      // Using configured api client from configs/axios.js
+      const response = await api.get('/api/services/admin')
+      console.log('API Response:', response.data)
+
+      if (response.data && Array.isArray(response.data)) {
+        console.log('Retrieved services:', response.data.length)
+
+        // Transform the API response to match our component's data structure
+        const transformedServices = response.data.map((service) => ({
+          id: service.serviceId,
+          name: service.serviceName,
+          description: service.description,
+          price: service.price,
+          category: service.category,
+          imageUrl: service.imageUrl || 'https://via.placeholder.com/200x200?text=No+Image',
+          status: service.isDeleted ? 'inactive' : 'active', // Map isDeleted to status
+          isDeleted: Boolean(service.isDeleted), // Ensure isDeleted is a boolean
+          duration: 30, // Default duration since API doesn't provide this
+          preparation: 'Liên hệ nhân viên để biết thêm chi tiết', // Default preparation
+          createdAt: service.createdAt,
+          updatedAt: service.updatedAt
+        }))
+
+        setServices(transformedServices)
+
+        if (transformedServices.length > 0) {
+          message.success(`Đã tải ${transformedServices.length} dịch vụ từ hệ thống`)
+        } else {
+          message.info('Hiện tại không có dịch vụ nào trong hệ thống')
+        }
+      } else {
+        console.error('Unexpected API response format or empty data:', response.data)
+        setServices([])
+        message.error('Dữ liệu API không đúng định dạng hoặc không có dịch vụ nào')
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error)
+      console.error('Error details:', error.response?.data)
+      setServices([])
+      message.error('Không thể kết nối tới API. Vui lòng kiểm tra kết nối hoặc thử lại sau.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchServices()
+  }, [])
+
+  const showModal = (service = null) => {
+    setEditingService(service)
+    if (service) {
+      form.setFieldsValue({
+        name: service.name,
+        description: service.description,
+        price: service.price,
+        category: service.category,
+        enabled: !service.isDeleted,
+        duration: service.duration,
+        preparation: service.preparation,
+        imageUrl: service.imageUrl
+      })
+    } else {
+      form.resetFields()
+      form.setFieldsValue({
+        status: 'active',
+        enabled: true
+      })
+    }
+    setIsModalVisible(true)
+  }
+
+  const handleCancel = () => {
+    setIsModalVisible(false)
+    form.resetFields()
+  }
+
+  // Remove unused image preview functions
+
+  const handleSubmit = async (values) => {
+    const isDeleted = !values.enabled
+    delete values.enabled
+
+    try {
+      if (editingService) {
+        // Update existing service - use only one API call with the admin endpoint
+        const requestData = {
+          Id: editingService.id, // Add Id field to match backend validator requirements
+          serviceName: values.name,
+          description: values.description,
+          price: values.price,
+          category: values.category,
+          imageUrl: values.imageUrl || editingService.imageUrl,
+          isDeleted: isDeleted
+        }
+
+        console.log('Updating service with data:', requestData)
+        console.log('Service ID:', editingService.id)
+
+        // Single API call to update all properties including isDeleted
+        try {
+          const updateResponse = await api.put(`/api/services/${editingService.id}`, requestData)
+          console.log('Update response:', updateResponse.data)
+        } catch (err) {
+          console.error('Detailed update error:', err.response?.data)
+          console.error('Request that caused error:', requestData)
+          throw err // Re-throw to be caught by outer catch block
+        }
+
+        // Refresh data from server instead of updating local state
+        await fetchServices()
+        message.success('Cập nhật dịch vụ thành công')
+      } else {
+        // Add new service
+        const requestData = {
+          serviceName: values.name,
+          description: values.description,
+          price: values.price,
+          category: values.category,
+          imageUrl: values.imageUrl || 'https://via.placeholder.com/200x200?text=No+Image',
+          isDeleted: isDeleted // Include isDeleted in initial creation
+        }
+
+        console.log('Creating new service:', requestData)
+        const response = await api.post('/api/services', requestData)
+        console.log('Create response:', response.data)
+
+        // Refresh data from server
+        await fetchServices()
+        message.success('Thêm dịch vụ thành công')
+      }
+    } catch (error) {
+      console.error('Error submitting service:', error)
+      console.error('Error response status:', error.response?.status)
+      console.error('Error response data:', error.response?.data)
+
+      // More detailed error message
+      if (error.response?.status === 400) {
+        message.error(`Lỗi dữ liệu: ${error.response.data?.message || 'Dữ liệu không hợp lệ'}`)
+      } else if (error.response?.status === 401) {
+        message.error('Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại.')
+      } else if (error.response?.status === 403) {
+        message.error('Bạn không có quyền thực hiện thao tác này.')
+      } else if (error.response?.status === 404) {
+        message.error('Không tìm thấy dịch vụ này trên hệ thống.')
+      } else {
+        message.error(
+          editingService
+            ? 'Không thể cập nhật dịch vụ. Vui lòng thử lại sau.'
+            : 'Không thể thêm dịch vụ mới. Vui lòng thử lại sau.'
+        )
+      }
+      return // Don't close modal if error
+    }
+
+    setIsModalVisible(false)
+  }
+
+  const handleDelete = async (id) => {
+    // Find the service to show its name in the confirmation dialog
+    const serviceToDelete = services.find((s) => s.id === id)
+    if (!serviceToDelete) {
+      message.error('Không tìm thấy dịch vụ này')
+      return
+    }
+
+    Modal.confirm({
+      title: 'Xác nhận tạm ngừng dịch vụ',
+      content: `Bạn có chắc chắn muốn tạm ngừng dịch vụ "${serviceToDelete.name}" không?`,
+      okText: 'Tạm ngừng',
+      okType: 'danger',
+      cancelText: 'Huỷ',
+      async onOk() {
+        try {
+          console.log(`Setting isDeleted=true for service with ID: ${id}`)
+
+          // Make the API call to update isDeleted status instead of deleting
+          const requestData = {
+            Id: id, // Add Id field to match backend validator requirements
+            serviceName: serviceToDelete.name,
+            description: serviceToDelete.description,
+            price: serviceToDelete.price,
+            category: serviceToDelete.category,
+            imageUrl: serviceToDelete.imageUrl,
+            isDeleted: true
+          }
+
+          const updateResponse = await api.put(`/api/services/${id}`, requestData)
+          console.log('Update API response:', updateResponse)
+
+          // Refresh data from server
+          await fetchServices()
+          message.success(`Đã tạm ngừng dịch vụ "${serviceToDelete.name}" thành công`)
+        } catch (error) {
+          console.error('Error updating service status:', error)
+          console.error('Error details:', {
+            response: error.response?.data,
+            status: error.response?.status,
+            message: error.message
+          })
+
+          // Show more specific error message
+          if (error.response?.status === 404) {
+            message.error('Không tìm thấy dịch vụ này trên hệ thống')
+          } else if (error.response?.status === 403) {
+            message.error('Bạn không có quyền tạm ngừng dịch vụ này')
+          } else if (error.message.includes('Network Error')) {
+            message.error('Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại')
+          } else {
+            message.error('Không thể tạm ngừng dịch vụ. Vui lòng thử lại sau.')
+          }
+        }
+      }
+    })
+  }
+
+  const handleSearch = (value) => {
+    setSearchText(value)
+  }
+
+  const toggleServiceStatus = async (id) => {
+    try {
+      const service = services.find((s) => s.id === id)
+      if (!service) return
+
+      // Toggle isDeleted value
+      const newIsDeleted = !service.isDeleted
+
+      console.log(`Toggling service ${id} status to isDeleted: ${newIsDeleted}`)
+
+      // Using admin API endpoint to toggle isDeleted status
+      const requestData = {
+        Id: id, // Add Id field to match backend validator requirements
+        serviceName: service.name,
+        description: service.description,
+        price: service.price,
+        category: service.category,
+        imageUrl: service.imageUrl,
+        isDeleted: newIsDeleted
+      }
+
+      const statusResponse = await api.put(`/api/services/${id}`, requestData)
+      console.log('Status update response:', statusResponse.data)
+
+      // Refresh data from server
+      await fetchServices()
+      message.success(`Dịch vụ đã được ${newIsDeleted ? 'tạm dừng' : 'kích hoạt'} thành công`)
+    } catch (error) {
+      console.error('Error toggling service status:', error)
+      console.error('Error details:', error.response?.data)
+      message.error('Không thể cập nhật trạng thái dịch vụ. Vui lòng thử lại sau.')
+    }
+  }
+
+  const filteredServices = services.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchText.toLowerCase())
+  )
+
+  // Categories for filtering and form selection
+  const categories = Array.from(new Set(services.map((s) => s.category)))
+
+  const columns = [
+    {
+      title: 'Tên dịch vụ',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text) => <a>{text}</a>
+    },
+    {
+      title: 'Danh mục',
+      dataIndex: 'category',
+      key: 'category',
+      filters: categories.map((c) => ({ text: c, value: c })),
+      onFilter: (value, record) => record.category === value,
+      render: (category) => <Tag color='blue'>{category}</Tag>
+    },
+    {
+      title: 'Giá',
+      dataIndex: 'price',
+      key: 'price',
+      render: (price) => `${price.toLocaleString('vi-VN')}đ`,
+      sorter: (a, b) => a.price - b.price
+    },
+    {
+      title: 'Hình ảnh',
+      dataIndex: 'imageUrl',
+      key: 'image',
+      render: (url) => (
+        <img src={url} alt='service' style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
+      )
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'isDeleted',
+      key: 'status',
+      filters: [
+        { text: 'Đang hoạt động', value: false },
+        { text: 'Đã tạm dừng', value: true }
+      ],
+      onFilter: (value, record) => record.isDeleted === value,
+      render: (isDeleted, record) => (
+        <Switch
+          checked={!isDeleted}
+          onChange={() => toggleServiceStatus(record.id)}
+          checkedChildren='Hoạt động'
+          unCheckedChildren='Tạm dừng'
+        />
+      )
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      render: (_, record) => (
+        <Space size='middle'>
+          <Button type='primary' size='small' icon={<Edit size={14} />} onClick={() => showModal(record)}>
+            Cập nhật
+          </Button>
+        </Space>
+      )
+    }
+  ]
+
+  // Removed unused normFile function
+
+  return (
+    <div>
+      <div className='flex justify-between items-center mb-6'>
+        <Title level={4}>Quản lý Dịch vụ</Title>
+        <Space>
+          <Button icon={<RefreshCw size={16} />} onClick={fetchServices}>
+            Làm mới
+          </Button>
+          <SearchInput
+            placeholder='Tìm kiếm dịch vụ...'
+            onSearch={handleSearch}
+            style={{ width: 300 }}
+            prefix={<Search size={16} />}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <Button type='primary' icon={<PlusSquare size={16} />} onClick={() => showModal()}>
+            Thêm dịch vụ
+          </Button>
+        </Space>
+      </div>
+
+      {/* Service Statistics */}
+      <Row gutter={16} className='mb-6'>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title='Tổng số dịch vụ'
+              value={services.length}
+              valueStyle={{ color: '#1677ff' }}
+              prefix={<Package size={18} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title='Đang hoạt động'
+              value={services.filter((s) => !s.isDeleted).length}
+              valueStyle={{ color: '#52c41a' }}
+              suffix={`/ ${services.length}`}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title='Giá trung bình'
+              value={services.reduce((acc, curr) => acc + curr.price, 0) / services.length}
+              precision={0}
+              valueStyle={{ color: '#cf1322' }}
+              prefix={<DollarSign size={18} />}
+              suffix='đ'
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title='Danh mục'
+              value={new Set(services.map((s) => s.category)).size}
+              valueStyle={{ color: '#722ed1' }}
+              prefix={<PieChart size={18} />}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Table
+        columns={columns}
+        dataSource={filteredServices}
+        rowKey='id'
+        loading={loading}
+        pagination={{
+          pageSize: 10,
+          showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} dịch vụ`
+        }}
+        expandable={{
+          expandedRowRender: (record) => (
+            <div className='p-4'>
+              <Paragraph>
+                <strong>Mô tả:</strong> {record.description}
+              </Paragraph>
+              <Paragraph>
+                <strong>Chuẩn bị:</strong> {record.preparation}
+              </Paragraph>
+            </div>
+          )
+        }}
+      />
+
+      <Modal
+        title={editingService ? 'Chi tiết dịch vụ' : 'Thêm dịch vụ mới'}
+        open={isModalVisible}
+        onCancel={handleCancel}
+        footer={null}
+        width={800}
+      >
+        <Form form={form} layout='vertical' onFinish={handleSubmit}>
+          <Row gutter={16}>
+            <Col span={16}>
+              <Form.Item
+                name='name'
+                label='Tên dịch vụ'
+                rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ!' }]}
+              >
+                <Input placeholder='Nhập tên dịch vụ' />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name='enabled' label='Trạng thái' valuePropName='checked' initialValue={true}>
+                <Switch checkedChildren='Hoạt động' unCheckedChildren='Tạm dừng' />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name='category'
+                label='Danh mục'
+                rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
+              >
+                <Select placeholder='Chọn danh mục' allowClear>
+                  {Array.from(new Set([...categories, 'Xét nghiệm', 'Khám tổng quát', 'Tư vấn', 'Điều trị'])).map(
+                    (category) => (
+                      <Option key={category} value={category}>
+                        {category}
+                      </Option>
+                    )
+                  )}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name='price' label='Giá (VND)' rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                  min={0}
+                  placeholder='Nhập giá dịch vụ'
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name='description'
+            label='Mô tả'
+            rules={[{ required: true, message: 'Vui lòng nhập mô tả dịch vụ!' }]}
+          >
+            <TextArea rows={4} placeholder='Nhập mô tả chi tiết về dịch vụ' />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item name='imageUrl' label='URL Hình ảnh'>
+                <Input placeholder='Nhập đường dẫn hình ảnh' />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <div className='flex justify-end mt-4'>
+            <Button className='mr-2' onClick={handleCancel}>
+              Huỷ
+            </Button>
+            <Button type='primary' htmlType='submit' loading={loading}>
+              {editingService ? 'Cập nhật' : 'Tạo mới'}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* Image preview modal removed as we're using direct URL input */}
+    </div>
+  )
+}
+
+export default TestServiceManagement

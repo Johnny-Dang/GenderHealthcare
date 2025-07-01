@@ -30,6 +30,13 @@ import UserManagement from './pages/admin/UserManagement'
 import TestServiceManagement from './pages/admin/TestServiceManagement'
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
+
+import ManagerDashboard from './pages/manager-dashboard'
+import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
+import ManagerPaymentManagement from './pages/manager-dashboard/payment'
+import ManagerStaffManagement from './pages/manager-dashboard/staff'
+import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
+
 import BookConsultantPage from './pages/booking-consultant'
 import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSchedule'
 import ProfilePage from './pages/profile'
@@ -118,6 +125,36 @@ function App() {
       ]
     },
     {
+      path: '/manager/dashboard',
+      element: (
+        <AuthGuard allowedRoles={['Manager', 'Admin']} redirectTo='/'>
+          <ManagerDashboard />
+        </AuthGuard>
+      ),
+      children: [
+        {
+          index: true,
+          element: <Navigate to='.' replace />
+        },
+        {
+          path: 'feedback',
+          element: <ManagerFeedbackManagement />
+        },
+        {
+          path: 'payment',
+          element: <ManagerPaymentManagement />
+        },
+        {
+          path: 'staff',
+          element: <ManagerStaffManagement />
+        },
+        {
+          path: 'test-service',
+          element: <ManagerTestServiceManagement />
+        }
+      ]
+    },
+    {
       path: '/consultant',
       element: (
         <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
@@ -135,6 +172,7 @@ function App() {
         }
       ]
     },
+
     {
       path: '/customer-dashboard',
       element: <CustomerDashboard />
