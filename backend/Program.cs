@@ -68,9 +68,6 @@ builder.Services.AddMemoryCache();
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSettings);
 
-var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
-builder.Services.Configure<CloudinarySettings>(cloudinarySettings);
-
 var geminiSettings = builder.Configuration.GetSection("Gemini");
 builder.Services.Configure<GeminiSettings>(geminiSettings);
 
