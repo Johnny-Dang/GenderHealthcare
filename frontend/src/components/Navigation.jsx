@@ -37,6 +37,13 @@ const Navigation = () => {
           { path: '/admin', label: 'Quản lý hệ thống' },
           { path: '/admin/users', label: 'Quản lý tài khoản' }
         ]
+      case 'Manager':
+        return [
+          { path: '/manager/dashboard', label: 'Tổng quan' },
+          { path: '/manager/dashboard/feedback', label: 'Quản lý Feedback' },
+          { path: '/manager/dashboard/payment', label: 'Quản lý Thanh toán' },
+          { path: '/manager/dashboard/staff', label: 'Quản lý Nhân viên' }
+        ]
 
       case 'Staff':
         return [
