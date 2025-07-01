@@ -35,6 +35,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IUserService, UserService>();
             serviceCollection.AddScoped<IPhotoService, PhotoService>();
 
+            serviceCollection.AddScoped<INotificationService, NotificationService>();
+
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
             serviceCollection.AddScoped<IBookingRepository, BookingRepository>();
@@ -51,6 +53,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IPaymentRepository, PaymentRepository>();
             serviceCollection.AddScoped<IFeedbackRepository, FeedbackRepository>();
             serviceCollection.AddScoped<IStaffInfoRepository, StaffInfoRepository>();
+            serviceCollection.AddScoped<INotificationRepository, NotificationRepository>();
+            
         }
     }
 }
