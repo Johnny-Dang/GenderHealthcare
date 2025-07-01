@@ -8,6 +8,7 @@ namespace backend.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class NotificationController: ControllerBase
     {
         private readonly INotificationService _notificationService;
@@ -20,8 +21,8 @@ namespace backend.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUserNotifications()
         {
-            // Lấy userId từ token JWT
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Console.WriteLine($"userId: {userId}");
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
             {
                 return Unauthorized();

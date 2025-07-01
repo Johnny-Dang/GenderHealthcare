@@ -16,7 +16,7 @@ export default function GoogleLoginButton() {
   useEffect(() => {
     if (window.google) {
       window.google.accounts.id.initialize({
-        client_id: '1050001082894-ns5vqk3okd16mor0o71tdmemqnbdq5u0.apps.googleusercontent.com',
+        client_id: '1009838237823-cgfehmh9ssdblpodj2sdfcd4p76ilvfb.apps.googleusercontent.com',
 
         callback: handleCredentialResponse
       })

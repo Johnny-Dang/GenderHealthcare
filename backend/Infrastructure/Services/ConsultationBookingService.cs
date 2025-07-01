@@ -72,6 +72,7 @@ namespace backend.Infrastructure.Services
                 Content = $"Bạn có lịch hẹn tư vấn mới vào ngày {booking.ScheduledAt.ToString("dd/MM/yyyy HH:mm")}",
                 Type = "Booking",
             });
+
             return Result<ConsultationBookingResponse>.Success(response);
         }
 
