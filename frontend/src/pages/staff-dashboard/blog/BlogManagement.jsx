@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import Navigation from '@/components/Navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -206,13 +205,16 @@ const BlogManagement = () => {
     const slug = generateSlug(formData.title)
     const excerpt = createExcerpt(formData.content, formData.excerpt)
 
+    // Always use the category selected in the form
+    let categoryId = formData.categoryId
+
     const postData = {
       title: formData.title,
       slug: slug,
       content: formData.content,
       excerpt: excerpt,
-      authorId: user?.accountId || user?.id, // Sử dụng ID người dùng đã đăng nhập
-      categoryId: formData.categoryId,
+      authorId: user?.userInfo?.accountId, // Access accountId correctly from userInfo
+      categoryId: categoryId,
       featuredImageUrl: formData.image || DEFAULT_IMAGE,
       isPublished: !isDraft
     }
@@ -236,7 +238,7 @@ const BlogManagement = () => {
       content: postData.content,
       image: postData.featuredImageUrl,
       status: isDraft ? 'draft' : 'published',
-      author: user?.fullName || user?.username || 'Staff',
+      author: user?.userInfo?.fullName || 'Staff',
       date: new Date().toISOString().split('T')[0],
       categoryId: postData.categoryId,
       categoryName: getCategoryName(postData.categoryId)
@@ -247,7 +249,7 @@ const BlogManagement = () => {
     if (!validateForm()) return
 
     // Kiểm tra user ID
-    if (!user || (!user.accountId && !user.id)) {
+    if (!user || !user.userInfo || !user.userInfo.accountId) {
       toast({
         title: 'Lỗi',
         description: 'Không thể xác định người tạo bài viết. Vui lòng đăng nhập lại.',
@@ -571,8 +573,6 @@ const BlogManagement = () => {
 
   return (
     <div className='min-h-screen bg-gradient-soft'>
-      <Navigation />
-
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in'>
         <div className='mb-8'>
           <h1 className='text-3xl font-bold text-gray-900'>Quản lý Blog</h1>

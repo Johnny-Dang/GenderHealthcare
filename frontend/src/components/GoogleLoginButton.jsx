@@ -16,11 +16,9 @@ export default function GoogleLoginButton() {
   useEffect(() => {
     if (window.google) {
       window.google.accounts.id.initialize({
-        client_id: '1009838237823-cgfehmh9ssdblpodj2sdfcd4p76ilvfb.apps.googleusercontent.com',
-
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse
       })
-
       window.google.accounts.id.renderButton(
         document.getElementById('google-signin-button'),
 

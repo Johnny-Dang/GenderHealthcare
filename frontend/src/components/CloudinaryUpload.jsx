@@ -1,191 +1,72 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
 import Avatar from '@/components/Avatar'
-import { Upload, X, Check } from 'lucide-react'
-import { toast } from 'react-toastify'
-import api from '@/configs/axios'
+import { Upload } from 'lucide-react'
 
-const CloudinaryUpload = ({ onUploadSuccess, currentAvatarUrl, className = '' }) => {
-  const [file, setFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState(null)
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'ml_default';
 
-  const handleFileSelect = (e) => {
-    const selectedFile = e.target.files[0]
-    if (!selectedFile) return
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-    if (!allowedTypes.includes(selectedFile.type)) {
-      toast.error('Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WebP)')
-      return
+const CloudinaryUpload = ({ onUploadSuccess, currentAvatarUrl, className = '', avatarSize = 'xl' }) => {
+  const openWidget = () => {
+    if (!window.cloudinary) {
+      alert('Cloudinary Widget chưa được load!');
+      return;
     }
-
-    // Validate file size (max 5MB)
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      toast.error('Kích thước file không được vượt quá 5MB')
-      return
-    }
-
-    setFile(selectedFile)
-    
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setPreviewUrl(e.target.result)
-    }
-    reader.readAsDataURL(selectedFile)
+    window.cloudinary.openUploadWidget(
+      {
+        cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+        uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+        cropping: true,
+        croppingAspectRatio: 1,
+        multiple: false,
+        maxImageFileSize: 2 * 1024 * 1024, // 2MB
+        sources: ['local', 'google_drive'],
+        googleApiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+        resourceType: 'image',
+        showSkipCropButton: false,
+        showPoweredBy: false,
+        folder: 'avatars',
+      },
+      (error, result) => {
+        if (!error && result && result.event === 'success') {
+          onUploadSuccess(result.info.secure_url)
+        }
+      }
+    )
   }
 
-  const handleUpload = async () => {
-    if (!file) {
-      toast.error('Vui lòng chọn file ảnh')
-      return
-    }
-
-    setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-
-    try {
-      const response = await api.post('/api/photo/upload', formData)
-      const uploadedUrl = response.data.url
-      
-      // Call parent callback with the new URL
-      onUploadSuccess(uploadedUrl)
-      
-      // Clear state
-      setFile(null)
-      setPreviewUrl(null)
-      
-      toast.success('Upload ảnh thành công!')
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error(error.response?.data || 'Upload thất bại. Vui lòng thử lại.')
-    } finally {
-      setUploading(false)
-    }
+  // Map avatarSize sang class width/height
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-24 h-24',
+    '2xl': 'w-28 h-28'
   }
-
-  const handleCancel = () => {
-    setFile(null)
-    setPreviewUrl(null)
-  }
-
-  const displayImage = previewUrl || currentAvatarUrl
+  const avatarBoxClass = sizeClasses[avatarSize] || 'w-24 h-24'
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Current Avatar Display */}
-      <div className="flex items-center justify-center">
-        <div className="relative">
-          <Avatar
-            src={displayImage}
-            alt="Avatar preview"
-            size="xl"
-            fallbackText=""
-            showFallback={!displayImage}
-            clickable={true}
-          />
-          
-          {/* Upload overlay for current avatar */}
-          {!file && currentAvatarUrl && (
-            <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
-              <Upload className="w-6 h-6 text-white" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </label>
-          )}
+    <div className={`space-y-2 flex flex-col items-center ${className}`}>
+      <div
+        className={`relative flex items-center justify-center group cursor-pointer ${avatarBoxClass}`}
+        onClick={openWidget}
+        title="Chọn hoặc thay đổi ảnh đại diện"
+        style={{ minWidth: 0 }}
+      >
+        <Avatar
+          src={currentAvatarUrl}
+          alt="Avatar preview"
+          size={avatarSize}
+          fallbackText=""
+          showFallback={!currentAvatarUrl}
+          clickable={false}
+        />
+        {/* Overlay upload icon khi hover */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition">
+          <Upload className="w-10 h-10 text-white mb-1" />
+          <span className="text-sm font-semibold text-white drop-shadow-md" style={{textShadow: '0 1px 4px rgba(0,0,0,0.7)'}}>Chọn hoặc thay đổi ảnh</span>
         </div>
       </div>
-
-      {/* File Selection */}
-      {!file && !currentAvatarUrl && (
-        <div className="text-center">
-          <label className="cursor-pointer">
-            <div className="border-2 border-dashed border-pink-300 rounded-lg p-6 hover:border-pink-400 transition-colors">
-              <Upload className="w-8 h-8 text-pink-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-1">Chọn ảnh đại diện</p>
-              <p className="text-xs text-gray-500">JPG, PNG, GIF, WebP (tối đa 5MB)</p>
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </label>
-        </div>
-      )}
-
-      {/* File Preview and Actions */}
-      {file && (
-        <div className="space-y-3">
-          <div className="bg-pink-50 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded bg-pink-100 flex items-center justify-center">
-                  <Upload className="w-4 h-4 text-pink-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCancel}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex space-x-2">
-            <Button
-              onClick={handleUpload}
-              disabled={uploading}
-              className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700"
-            >
-              {uploading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Đang upload...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Upload ảnh
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Change Avatar Button for existing avatar */}
-      {!file && currentAvatarUrl && (
-        <div className="text-center">
-          <label className="cursor-pointer">
-            <Button variant="outline" className="border-pink-300 text-pink-600 hover:bg-pink-50">
-              <Upload className="w-4 h-4 mr-2" />
-              Thay đổi ảnh
-            </Button>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </label>
-        </div>
-      )}
     </div>
   )
 }
