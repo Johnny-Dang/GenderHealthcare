@@ -6,7 +6,6 @@ import rootReducer from './rootReducer'
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['user'] // Persist only the user slice
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

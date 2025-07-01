@@ -33,7 +33,6 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IFeedbackService, FeedbackService>();
             serviceCollection.AddScoped<IStaffInfoService, StaffInfoService>();
             serviceCollection.AddScoped<IUserService, UserService>();
-            serviceCollection.AddScoped<IPhotoService, PhotoService>();
 
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();

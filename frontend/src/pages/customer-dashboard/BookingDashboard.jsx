@@ -20,7 +20,7 @@ import { useSelector } from 'react-redux'
 import api from '@/configs/axios'
 
 const CustomerDashboard = () => {
-  const user = useSelector((state) => state.user.userInfo)
+  const user = useSelector((state) => state.user?.userInfo)
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
