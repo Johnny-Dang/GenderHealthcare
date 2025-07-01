@@ -166,20 +166,21 @@ const UserManagement = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      width: '18%'
+      width: '16%'
     },
     {
       title: 'Tên',
       dataIndex: 'name',
       key: 'name',
       render: (text) => <Text strong>{text}</Text>,
-      sorter: (a, b) => a.name.localeCompare(b.name)
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      width: '10%'
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-      width: '20%'
+      width: '10%'
     },
     {
       title: 'Số điện thoại',
