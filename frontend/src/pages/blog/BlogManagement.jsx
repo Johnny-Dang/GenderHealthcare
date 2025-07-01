@@ -206,15 +206,31 @@ const BlogManagement = () => {
     const slug = generateSlug(formData.title)
     const excerpt = createExcerpt(formData.content, formData.excerpt)
 
+    // Handle categoryId differently for create vs update
+    let categoryId = formData.categoryId
+
+    // For create: use directly from the form (user's selection)
+    // For update: try to find based on categoryName if available
+    if (isUpdate && editingPost && editingPost.categoryName) {
+      const category = categories.find((cat) => cat.name === editingPost.categoryName)
+      if (category) {
+        categoryId = category.categoryId
+      }
+    }
+
     const postData = {
       title: formData.title,
       slug: slug,
       content: formData.content,
       excerpt: excerpt,
-      authorId: user?.userInfo?.accountId || user?.accountId || '207a7ab3-c403-41c5-8dbe-34e97dd5e7dd',
-      categoryId: formData.categoryId, // Đã được set đúng từ handleEditPost
+      authorId: user?.userInfo?.accountId, // Access accountId correctly from userInfo
+      categoryId: categoryId,
       featuredImageUrl: formData.image || DEFAULT_IMAGE,
       isPublished: !isDraft
+    }
+
+    if (isUpdate && editingPost) {
+      postData.blogId = editingPost.id
     }
 
     // Log để debug
@@ -232,7 +248,7 @@ const BlogManagement = () => {
       content: postData.content,
       image: postData.featuredImageUrl,
       status: isDraft ? 'draft' : 'published',
-      author: user?.fullName || user?.username || 'Staff',
+      author: user?.userInfo?.fullName || 'Staff',
       date: new Date().toISOString().split('T')[0],
       categoryId: postData.categoryId,
       categoryName: getCategoryName(postData.categoryId)
@@ -243,7 +259,7 @@ const BlogManagement = () => {
     if (!validateForm()) return
 
     // Kiểm tra user ID
-    if (!user || (!user.accountId && !user.id)) {
+    if (!user || !user.userInfo || !user.userInfo.accountId) {
       toast({
         title: 'Lỗi',
         description: 'Không thể xác định người tạo bài viết. Vui lòng đăng nhập lại.',
@@ -304,27 +320,13 @@ const BlogManagement = () => {
   }
 
   function handleEditPost(post) {
-    // Tìm categoryId dựa trên categoryName
-    const categoryId = post.categoryName
-      ? categories.find((c) => c.name === post.categoryName)?.categoryId
-      : categories[0]?.categoryId
-
-    if (!categoryId) {
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể xác định danh mục cho bài viết này',
-        variant: 'destructive'
-      })
-      return
-    }
-
     setEditingPost(post)
     setFormData({
       title: post.title,
       excerpt: post.excerpt,
       content: post.content,
       image: post.image,
-      categoryId: categoryId // Sử dụng categoryId đã tìm được
+      categoryId: post.categoryId || (categories.length > 0 ? categories[0].categoryId : '')
     })
     setShowEditModal(true)
   }
