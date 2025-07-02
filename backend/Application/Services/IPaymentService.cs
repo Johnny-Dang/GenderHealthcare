@@ -14,6 +14,6 @@ namespace backend.Application.Services
         // Additional methods for payment operations
         Task<PaymentDTO> GetPaymentByBookingIdAsync(Guid bookingId);
         Task<PaymentDTO> GetPaymentByTransactionIdAsync(string transactionId);
-        Task<List<PaymentWithCustomerDTO>> GetAllPaymentsWithCustomerAsync();
+        Task<List<PaymentWithBookingInfoDTO>> GetAllPaymentsWithBookingInfoAsync();
     }
 }

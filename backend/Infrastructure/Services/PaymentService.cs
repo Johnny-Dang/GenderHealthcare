@@ -88,21 +88,29 @@ namespace backend.Infrastructure.Services
             var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(transactionId);
             return payment != null ? MapToDTO(payment) : null;
         }
-        public async Task<List<PaymentWithCustomerDTO>> GetAllPaymentsWithCustomerAsync()
+
+        public async Task<List<PaymentWithBookingInfoDTO>> GetAllPaymentsWithBookingInfoAsync()
         {
             var payments = await _paymentRepository.GetAllPaymentsAsync();
-            var result = payments.Select(p => new PaymentWithCustomerDTO
+            var result = new List<PaymentWithBookingInfoDTO>();
+            foreach (var payment in payments)
             {
-                BookingId = p.BookingId,
-                FirstName = p.Booking.Account?.FirstName ?? string.Empty,
-                LastName = p.Booking.Account?.LastName ?? string.Empty,
-                Amount = p.Amount,
-                PaymentMethod = p.PaymentMethod,
-                CreatedAt = p.CreatedAt,
-                Phone = p.Booking.Account?.Phone ?? string.Empty,
-                Email = p.Booking.Account?.Email ?? string.Empty,
-                Gender = p.Booking.Account?.Gender ?? false
-            }).ToList();
+                var booking = payment.Booking;
+                var account = booking?.Account;
+                result.Add(new PaymentWithBookingInfoDTO
+                {
+                    BookingId = payment.BookingId,
+                    FirstName = account?.FirstName ?? string.Empty,
+                    LastName = account?.LastName ?? string.Empty,
+                    Amount = payment.Amount,
+                    PaymentMethod = payment.PaymentMethod,
+                    CreateAt = payment.CreatedAt,
+                    Phone = account?.Phone ?? string.Empty,
+                    Email = account?.Email ?? string.Empty,
+                    Gender = account?.Gender ?? false,
+                    TransactionId = payment.TransactionId
+                });
+            }
             return result;
         }
         
