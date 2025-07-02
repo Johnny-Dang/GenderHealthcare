@@ -21,7 +21,7 @@ namespace backend.API.Controllers
         
         // POST: api/payments/create-vnpay-url
         [HttpPost("create-vnpay-url")]
-        //[Authorize]
+        [Authorize]
         public IActionResult CreateVnPayUrl([FromBody] CreateVnPayRequest request)
         {
             var url = _paymentService.CreatePaymentUrl(request, HttpContext);
@@ -31,21 +31,12 @@ namespace backend.API.Controllers
         // GET: api/payments/vnpay-callback
         [HttpGet("vnpay-callback")]
         [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> VnPayCallback()
         {
             var response = _paymentService.PaymentExecute(Request.Query);
             await _paymentService.StorePayment(response);
             return Ok(response);
-        }
-        
-        // GET: api/payments
-        [HttpGet]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<PaymentDTO>>> GetAllPayments()
-        {
-            var payments = await _paymentService.GetAllPaymentsAsync();
-            return Ok(payments);
         }
         
         // GET: api/payments/booking/{bookingId}
@@ -74,6 +65,16 @@ namespace backend.API.Controllers
                 return NotFound();
                 
             return Ok(payment);
+        }
+        
+        // GET: api/payments/with-booking-info
+        [HttpGet("with-booking-info")]
+        [Authorize(Roles ="Staff,Manager,Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<PaymentWithBookingInfoDTO>>> GetAllPaymentsWithBookingInfo()
+        {
+            var payments = await _paymentService.GetAllPaymentsWithBookingInfoAsync();
+            return Ok(payments);
         }
     }
 } 

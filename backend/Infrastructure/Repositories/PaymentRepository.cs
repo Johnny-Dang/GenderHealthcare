@@ -42,7 +42,7 @@ namespace backend.Infrastructure.Repositories
         public async Task<List<Payment>> GetAllPaymentsAsync()
         {
             return await _dbContext.Payment
-                .Include(p => p.Booking)
+                .Include(p => p.Booking).ThenInclude(b => b.Account)
                 .ToListAsync();
         }
     }
