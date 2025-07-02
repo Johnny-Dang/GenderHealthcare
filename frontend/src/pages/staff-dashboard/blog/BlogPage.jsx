@@ -7,7 +7,7 @@ import { Calendar, User, Loader, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import api from '@/configs/axios'
 import { useToast } from '@/hooks/use-toast'
-import Loading from '../../components/Loading'
+import Loading from '../../../components/Loading'
 
 const BlogPage = () => {
   const { toast } = useToast()

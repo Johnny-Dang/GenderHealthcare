@@ -23,6 +23,7 @@ namespace backend.Infrastructure.Database
         public DbSet<Feedback> Feedback { get ; set; }
 
         public DbSet<ConsultationBooking> ConsultationBooking { get; set; }
+        public DbSet<Notification> Notification { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -38,7 +39,7 @@ namespace backend.Infrastructure.Database
             // mấy thằng bị xóa mềm là ban nè
             modelBuilder.Entity<Account>().HasQueryFilter(a => !a.IsDeleted);
 
-            // Load mapping configurations
+            // This will automatically apply all configurations in the current assembly
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
             base.OnModelCreating(modelBuilder);

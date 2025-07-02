@@ -6,9 +6,9 @@ import RegisterPage from './pages/register'
 import NotFound from './pages/NotFound'
 import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
 import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
-import BlogManagement from './pages/blog/BlogManagement'
-import BlogPage from './pages/blog/BlogPage'
-import BlogDetailPage from './pages/blog/BlogDetailPage'
+import BlogManagement from './pages/staff-dashboard/blog/BlogManagement'
+import BlogPage from './pages/staff-dashboard/blog/BlogPage'
+import BlogDetailPage from './pages/staff-dashboard/blog/BlogDetailPage'
 import TestServicePage from './pages/test-service'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
@@ -30,10 +30,23 @@ import UserManagement from './pages/admin/UserManagement'
 import TestServiceManagement from './pages/admin/TestServiceManagement'
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
+
+import ManagerDashboard from './pages/manager-dashboard'
+import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
+import ManagerPaymentManagement from './pages/manager-dashboard/payment'
+import ManagerStaffManagement from './pages/manager-dashboard/staff'
+import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
+
 import BookConsultantPage from './pages/booking-consultant'
 import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSchedule'
 import ProfilePage from './pages/profile'
 import TestResultsPage from './pages/consultant/TestResultsPage'
+
+// Staff Dashboard Imports
+import StaffLayout from './pages/staff-dashboard/StaffLayout'
+import StaffDashboard from './pages/staff-dashboard/dashboard/StaffDashboard'
+import AppointmentsManagement from './pages/staff-dashboard/Appoinments/AppointmentsManagement'
+import TestResultsManagement from './pages/staff-dashboard/TestResult/TestResultsManagement'
 
 function App() {
   // Using HashRouter for better compatibility with different server configurations
@@ -71,13 +84,36 @@ function App() {
       path: '/blog/:id',
       element: <BlogDetailPage />
     },
+    // Staff Dashboard and related routes
     {
-      path: '/staff/blog',
+      path: '/staff',
       element: (
         <AuthGuard allowedRoles={['Staff']} redirectTo='/'>
-          <BlogManagement />
+          <StaffLayout />
         </AuthGuard>
-      )
+      ),
+      children: [
+        {
+          index: true,
+          element: <Navigate to='dashboard' replace />
+        },
+        {
+          path: 'dashboard',
+          element: <StaffDashboard />
+        },
+        {
+          path: 'blog',
+          element: <BlogManagement />
+        },
+        {
+          path: 'appointments',
+          element: <AppointmentsManagement />
+        },
+        {
+          path: 'test-results',
+          element: <TestResultsManagement />
+        }
+      ]
     },
     {
       path: '/cycle-tracking',
@@ -118,6 +154,36 @@ function App() {
       ]
     },
     {
+      path: '/manager/dashboard',
+      element: (
+        <AuthGuard allowedRoles={['Manager', 'Admin']} redirectTo='/'>
+          <ManagerDashboard />
+        </AuthGuard>
+      ),
+      children: [
+        {
+          index: true,
+          element: <Navigate to='.' replace />
+        },
+        {
+          path: 'feedback',
+          element: <ManagerFeedbackManagement />
+        },
+        {
+          path: 'payment',
+          element: <ManagerPaymentManagement />
+        },
+        {
+          path: 'staff',
+          element: <ManagerStaffManagement />
+        },
+        {
+          path: 'test-service',
+          element: <ManagerTestServiceManagement />
+        }
+      ]
+    },
+    {
       path: '/consultant',
       element: (
         <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']} redirectTo='/'>
@@ -135,6 +201,7 @@ function App() {
         }
       ]
     },
+
     {
       path: '/customer-dashboard',
       element: <CustomerDashboard />
@@ -150,6 +217,15 @@ function App() {
     {
       path: '/checkout/vnpay-return',
       element: <VnPayReturn />
+    },
+    // Redirect staff to staff dashboard after login
+    {
+      path: '/staff-dashboard',
+      element: (
+        <AuthGuard allowedRoles={['Staff']} redirectTo='/'>
+          <Navigate to='/staff/dashboard' replace />
+        </AuthGuard>
+      )
     },
     {
       path: '*',

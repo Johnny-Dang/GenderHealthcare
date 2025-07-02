@@ -8,6 +8,7 @@ import { logout } from '@/redux/features/userSlice'
 import api from '@/configs/axios'
 import { toast } from 'react-toastify'
 import CartIcon from './CartIcon'
+import NotificationBell from './NotificationBell'
 
 const Navigation = () => {
   const navigate = useNavigate()
@@ -36,6 +37,13 @@ const Navigation = () => {
         return [
           { path: '/admin', label: 'Quản lý hệ thống' },
           { path: '/admin/users', label: 'Quản lý tài khoản' }
+        ]
+      case 'Manager':
+        return [
+          { path: '/manager/dashboard', label: 'Tổng quan' },
+          { path: '/manager/dashboard/feedback', label: 'Quản lý Feedback' },
+          { path: '/manager/dashboard/payment', label: 'Quản lý Thanh toán' },
+          { path: '/manager/dashboard/staff', label: 'Quản lý Nhân viên' }
         ]
 
       case 'Staff':
@@ -228,6 +236,8 @@ const Navigation = () => {
 
             {/* Cart Icon */}
             <CartIcon />
+
+            {userInfo && <NotificationBell />}
 
             {/* User avatar and dropdown */}
             {userInfo ? (

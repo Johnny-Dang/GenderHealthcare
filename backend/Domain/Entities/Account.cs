@@ -29,5 +29,7 @@ namespace DeployGenderSystem.Domain.Entity
         public virtual ICollection<ConsultationBooking> CustomerBookings { get; set; } = new List<ConsultationBooking>();
         public virtual ICollection<ConsultationBooking> StaffBookings { get; set; } = new List<ConsultationBooking>();
 
+        public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
     }
 }

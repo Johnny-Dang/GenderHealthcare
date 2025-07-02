@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, User, Loader, Clock, Tag } from 'lucide-react'
 import api from '@/configs/axios'
-import Loading from '../../components/Loading'
+import Loading from '../../../components/Loading'
 
 const BlogDetailPage = () => {
   const { id } = useParams()
