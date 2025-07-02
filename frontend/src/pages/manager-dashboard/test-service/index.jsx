@@ -34,6 +34,8 @@ import {
 } from 'lucide-react'
 // Removed unused UploadOutlined import
 import api from '../../../configs/axios'
+import CloudinaryUpload from '@/components/CloudinaryUpload'
+import ImageModal from '@/components/ImageModal'
 
 const { Title, Text, Paragraph } = Typography
 const { Search: SearchInput } = Input
@@ -47,7 +49,9 @@ const TestServiceManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [editingService, setEditingService] = useState(null)
   const [form] = Form.useForm()
-  // Removed unused image preview states
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageModalVisible, setImageModalVisible] = useState(false)
+  const [selectedImageUrl, setSelectedImageUrl] = useState('')
 
   // Fetch data from API
   const fetchServices = async () => {
@@ -117,12 +121,14 @@ const TestServiceManagement = () => {
         preparation: service.preparation,
         imageUrl: service.imageUrl
       })
+      setImageUrl(service.imageUrl || '')
     } else {
       form.resetFields()
       form.setFieldsValue({
         status: 'active',
         enabled: true
       })
+      setImageUrl('')
     }
     setIsModalVisible(true)
   }
@@ -131,8 +137,6 @@ const TestServiceManagement = () => {
     setIsModalVisible(false)
     form.resetFields()
   }
-
-  // Remove unused image preview functions
 
   const handleSubmit = async (values) => {
     const isDeleted = !values.enabled
@@ -342,12 +346,21 @@ const TestServiceManagement = () => {
       sorter: (a, b) => a.price - b.price
     },
     {
-      title: 'Hình ảnh',
+      title: 'Ảnh',
       dataIndex: 'imageUrl',
-      key: 'image',
+      key: 'imageUrl',
       render: (url) => (
-        <img src={url} alt='service' style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
-      )
+        <img
+          src={url}
+          alt="Ảnh dịch vụ"
+          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, cursor: 'pointer', border: '1px solid #eee' }}
+          onClick={() => {
+            setSelectedImageUrl(url)
+            setImageModalVisible(true)
+          }}
+        />
+      ),
+      width: 80
     },
     {
       title: 'Trạng thái',
@@ -473,13 +486,18 @@ const TestServiceManagement = () => {
       />
 
       <Modal
-        title={editingService ? 'Chi tiết dịch vụ' : 'Thêm dịch vụ mới'}
-        open={isModalVisible}
+        title={editingService ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}
+        visible={isModalVisible}
         onCancel={handleCancel}
-        footer={null}
-        width={800}
+        onOk={() => form.submit()}
+        okText={editingService ? 'Cập nhật' : 'Thêm mới'}
+        cancelText="Hủy"
       >
-        <Form form={form} layout='vertical' onFinish={handleSubmit}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+        >
           <Row gutter={16}>
             <Col span={16}>
               <Form.Item
@@ -536,26 +554,26 @@ const TestServiceManagement = () => {
             <TextArea rows={4} placeholder='Nhập mô tả chi tiết về dịch vụ' />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item name='imageUrl' label='URL Hình ảnh'>
-                <Input placeholder='Nhập đường dẫn hình ảnh' />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <div className='flex justify-end mt-4'>
-            <Button className='mr-2' onClick={handleCancel}>
-              Huỷ
-            </Button>
-            <Button type='primary' htmlType='submit' loading={loading}>
-              {editingService ? 'Cập nhật' : 'Tạo mới'}
-            </Button>
-          </div>
+          <Form.Item label="Ảnh dịch vụ" name="imageUrl">
+            <CloudinaryUpload
+              onUploadSuccess={(url) => {
+                setImageUrl(url)
+                form.setFieldsValue({ imageUrl: url })
+              }}
+              currentImageUrl={imageUrl}
+              folder="testservices"
+              label="Chọn ảnh dịch vụ"
+              size={160}
+            />
+          </Form.Item>
         </Form>
       </Modal>
 
-      {/* Image preview modal removed as we're using direct URL input */}
+      <ImageModal
+        isOpen={imageModalVisible}
+        imageUrl={selectedImageUrl}
+        onClose={() => setImageModalVisible(false)}
+      />
     </div>
   )
 }

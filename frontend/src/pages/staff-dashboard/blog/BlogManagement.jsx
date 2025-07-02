@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import api from '@/configs/axios'
+import CloudinaryUpload from '@/components/CloudinaryUpload'
 
 // Constants
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop'
@@ -671,12 +672,13 @@ const BlogManagement = () => {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='image'>URL ảnh minh họa</Label>
-                <Input
-                  id='image'
-                  placeholder='https://example.com/image.jpg'
-                  value={formData.image}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
+                <Label>Ảnh minh họa</Label>
+                <CloudinaryUpload
+                  onUploadSuccess={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+                  currentImageUrl={formData.image}
+                  folder="blog"
+                  label="Tải lên ảnh minh họa"
+                  size={160}
                 />
               </div>
 
@@ -1071,12 +1073,13 @@ const BlogManagement = () => {
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='edit-image'>URL ảnh minh họa</Label>
-                    <Input
-                      id='edit-image'
-                      placeholder='https://example.com/image.jpg'
-                      value={formData.image}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
+                    <Label>Ảnh minh họa</Label>
+                    <CloudinaryUpload
+                      onUploadSuccess={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+                      currentImageUrl={formData.image}
+                      folder="blog"
+                      label="Tải lên ảnh minh họa"
+                      size={160}
                     />
                   </div>
 
