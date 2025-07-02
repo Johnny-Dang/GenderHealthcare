@@ -8,6 +8,7 @@ import { logout } from '@/redux/features/userSlice'
 import api from '@/configs/axios'
 import { toast } from 'react-toastify'
 import CartIcon from './CartIcon'
+import NotificationBell from './NotificationBell'
 
 const Navigation = () => {
   const navigate = useNavigate()
@@ -235,6 +236,8 @@ const Navigation = () => {
 
             {/* Cart Icon */}
             <CartIcon />
+
+            {userInfo && <NotificationBell />}
 
             {/* User avatar and dropdown */}
             {userInfo ? (
