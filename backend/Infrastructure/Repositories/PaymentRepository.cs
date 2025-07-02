@@ -43,6 +43,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _dbContext.Payment
                 .Include(p => p.Booking)
+                .ThenInclude(b => b.Account)
                 .ToListAsync();
         }
     }

@@ -42,9 +42,9 @@ namespace backend.API.Controllers
         [HttpGet]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<PaymentDTO>>> GetAllPayments()
+        public async Task<ActionResult<IEnumerable<PaymentWithCustomerDTO>>> GetAllPayments()
         {
-            var payments = await _paymentService.GetAllPaymentsAsync();
+            var payments = await _paymentService.GetAllPaymentsWithCustomerAsync();
             return Ok(payments);
         }
         

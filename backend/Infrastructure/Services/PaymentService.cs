@@ -88,11 +88,22 @@ namespace backend.Infrastructure.Services
             var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(transactionId);
             return payment != null ? MapToDTO(payment) : null;
         }
-
-        public async Task<List<PaymentDTO>> GetAllPaymentsAsync()
+        public async Task<List<PaymentWithCustomerDTO>> GetAllPaymentsWithCustomerAsync()
         {
             var payments = await _paymentRepository.GetAllPaymentsAsync();
-            return payments.Select(MapToDTO).ToList();
+            var result = payments.Select(p => new PaymentWithCustomerDTO
+            {
+                BookingId = p.BookingId,
+                FirstName = p.Booking.Account?.FirstName ?? string.Empty,
+                LastName = p.Booking.Account?.LastName ?? string.Empty,
+                Amount = p.Amount,
+                PaymentMethod = p.PaymentMethod,
+                CreatedAt = p.CreatedAt,
+                Phone = p.Booking.Account?.Phone ?? string.Empty,
+                Email = p.Booking.Account?.Email ?? string.Empty,
+                Gender = p.Booking.Account?.Gender ?? false
+            }).ToList();
+            return result;
         }
         
         // Helper method to map Payment entity to PaymentDTO
