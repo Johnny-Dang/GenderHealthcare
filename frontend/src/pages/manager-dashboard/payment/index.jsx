@@ -287,7 +287,8 @@ const PaymentManagement = () => {
       title: 'Mã thanh toán',
       dataIndex: 'id',
       key: 'id',
-      render: (text) => <a style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>{text}</a>
+      render: (text) => <a style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>{text}</a>,
+      width: 200
     },
 
     {
@@ -338,9 +339,11 @@ const PaymentManagement = () => {
   ]
 
   return (
-    <div>
-      <div className='flex justify-between items-center mb-6'>
-        <Title level={4}>Quản lý Thanh toán</Title>
+    <div className='bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6 rounded-lg shadow-sm min-h-screen'>
+      <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-blue-100 to-blue-50 p-4 rounded-lg shadow-sm'>
+        <Title level={4} className='transition-all duration-300 hover:text-blue-600 hover:translate-x-1 mb-0'>
+          Quản lý Thanh toán
+        </Title>
         <Space>
           <Button icon={<RefreshCw size={16} />} onClick={fetchPayments}>
             Làm mới
@@ -354,38 +357,42 @@ const PaymentManagement = () => {
       <Tabs defaultActiveKey='statistics' className='mb-6'>
         <TabPane tab='Thống kê' key='statistics'>
           <div className='grid grid-cols-4 gap-4 mb-6'>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-blue-400 bg-white'>
               <Statistic
                 title='Tổng doanh thu'
                 value={payments.reduce((sum, item) => sum + (item.status === 'completed' ? item.amount : 0), 0)}
                 valueStyle={{ color: '#3f8600' }}
-                prefix={<DollarSign size={18} />}
+                prefix={<DollarSign size={18} className='text-blue-500 animate-pulse' />}
                 suffix='VND'
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-indigo-400 bg-white'>
               <Statistic
                 title='Số giao dịch'
                 value={payments.length}
                 valueStyle={{ color: '#1677ff' }}
-                prefix={<CreditCard size={18} />}
+                prefix={<CreditCard size={18} className='text-indigo-500 animate-pulse' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-green-400 bg-white'>
               <Statistic
                 title='Đơn thành công'
                 value={payments.filter((p) => p.status === 'completed').length}
                 valueStyle={{ color: '#52c41a' }}
-                prefix={<TrendingUp size={18} />}
+                prefix={<TrendingUp size={18} className='text-green-500 animate-pulse' />}
                 suffix={`/ ${payments.length}`}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-yellow-400 bg-white'>
               <Statistic
                 title='Đơn đang xử lý'
                 value={payments.filter((p) => p.status === 'pending').length}
                 valueStyle={{ color: '#faad14' }}
-                prefix={<Calendar size={18} />}
+                prefix={<Calendar size={18} className='text-yellow-500 animate-pulse' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
           </div>

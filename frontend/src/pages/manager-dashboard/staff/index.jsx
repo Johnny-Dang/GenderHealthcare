@@ -141,7 +141,7 @@ const StaffManagement = () => {
             size='small'
             icon={<Eye size={14} />}
             onClick={() => showModal(record)}
-            className='transition-all duration-300 hover:scale-105 hover:shadow-md'
+            className='transition-all duration-300 hover:scale-105 hover:shadow-md bg-green-500 hover:bg-green-600'
           >
             Chi tiết
           </Button>
@@ -151,16 +151,16 @@ const StaffManagement = () => {
   ]
 
   return (
-    <div>
-      <div className='flex justify-between items-center mb-6'>
-        <Title level={4} className='transition-all duration-300 hover:text-blue-600 hover:translate-x-1'>
+    <div className='bg-gradient-to-br from-green-50 via-white to-green-50 p-6 rounded-lg shadow-sm min-h-screen'>
+      <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-green-100 to-green-50 p-4 rounded-lg shadow-sm'>
+        <Title level={4} className='transition-all duration-300 hover:text-green-600 hover:translate-x-1 mb-0'>
           Quản lý Nhân viên
         </Title>
         <Space>
           <Button
-            icon={<RefreshCw size={16} />}
+            icon={<RefreshCw size={16} className='group-hover:rotate-180 transition-transform duration-500' />}
             onClick={fetchStaffInfo}
-            className='transition-all duration-300 hover:shadow-md hover:text-blue-600 hover:border-blue-400'
+            className='transition-all duration-300 hover:shadow-md hover:text-green-600 hover:border-green-400 group bg-white'
           >
             Làm mới
           </Button>
@@ -176,20 +176,20 @@ const StaffManagement = () => {
       </div>
 
       {/* Staff Statistics */}
-      <Row gutter={16} className='mb-6'>
+      <Row gutter={16} className='mb-6 p-2 bg-green-50/30 rounded-lg'>
         <Col span={8}>
-          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1'>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-green-400 bg-white'>
             <Statistic
               title='Tổng số nhân viên'
               value={staffList.length}
               valueStyle={{ color: '#1677ff' }}
-              prefix={<Users size={18} />}
+              prefix={<Users size={18} className='text-green-500 animate-pulse' />}
               className='transition-all duration-300 hover:scale-105'
             />
           </Card>
         </Col>
         <Col span={8}>
-          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1'>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-orange-400 bg-white'>
             <Statistic
               title='Số năm kinh nghiệm TB'
               value={
@@ -205,7 +205,7 @@ const StaffManagement = () => {
           </Card>
         </Col>
         <Col span={8}>
-          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1'>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-purple-400 bg-white'>
             <Statistic
               title='Số phòng ban'
               value={new Set(staffList.map((s) => s.department)).size}
@@ -225,11 +225,11 @@ const StaffManagement = () => {
           pageSize: 10,
           showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhân viên`
         }}
-        className='transition-all duration-300 hover:shadow-md'
-        rowClassName={() => 'transition-all duration-300 hover:bg-blue-50'}
+        className='transition-all duration-300 hover:shadow-md bg-white rounded-lg overflow-hidden border border-green-200'
+        rowClassName={() => 'transition-all duration-300 hover:bg-green-50'}
         expandable={{
           expandedRowRender: (record) => (
-            <div className='p-4 bg-gray-50 rounded-md transition-all duration-300 hover:bg-blue-50'>
+            <div className='p-4 bg-green-50/40 rounded-md transition-all duration-300 hover:bg-green-100 border border-green-200'>
               <Text strong>Tiểu sử:</Text>
               <p>{record.biography}</p>
             </div>
@@ -245,14 +245,14 @@ const StaffManagement = () => {
           <Button
             key='back'
             onClick={handleCancel}
-            className='transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-400 hover:shadow-md'
+            className='transition-all duration-300 hover:bg-green-50 hover:text-green-600 hover:border-green-400 hover:shadow-md'
           >
             Đóng
           </Button>
         ]}
         width={800}
-        className='transition-all duration-500 bg-gradient-to-r from-blue-50 to-indigo-50'
-        bodyStyle={{ backgroundColor: '#f0f7ff', borderRadius: '8px', padding: '20px' }}
+        className='transition-all duration-500 bg-gradient-to-r from-green-50 to-emerald-50'
+        bodyStyle={{ backgroundColor: '#f0fff5', borderRadius: '8px', padding: '20px' }}
       >
         {editingStaff && (
           <div className='flex flex-col'>
@@ -270,37 +270,37 @@ const StaffManagement = () => {
                   }
                 }}
               />
-              <Text strong className='text-xl transition-all duration-300 hover:text-blue-600'>
+              <Text strong className='text-xl transition-all duration-300 hover:text-green-600'>
                 {editingStaff.fullName || 'N/A'}
               </Text>
               <Text className='text-gray-500 transition-all duration-300 hover:text-gray-700'>
                 {editingStaff.email}
               </Text>
               <div className='mt-2'>
-                <Tag color='blue' className='transition-all duration-300 hover:scale-110'>
+                <Tag color='green' className='transition-all duration-300 hover:scale-110'>
                   {editingStaff.degree}
                 </Tag>
               </div>
             </div>
 
             {/* Two column layout for details */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-indigo-50 to-white rounded-lg p-4 shadow-sm mb-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-br from-green-50 to-white rounded-lg p-4 shadow-sm mb-4'>
               <div>
-                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-blue-50 hover:shadow-sm bg-blue-50/30'>
+                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-green-50 hover:shadow-sm bg-green-50/30'>
                   <Text strong className='text-blue-700'>
                     ID Tài khoản:
                   </Text>
                   <div>{editingStaff.accountId}</div>
                 </div>
 
-                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-blue-50 hover:shadow-sm bg-indigo-50/40'>
+                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-green-50 hover:shadow-sm bg-green-100/40'>
                   <Text strong className='text-indigo-700'>
                     Phòng ban:
                   </Text>
                   <div>{editingStaff.department}</div>
                 </div>
 
-                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-blue-50 hover:shadow-sm bg-green-50/30'>
+                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-green-50 hover:shadow-sm bg-green-50/30'>
                   <Text strong className='text-green-700'>
                     Số năm kinh nghiệm:
                   </Text>
@@ -309,14 +309,14 @@ const StaffManagement = () => {
               </div>
 
               <div>
-                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-blue-50 hover:shadow-sm bg-cyan-50/30'>
+                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-green-50 hover:shadow-sm bg-green-200/30'>
                   <Text strong className='text-cyan-700'>
                     Số điện thoại:
                   </Text>
                   <div>{editingStaff.phone || 'Chưa cập nhật'}</div>
                 </div>
 
-                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-blue-50 hover:shadow-sm bg-purple-50/30'>
+                <div className='mb-4 p-2 rounded transition-all duration-300 hover:bg-green-50 hover:shadow-sm bg-green-300/30'>
                   <Text strong className='text-purple-700'>
                     Ngày tạo:
                   </Text>
