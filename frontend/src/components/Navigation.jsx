@@ -40,17 +40,14 @@ const Navigation = () => {
         ]
       case 'Manager':
         return [
-          { path: '/manager/dashboard', label: 'Tổng quan' },
-          { path: '/manager/dashboard/feedback', label: 'Quản lý Feedback' },
-          { path: '/manager/dashboard/payment', label: 'Quản lý Thanh toán' },
-          { path: '/manager/dashboard/staff', label: 'Quản lý Nhân viên' }
+          { path: '/manager/dashboard', label: 'Bảng Điều Khiển' },
+          { path: '/test-service', label: 'Dịch vụ xét nghiệm' }
         ]
 
       case 'Staff':
         return [
-          { path: '/staff/blog', label: 'Quản lý Blog & Dịch vụ' },
-          { path: '/blog', label: 'Blog' },
-          { path: '/dich-vu', label: 'Dịch vụ' }
+          { path: '/staff/dashboard', label: 'Bảng Điều Khiển' },
+          { path: '/blog', label: 'Blog' }
         ]
 
       case 'Consultant':
