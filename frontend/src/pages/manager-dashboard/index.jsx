@@ -159,7 +159,7 @@ const ManagerDashboard = () => {
 
   const fetchPaymentStats = async () => {
     try {
-      const response = await api.get('/api/payments')
+      const response = await api.get('/api/payments/with-booking-info')
       if (response.data && Array.isArray(response.data)) {
         const payments = response.data
         const total = payments.length
@@ -229,45 +229,54 @@ const ManagerDashboard = () => {
       // Récupérer les feedbacks récents
       const feedbackResponse = await api.get('/api/Feedback')
       if (feedbackResponse.data && Array.isArray(feedbackResponse.data)) {
-        // Trier par date et prendre les 5 plus récents
+        // Trier par date et prendre les 3 plus récents
         const sortedFeedbacks = feedbackResponse.data
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5)
+          .slice(0, 3)
           .map((fb) => ({
             id: fb.feedbackId,
             customerName: fb.accountName,
             serviceName: fb.serviceName,
             rating: fb.rating,
+            comment: fb.comment,
             date: new Date(fb.createdAt)
           }))
         setRecentFeedbacks(sortedFeedbacks)
       }
 
       // Récupérer les paiements récents
-      const paymentResponse = await api.get('/api/payments')
+      const paymentResponse = await api.get('/api/payments/with-booking-info')
       if (paymentResponse.data && Array.isArray(paymentResponse.data)) {
         // Trier par date et prendre les 4 plus récents
         const sortedPayments = await Promise.all(
           paymentResponse.data
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .sort((a, b) => new Date(b.createAt) - new Date(a.createAt))
             .slice(0, 3)
             .map(async (payment) => {
-              let bookingDetails = null
+              // Fetch service name from booking details
+              let serviceName = 'N/A'
               try {
-                const bookingResponse = await api.get(`/api/bookings/${payment.bookingId}`)
-                if (bookingResponse.data) {
-                  bookingDetails = bookingResponse.data
+                const res = await api.get(`/api/booking-details/booking/${payment.bookingId}`)
+                const details = res.data
+
+                if (Array.isArray(details) && details.length > 0) {
+                  serviceName = details
+                    .map((d) => d.serviceName)
+                    .filter(Boolean)
+                    .join(', ')
+                } else if (details && typeof details === 'object') {
+                  serviceName = details.serviceName || 'N/A'
                 }
-              } catch (error) {
-                console.error(`Error fetching booking details for ${payment.bookingId}:`, error)
+              } catch (err) {
+                console.error(err)
               }
 
               return {
                 id: payment.transactionId,
                 amount: payment.amount,
-                customerName: bookingDetails?.customerName || 'N/A',
-                serviceName: bookingDetails?.serviceName || 'N/A',
-                date: new Date(payment.createdAt)
+                customerName: `${payment.firstName} ${payment.lastName}`,
+                serviceName: serviceName,
+                date: new Date(payment.createAt)
               }
             })
         )
@@ -332,7 +341,10 @@ const ManagerDashboard = () => {
           {/* Stats */}
           <Row gutter={16} className='mb-6'>
             <Col span={6}>
-              <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+              <Card
+                bordered={false}
+                className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-pink-400'
+              >
                 {dashboardStats.feedback.loading ? (
                   <div className='flex justify-center items-center p-4'>
                     <Spin />
@@ -342,13 +354,17 @@ const ManagerDashboard = () => {
                     title='Tổng số Feedback'
                     value={dashboardStats.feedback.total}
                     valueStyle={{ color: '#3f8600' }}
-                    prefix={<MessageSquare size={18} className='mr-2' />}
+                    prefix={<MessageSquare size={18} className='mr-2 animate-pulse text-pink-500' />}
+                    className='transition-all duration-300 hover:scale-105'
                   />
                 )}
               </Card>
             </Col>
             <Col span={6}>
-              <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+              <Card
+                bordered={false}
+                className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-blue-400'
+              >
                 {dashboardStats.payment.loading ? (
                   <div className='flex justify-center items-center p-4'>
                     <Spin />
@@ -359,14 +375,18 @@ const ManagerDashboard = () => {
                     value={dashboardStats.payment.totalAmount}
                     precision={0}
                     valueStyle={{ color: '#cf1322' }}
-                    prefix={<CreditCard size={18} className='mr-2' />}
+                    prefix={<CreditCard size={18} className='mr-2 animate-pulse text-blue-500' />}
                     suffix='VND'
+                    className='transition-all duration-300 hover:scale-105'
                   />
                 )}
               </Card>
             </Col>
             <Col span={6}>
-              <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+              <Card
+                bordered={false}
+                className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-green-400'
+              >
                 {dashboardStats.staff.loading ? (
                   <div className='flex justify-center items-center p-4'>
                     <Spin />
@@ -376,13 +396,17 @@ const ManagerDashboard = () => {
                     title='Tổng số Nhân viên'
                     value={dashboardStats.staff.total}
                     valueStyle={{ color: '#1677ff' }}
-                    prefix={<Users size={18} className='mr-2' />}
+                    prefix={<Users size={18} className='mr-2 animate-pulse text-green-500' />}
+                    className='transition-all duration-300 hover:scale-105'
                   />
                 )}
               </Card>
             </Col>
             <Col span={6}>
-              <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+              <Card
+                bordered={false}
+                className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-purple-400'
+              >
                 {dashboardStats.services.loading ? (
                   <div className='flex justify-center items-center p-4'>
                     <Spin />
@@ -392,7 +416,8 @@ const ManagerDashboard = () => {
                     title='Dịch vụ có sẵn'
                     value={dashboardStats.services.active}
                     valueStyle={{ color: '#722ed1' }}
-                    prefix={<Stethoscope size={18} className='mr-2' />}
+                    prefix={<Stethoscope size={18} className='mr-2 animate-pulse text-purple-500' />}
+                    className='transition-all duration-300 hover:scale-105'
                   />
                 )}
               </Card>
@@ -406,33 +431,74 @@ const ManagerDashboard = () => {
           <Row gutter={[16, 16]}>
             <Col span={6}>
               <Link to='/manager/dashboard/feedback'>
-                <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-                  <MessageSquare size={36} className='text-pink-500 mb-4' />
-                  <Meta title='Quản lý Feedback' description='Xem và quản lý phản hồi từ khách hàng' />
+                <Card
+                  hoverable
+                  className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-pink-400 border-2 border-transparent group'
+                >
+                  <MessageSquare
+                    size={36}
+                    className='text-pink-500 mb-4 transition-all duration-300 group-hover:scale-125'
+                  />
+                  <Meta
+                    title={
+                      <span className='transition-all duration-300 group-hover:text-pink-500'>Quản lý Feedback</span>
+                    }
+                    description='Xem và quản lý phản hồi từ khách hàng'
+                  />
                 </Card>
               </Link>
             </Col>
             <Col span={6}>
               <Link to='/manager/dashboard/payment'>
-                <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-                  <CreditCard size={36} className='text-blue-500 mb-4' />
-                  <Meta title='Quản lý Thanh toán' description='Xem và quản lý thanh toán của dịch vụ' />
+                <Card
+                  hoverable
+                  className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-blue-400 border-2 border-transparent group'
+                >
+                  <CreditCard
+                    size={36}
+                    className='text-blue-500 mb-4 transition-all duration-300 group-hover:scale-125'
+                  />
+                  <Meta
+                    title={
+                      <span className='transition-all duration-300 group-hover:text-blue-500'>Quản lý Thanh toán</span>
+                    }
+                    description='Xem và quản lý thanh toán của dịch vụ'
+                  />
                 </Card>
               </Link>
             </Col>
             <Col span={6}>
               <Link to='/manager/dashboard/staff'>
-                <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-                  <Users size={36} className='text-green-500 mb-4' />
-                  <Meta title='Quản lý Nhân viên' description='Xem và quản lý thông tin nhân viên' />
+                <Card
+                  hoverable
+                  className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-green-400 border-2 border-transparent group'
+                >
+                  <Users size={36} className='text-green-500 mb-4 transition-all duration-300 group-hover:scale-125' />
+                  <Meta
+                    title={
+                      <span className='transition-all duration-300 group-hover:text-green-500'>Quản lý Nhân viên</span>
+                    }
+                    description='Xem và quản lý thông tin nhân viên'
+                  />
                 </Card>
               </Link>
             </Col>
             <Col span={6}>
               <Link to='/manager/dashboard/test-service'>
-                <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-                  <Stethoscope size={36} className='text-purple-500 mb-4' />
-                  <Meta title='Quản lý Dịch vụ' description='Xem và quản lý dịch vụ xét nghiệm' />
+                <Card
+                  hoverable
+                  className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-purple-400 border-2 border-transparent group'
+                >
+                  <Stethoscope
+                    size={36}
+                    className='text-purple-500 mb-4 transition-all duration-300 group-hover:scale-125'
+                  />
+                  <Meta
+                    title={
+                      <span className='transition-all duration-300 group-hover:text-purple-500'>Quản lý Dịch vụ</span>
+                    }
+                    description='Xem và quản lý dịch vụ xét nghiệm'
+                  />
                 </Card>
               </Link>
             </Col>
@@ -445,15 +511,22 @@ const ManagerDashboard = () => {
           <Row gutter={[16, 16]}>
             <Col span={8}>
               <Card
-                title='Đánh giá gần đây'
-                extra={<Link to='/manager/dashboard/feedback'>Xem tất cả</Link>}
-                className='h-64'
+                title={<span className='text-pink-600 font-medium'>Đánh giá gần đây</span>}
+                extra={
+                  <Link
+                    to='/manager/dashboard/feedback'
+                    className='text-pink-500 hover:text-pink-700 hover:underline transition-all duration-300'
+                  >
+                    Xem tất cả
+                  </Link>
+                }
+                className='h-64 transition-all duration-300 hover:shadow-md border-pink-200 hover:border-pink-400'
                 loading={loadingRecent}
               >
                 {recentFeedbacks.length > 0 ? (
                   <div className='space-y-3'>
                     {recentFeedbacks.map((feedback, index) => (
-                      <div key={index} className='flex items-center justify-between'>
+                      <div key={index} className='flex items-center justify-between mb-3 pb-2 border-b'>
                         <div>
                           <Text strong>{feedback.customerName}</Text>
                           <div className='flex items-center'>
@@ -465,6 +538,13 @@ const ManagerDashboard = () => {
                               />
                             ))}
                           </div>
+                          {feedback.comment && (
+                            <div className='mt-1'>
+                              <Text italic className='text-xs text-gray-600 line-clamp-2' title={feedback.comment}>
+                                "{feedback.comment}"
+                              </Text>
+                            </div>
+                          )}
                         </div>
                         <Text type='secondary'>{formatDate(feedback.date)}</Text>
                       </div>
@@ -479,19 +559,32 @@ const ManagerDashboard = () => {
             </Col>
             <Col span={8}>
               <Card
-                title='Thanh toán gần đây'
-                extra={<Link to='/manager/dashboard/payment'>Xem tất cả</Link>}
-                className='h-64'
+                title={<span className='text-blue-600 font-medium'>Thanh toán gần đây</span>}
+                extra={
+                  <Link
+                    to='/manager/dashboard/payment'
+                    className='text-blue-500 hover:text-blue-700 hover:underline transition-all duration-300'
+                  >
+                    Xem tất cả
+                  </Link>
+                }
+                className='h-64 transition-all duration-300 hover:shadow-md border-blue-200 hover:border-blue-400'
                 loading={loadingRecent}
               >
                 {recentPayments.length > 0 ? (
                   <div className='space-y-3'>
                     {recentPayments.map((payment, index) => (
-                      <div key={index} className='flex items-center justify-between'>
-                        <div>
-                          <Text strong>{payment.id}</Text>
+                      <div key={index} className='flex flex-col mb-2 pb-2 border-b'>
+                        <div className='flex items-center justify-between'>
+                          <Text className='text-xs truncate' type='secondary'>
+                            {payment.customerName}
+                          </Text>
+                          <Text type='success'>{payment.amount.toLocaleString('vi-VN')}đ</Text>
                         </div>
-                        <Text type='success'>{payment.amount.toLocaleString('vi-VN')}đ</Text>
+                        <div className='flex items-center justify-between'>
+                          <Text className='text-xs truncate'>{payment.serviceName}</Text>
+                          <Text className='text-xs text-gray-500'>{formatDate(payment.date)}</Text>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -503,7 +596,10 @@ const ManagerDashboard = () => {
               </Card>
             </Col>
             <Col span={8}>
-              <Card title='Thông tin hệ thống' className='h-64'>
+              <Card
+                title={<span className='text-green-600 font-medium'>Thông tin hệ thống</span>}
+                className='h-64 transition-all duration-300 hover:shadow-md border-green-200 hover:border-green-400'
+              >
                 <div className='space-y-3'>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -652,14 +748,17 @@ const ManagerDashboard = () => {
               type='text'
               icon={collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               onClick={() => setCollapsed(!collapsed)}
-              className='text-base mr-4 text-pink-500 hover:text-pink-700'
+              className='text-base mr-4 text-pink-500 hover:text-pink-700 transition-all duration-300 hover:shadow-md hover:scale-110'
             />
             <Breadcrumb className='my-4' items={breadcrumbItems} />
           </div>
 
           <div className='flex items-center gap-4'>
-            <Badge count={3} size='small' color='#eb2f96'>
-              <Bell size={18} className='cursor-pointer text-slate-600 hover:text-pink-500' />
+            <Badge count={3} size='small' color='#eb2f96' className='transition-all duration-300 hover:scale-110'>
+              <Bell
+                size={18}
+                className='cursor-pointer text-slate-600 hover:text-pink-500 transition-all duration-300 hover:rotate-12'
+              />
             </Badge>
             <Dropdown
               menu={{
@@ -668,10 +767,10 @@ const ManagerDashboard = () => {
               placement='bottomRight'
               trigger={['click']}
             >
-              <div className='flex items-center gap-3 cursor-pointer hover:bg-pink-50 px-3 py-1.5 rounded-full transition-all border border-pink-100'>
+              <div className='flex items-center gap-3 cursor-pointer hover:bg-pink-50 px-3 py-1.5 rounded-full transition-all duration-300 hover:shadow-md border border-pink-100 group'>
                 <Avatar
                   size={38}
-                  className='bg-gradient-to-r from-pink-400 to-pink-600 border-2 border-white shadow-sm'
+                  className='bg-gradient-to-r from-pink-400 to-pink-600 border-2 border-white shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg'
                   icon={<UserCircle size={22} />}
                 />
                 <div className='hidden md:block'>
