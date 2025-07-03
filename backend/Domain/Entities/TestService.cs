@@ -15,5 +15,6 @@
         public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
         public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
+        public virtual ICollection<TestServiceSlot> TestServiceSlots { get; set; } = new List<TestServiceSlot>();
     }
 }
