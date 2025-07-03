@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace backend.Application.DTOs.BookingDetailDTO
 {
@@ -8,7 +8,9 @@ namespace backend.Application.DTOs.BookingDetailDTO
         public Guid BookingId { get; set; }
         public Guid ServiceId { get; set; }
         public string ServiceName { get; set; } = string.Empty;
-
+        public Guid SlotId { get; set; }
+        public DateOnly SlotDate { get; set; }
+        public string SlotShift { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string FirstName { get; set; } = string.Empty;

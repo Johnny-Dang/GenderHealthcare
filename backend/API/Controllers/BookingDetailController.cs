@@ -12,12 +12,12 @@ namespace backend.API.Controllers
     public class BookingDetailController : ControllerBase
     {
         private readonly IBookingDetailService _bookingDetailService;
-
+        
         public BookingDetailController(IBookingDetailService bookingDetailService)
         {
             _bookingDetailService = bookingDetailService;
         }
-
+        
         // POST: api/booking-details
         [HttpPost]
         [Authorize]
@@ -29,9 +29,9 @@ namespace backend.API.Controllers
             var bookingDetail = await _bookingDetailService.CreateAsync(request);
 
             if (bookingDetail == null)
-                return NotFound("Booking not found");
+                return BadRequest("Không thể tạo booking detail. Có thể booking không tồn tại, slot đã đầy hoặc dữ liệu không hợp lệ.");
 
-            return Ok(bookingDetail);
+            return CreatedAtAction(nameof(GetById), new { id = bookingDetail.BookingDetailId }, bookingDetail);
         }
 
         // GET: api/booking-details/{id}
@@ -42,7 +42,7 @@ namespace backend.API.Controllers
             var bookingDetail = await _bookingDetailService.GetByIdAsync(id);
 
             if (bookingDetail == null)
-                return NotFound();
+                return NotFound("Không tìm thấy booking detail.");
 
             return Ok(bookingDetail);
         }
@@ -64,51 +64,52 @@ namespace backend.API.Controllers
             var totalAmount = await _bookingDetailService.CalculateTotalAmountByBookingIdAsync(bookingId);
 
             if (totalAmount == null)
-                return NotFound("Booking not found");
+                return NotFound("Không tìm thấy booking.");
 
             return Ok(totalAmount);
         }
 
-        // PUT: api/booking-details
+        // PUT: api/booking-details/{bookingDetailId}
         [HttpPut("{bookingDetailId}")]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> Update(Guid bookingDetailId, [FromBody] UpdateBookingDetailRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-             
-            // Gọi service update nhưng không update status
-            var updatedBookingDetail = await _bookingDetailService.UpdateInfoOnlyAsync(bookingDetailId,request);
+
+            var updatedBookingDetail = await _bookingDetailService.UpdateInfoOnlyAsync(bookingDetailId, request);
 
             if (updatedBookingDetail == null)
-                return NotFound();
+                return NotFound("Không tìm thấy booking detail để cập nhật.");
 
             return Ok(updatedBookingDetail);
         }
-        
-        // PUT: api/booking-details/update-status
-        [HttpPut("update-status")]
-        [Authorize(Roles = "Staff")]
-        public async Task<IActionResult> UpdateStatus([FromQuery] Guid bookingDetailId, [FromQuery] string status)
+
+        // PUT: api/booking-details/{id}/status
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] string status)
         {
-            if (bookingDetailId == Guid.Empty || string.IsNullOrWhiteSpace(status))
-                return BadRequest("Thiếu bookingDetailId hoặc status");
-            var updated = await _bookingDetailService.UpdateStatusAsync(bookingDetailId, status);
-            if (updated == null)
-                return NotFound();
-            return Ok(updated);
+            if (string.IsNullOrWhiteSpace(status))
+                return BadRequest("Trạng thái không hợp lệ.");
+
+            var result = await _bookingDetailService.UpdateStatusAsync(id, status);
+            if (result == null)
+                return NotFound("Không tìm thấy booking detail để cập nhật trạng thái.");
+
+            return Ok(result);
         }
-        
+
         // DELETE: api/booking-details/{id}
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _bookingDetailService.DeleteAsync(id);
-            
+
             if (!result)
-                return NotFound();
-                
+                return NotFound("Không tìm thấy booking detail để xóa.");
+
             return NoContent();
         }
     }

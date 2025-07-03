@@ -2,6 +2,7 @@
 using backend.Application.Repositories;
 using backend.Application.Services;
 using backend.Domain.Entities;
+using backend.Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -15,11 +16,16 @@ namespace backend.Infrastructure.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IBookingDetailRepository _bookingDetailRepository;
         
-        public PaymentService(IConfiguration configuration, IPaymentRepository paymentRepository)
+        public PaymentService(IConfiguration configuration, IPaymentRepository paymentRepository,
+            IBookingDetailRepository bookingDetail, IBookingRepository booking)
         {
             _configuration = configuration;
             _paymentRepository = paymentRepository;
+            _bookingRepository = booking;
+            _bookingDetailRepository = bookingDetail;
         }
 
         public string CreatePaymentUrl(CreateVnPayRequest model, HttpContext context)
@@ -72,6 +78,10 @@ namespace backend.Infrastructure.Services
                 
                 // Use repository to store payment
                 await _paymentRepository.CreatePaymentAsync(newPayment);
+
+                // Cập nhật trạng thái Booking và BookingDetail
+                await _bookingRepository.UpdateStatusAsync(response.BookingId, "Đã thanh toán");
+                await _bookingDetailRepository.UpdateStatusByBookingIdAsync(response.BookingId, "Đã thanh toán");
             }
             return response;
         }

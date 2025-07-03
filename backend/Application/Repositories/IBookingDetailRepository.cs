@@ -28,5 +28,9 @@ namespace backend.Application.Repositories
         Task<decimal> CalculateTotalAmountByBookingIdAsync(Guid bookingId);
 
         Task<BookingDetail> UpdateStatusAsync(Guid bookingDetailId, string status);
+        // này dùng để gửi thông báo
+        Task<Booking> GetBookingAsync(Guid bookingId);
+        // tự động cập nhật trạng thái của booking detail theo booking id
+        Task UpdateStatusByBookingIdAsync(Guid bookingId, string status);
     }
 }

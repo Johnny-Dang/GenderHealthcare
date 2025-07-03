@@ -3,6 +3,7 @@ using backend.Application.Common.Mappings;
 using backend.Application.Services;
 using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
+using backend.Infrastructure.BackgroundJobs;
 using backend.Infrastructure.Database;
 using backend.Infrastructure.Extensions;
 using backend.Infrastructure.Persistence.Configurations;
@@ -10,6 +11,7 @@ using backend.Infrastructure.Services;
 using DeployGenderSystem.Domain.Entity;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -19,8 +21,16 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Hangfire config
+builder.Services.AddHangfire(config =>
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
+
 // Add services to the container.
 builder.Services.AddService();
+
+// note hangfire job này sẽ chạy mỗi ngày lúc 00:00
+builder.Services.AddScoped<SlotGenerationJob>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -139,5 +149,15 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Hangfire dashboard (truy cập /hangfire để xem job)
+app.UseHangfireDashboard();
+
+// Đăng ký job chạy mỗi thứ 2 lúc 0h
+RecurringJob.AddOrUpdate<SlotGenerationJob>(
+    "generate-slots-weekly",
+    job => job.GenerateSlotsForAllServicesNextWeek(),
+    "0 0 * * 1" // Cron: mỗi thứ 2 lúc 0h
+);
 
 app.Run();

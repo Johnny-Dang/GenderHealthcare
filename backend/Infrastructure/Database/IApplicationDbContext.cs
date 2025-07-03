@@ -22,6 +22,7 @@ namespace backend.Infrastructure.Database
         public DbSet<BookingDetail> BookingDetail { get; set; }
         public DbSet<Feedback> Feedback { get; set; }
         public DbSet<Notification> Notification { get; set; }
+        public DbSet<TestServiceSlot> TestServiceSlot { get; set; }
         public Task<int> SaveChangesAsync();
     }
 }

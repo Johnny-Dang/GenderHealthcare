@@ -14,13 +14,11 @@ const NotificationBell = () => {
   const dropdownRef = useRef(null)
   const userInfo = useSelector((state) => state.user.userInfo)
 
-  // Fetch notifications using token
   const fetchNotifications = async () => {
     if (!userInfo) return
 
     try {
       setLoading(true)
-      // Lấy danh sách thông báo - API này tự động lấy theo token
       const response = await api.get('/api/Notification')
       console.log('Notification API response:', response)
 
@@ -59,19 +57,25 @@ const NotificationBell = () => {
   const markAsRead = async (notificationId) => {
     if (!userInfo) return
 
+    const originalNotifications = [...notifications]
+    const originalUnreadCount = unreadCount
+
+    // Optimistic update
+    setNotifications(
+      notifications.map((notif) => (notif.notificationId === notificationId ? { ...notif, isRead: true } : notif))
+    )
+    setUnreadCount((prev) => Math.max(0, prev - 1))
+
     try {
       console.log('Marking notification as read:', notificationId)
-      // Đánh dấu đã đọc - API sử dụng token để xác thực
       const response = await api.put(`/api/Notification/${notificationId}/read`)
       console.log('Mark as read response:', response)
 
-      // Cập nhật state
-      setNotifications(
-        notifications.map((notif) => (notif.notificationId === notificationId ? { ...notif, isRead: true } : notif))
-      )
       setUnreadCount((prev) => Math.max(0, prev - 1))
     } catch (error) {
       console.error('Error marking notification as read:', error)
+      setNotifications(originalNotifications)
+      setUnreadCount(originalUnreadCount)
     }
   }
 
@@ -81,7 +85,6 @@ const NotificationBell = () => {
 
     try {
       console.log('Marking all notifications as read')
-      // Đánh dấu tất cả đã đọc - API sử dụng token để xác thực
       const response = await api.put('/api/Notification/mark-all-read')
       console.log('Mark all as read response:', response)
 
@@ -105,7 +108,6 @@ const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Fetch notifications on mount and when user changes
   useEffect(() => {
     if (userInfo) {
       fetchNotifications()
@@ -119,7 +121,6 @@ const NotificationBell = () => {
   // Helper function to convert UTC to Vietnam time (UTC+7)
   const convertToVietnamTime = (dateString) => {
     const utcDate = new Date(dateString)
-    // Add 7 hours to convert to Vietnam time
     return addHours(utcDate, 7)
   }
 
