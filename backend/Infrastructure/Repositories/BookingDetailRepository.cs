@@ -122,5 +122,24 @@ namespace backend.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return existingDetail;
         }
+
+        // để thông báo
+        public async Task<Booking> GetBookingAsync(Guid bookingId)
+        {
+            return await _context.Booking
+                .Include(b => b.Account)
+                .Include(b => b.Payment)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+        }
+
+        public async Task UpdateStatusByBookingIdAsync(Guid bookingId, string status)
+        {
+            var details = await _context.BookingDetail.Where(bd => bd.BookingId == bookingId).ToListAsync();
+            foreach (var detail in details)
+            {
+                detail.Status = status;
+            }
+            await _context.SaveChangesAsync();
+        }
     }
 }

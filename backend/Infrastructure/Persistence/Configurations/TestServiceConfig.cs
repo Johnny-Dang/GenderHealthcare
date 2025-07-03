@@ -17,6 +17,12 @@ namespace backend.Infrastructure.Persistence.Configurations
             builder.Property(ts => ts.CreatedAt).IsRequired();
             builder.Property(ts => ts.Category).IsRequired().HasMaxLength(100);
             builder.Property(ts => ts.IsDeleted).HasDefaultValue(false);
+
+            // Thêm navigation property với TestServiceSlot
+            builder.HasMany(ts => ts.TestServiceSlots)
+                .WithOne(tss => tss.TestService)
+                .HasForeignKey(tss => tss.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

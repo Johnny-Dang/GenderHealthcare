@@ -209,6 +209,9 @@ namespace backend.Migrations
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("SlotId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -218,6 +221,8 @@ namespace backend.Migrations
                     b.HasIndex("BookingId");
 
                     b.HasIndex("ServiceId");
+
+                    b.HasIndex("SlotId");
 
                     b.ToTable("BookingDetail");
                 });
@@ -305,6 +310,44 @@ namespace backend.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("Feedback");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("RecipientId");
+
+                    b.ToTable("Notification", (string)null);
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.Payment", b =>
@@ -489,6 +532,51 @@ namespace backend.Migrations
                     b.ToTable("TestService");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.TestServiceSlot", b =>
+                {
+                    b.Property<Guid>("SlotId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MaxQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(10);
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Shift")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateOnly>("SlotDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("TestServiceServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SlotId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("TestServiceServiceId");
+
+                    b.ToTable("TestServiceSlot", (string)null);
+                });
+
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
                 {
                     b.HasOne("backend.Domain.Entities.Role", "Role")
@@ -544,9 +632,35 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("backend.Domain.Entities.TestServiceSlot", "TestServiceSlot")
+                        .WithMany("BookingDetails")
+                        .HasForeignKey("SlotId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Booking");
 
                     b.Navigation("TestService");
+
+                    b.Navigation("TestServiceSlot");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
+                {
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Customer")
+                        .WithMany("CustomerBookings")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
+                        .WithMany("StaffBookings")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
@@ -584,6 +698,17 @@ namespace backend.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("TestService");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Account")
+                        .WithMany("Notifications")
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.Payment", b =>
@@ -630,6 +755,21 @@ namespace backend.Migrations
                     b.Navigation("BookingDetail");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.TestServiceSlot", b =>
+                {
+                    b.HasOne("backend.Domain.Entities.TestService", "TestService")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Domain.Entities.TestService", null)
+                        .WithMany("TestServiceSlots")
+                        .HasForeignKey("TestServiceServiceId");
+
+                    b.Navigation("TestService");
+                });
+
             modelBuilder.Entity("DeployGenderSystem.Domain.Entity.Account", b =>
                 {
                     b.Navigation("Bookings");
@@ -637,6 +777,8 @@ namespace backend.Migrations
                     b.Navigation("CustomerBookings");
 
                     b.Navigation("Feedbacks");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("RefreshTokens");
 
@@ -669,6 +811,13 @@ namespace backend.Migrations
                     b.Navigation("BookingDetails");
 
                     b.Navigation("Feedbacks");
+
+                    b.Navigation("TestServiceSlots");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.TestServiceSlot", b =>
+                {
+                    b.Navigation("BookingDetails");
                 });
 #pragma warning restore 612, 618
         }

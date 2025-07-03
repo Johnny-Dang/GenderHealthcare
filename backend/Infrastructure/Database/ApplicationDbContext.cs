@@ -24,6 +24,7 @@ namespace backend.Infrastructure.Database
 
         public DbSet<ConsultationBooking> ConsultationBooking { get; set; }
         public DbSet<Notification> Notification { get; set; }
+        public DbSet<TestServiceSlot> TestServiceSlot { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

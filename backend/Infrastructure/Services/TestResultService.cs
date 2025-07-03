@@ -9,10 +9,12 @@ namespace backend.Infrastructure.Services
     public class TestResultService : ITestResultService
     {
         private readonly ITestResultRepository _repository;
+        private readonly IBookingDetailRepository _bookingDetailRepository;
 
-        public TestResultService(ITestResultRepository repository)
+        public TestResultService(ITestResultRepository repository, IBookingDetailRepository bookingDetailRepository)
         {
             _repository = repository;
+            _bookingDetailRepository = bookingDetailRepository;
         }
 
         public async Task<Result<TestResultResponse>> CreateTestResultAsync(CreateTestResultRequest request)
@@ -43,6 +45,9 @@ namespace backend.Infrastructure.Services
             {
                 return Result<TestResultResponse>.Failure("Failed to retrieve created test result");
             }
+
+            // Sau khi lưu TestResult thành công
+            await _bookingDetailRepository.UpdateStatusAsync(testResult.BookingDetailId, "Đã có kết quả");
 
             return Result<TestResultResponse>.Success(response);
         }

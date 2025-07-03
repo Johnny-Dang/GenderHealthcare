@@ -35,6 +35,7 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IUserService, UserService>();
 
             serviceCollection.AddScoped<INotificationService, NotificationService>();
+            serviceCollection.AddScoped<ITestServiceSlotService, TestServiceSlotService>();
 
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
@@ -53,7 +54,8 @@ namespace backend.Infrastructure.Extensions
             serviceCollection.AddScoped<IFeedbackRepository, FeedbackRepository>();
             serviceCollection.AddScoped<IStaffInfoRepository, StaffInfoRepository>();
             serviceCollection.AddScoped<INotificationRepository, NotificationRepository>();
-            
+            serviceCollection.AddScoped<ITestServiceSlotRepository, TestServiceSlotRepository>();
+
         }
     }
 }

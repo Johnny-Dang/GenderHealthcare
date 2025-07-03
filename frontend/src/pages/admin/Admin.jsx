@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
-import { Layout, Menu, theme, Avatar, Typography, Button, Breadcrumb, Dropdown, Spin } from 'antd'
+import { Layout, Menu, theme, Avatar, Typography, Breadcrumb, Dropdown, Spin } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
 import { PieChart, Users, Package, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import api from '../../configs/axios'
 
 const { Header, Content, Footer, Sider } = Layout
@@ -150,7 +151,7 @@ const AdminPage = () => {
         collapsible
         collapsed={collapsed}
         trigger={null}
-        className='shadow-lg bg-gradient-to-b from-pink-50 to-pink-100'
+        className='shadow-lg bg-gradient-to-b from-primary-50 to-secondary-50'
         width={250}
       >
         <div className={`flex items-center mb-8 ${collapsed ? 'justify-center' : 'justify-start px-6'} h-16`}>
@@ -159,7 +160,7 @@ const AdminPage = () => {
           </div>
           {!collapsed && (
             <span className='ml-3 text-2xl font-bold gradient-text'>
-              <Link to='/' className='hover:text-pink-800'>
+              <Link to='/' className='hover:text-primary-800'>
                 WellCare
               </Link>
             </span>
@@ -184,11 +185,13 @@ const AdminPage = () => {
         >
           <div className='flex items-center'>
             <Button
-              type='text'
-              icon={collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+              variant='ghost'
+              size='icon'
               onClick={() => setCollapsed(!collapsed)}
-              className='text-base mr-4 text-pink-500 hover:text-pink-700'
-            />
+              className='mr-4 text-primary-500 hover:text-primary-700 hover:bg-primary-50'
+            >
+              {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </Button>
             <Breadcrumb className='my-4' items={breadcrumbItems} />
           </div>
 
@@ -209,18 +212,17 @@ const AdminPage = () => {
               placement='bottomRight'
               arrow
             >
-              <div className='flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-pink-50'>
+              <div className='flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-primary-50'>
                 <Avatar
                   size={36}
                   src={userInfo?.avatarUrl}
-                  className='bg-gradient-to-r from-pink-500 to-red-500'
+                  className='bg-gradient-to-r from-primary-500 to-secondary-500'
                   icon={<UserCircle size={20} />}
                 />
                 <div>
                   <Text strong className='text-slate-700'>
                     {userInfo?.fullName || 'Admin'}
                   </Text>
-                  {/* <Text className='text-xs block text-slate-500'>{userInfo?.email}</Text> */}
                 </div>
               </div>
             </Dropdown>
@@ -233,9 +235,9 @@ const AdminPage = () => {
           </div>
         </Content>
 
-        <Footer className='text-center py-3 px-12 bg-pink-50 border-t border-pink-100'>
+        <Footer className='text-center py-3 px-12 bg-primary-50 border-t border-primary-100'>
           <div className='flex items-center justify-center gap-2'>
-            <Heart size={16} className='text-pink-500' />
+            <Heart size={16} className='text-primary-500' />
             <Text type='secondary'>WellCare ©{new Date().getFullYear()}</Text>
           </div>
         </Footer>
