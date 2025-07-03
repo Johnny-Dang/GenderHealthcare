@@ -40,32 +40,41 @@ const PaymentManagement = () => {
     setLoading(true)
     try {
       console.log('Fetching payments from API...')
-      const response = await api.get('/api/payments')
+      const response = await api.get('/api/payments/with-booking-info')
       console.log('API Response:', response.data)
 
       if (response.data && Array.isArray(response.data)) {
         const transformedPayments = await Promise.all(
           response.data.map(async (payment) => {
-            let bookingDetails = null
+            let serviceName = 'N/A'
             try {
-              // Lấy thông tin chi tiết booking
-              const bookingResponse = await api.get(`/api/bookings/${payment.bookingId}`)
-              if (bookingResponse.data) {
-                bookingDetails = bookingResponse.data
+              const res = await api.get(`/api/booking-details/booking/${payment.bookingId}`)
+              const details = res.data
+
+              if (Array.isArray(details) && details.length > 0) {
+                serviceName = details
+                  .map((d) => d.serviceName)
+                  .filter(Boolean)
+                  .join(', ')
+              } else if (details && typeof details === 'object') {
+                serviceName = details.serviceName || 'N/A'
               }
-            } catch (error) {
-              console.error(`Error fetching booking details for ${payment.bookingId}:`, error)
+            } catch (err) {
+              console.error(err)
             }
 
             return {
               id: payment.transactionId,
               bookingId: payment.bookingId,
-              customerName: bookingDetails?.customerName || 'N/A',
-              serviceName: bookingDetails?.serviceName || 'N/A',
+              customerName: `${payment.firstName} ${payment.lastName}`,
+              serviceName: serviceName,
               amount: payment.amount,
               paymentMethod: payment.paymentMethod,
-              date: new Date(payment.createdAt).toISOString().split('T')[0],
-              status: 'completed' // Giả sử tất cả payment trong DB là thành công
+              date: new Date(payment.createAt).toISOString().split('T')[0],
+              status: 'completed', // Assume all payments in DB are successful
+              phone: payment.phone,
+              email: payment.email,
+              gender: payment.gender
             }
           })
         )
@@ -153,9 +162,28 @@ const PaymentManagement = () => {
     try {
       // Lấy chi tiết thanh toán từ API
       const detailResponse = await api.get(`/api/payments/transaction/${payment.id}`)
+
+      // Lấy thông tin dịch vụ từ booking details API (if not already present)
+      let serviceName = payment.serviceName || 'N/A'
+      if (serviceName === 'N/A') {
+        try {
+          const bookingDetailsResponse = await api.get(`/api/booking-details/booking/${payment.bookingId}`)
+          if (
+            bookingDetailsResponse.data &&
+            Array.isArray(bookingDetailsResponse.data) &&
+            bookingDetailsResponse.data.length > 0
+          ) {
+            serviceName = bookingDetailsResponse.data[0].testServiceName || 'N/A'
+          }
+        } catch (error) {
+          console.error('Error fetching booking details:', error)
+        }
+      }
+
       setSelectedPayment({
         ...payment,
-        details: detailResponse.data
+        details: detailResponse.data,
+        serviceName: serviceName
       })
     } catch (error) {
       console.error('Error fetching payment details:', error)
@@ -169,7 +197,6 @@ const PaymentManagement = () => {
     const headers = [
       'Mã thanh toán',
       'Mã đặt hàng',
-      'Khách hàng',
       'Dịch vụ',
       'Số tiền',
       'Phương thức',
@@ -183,8 +210,7 @@ const PaymentManagement = () => {
         [
           payment.id,
           payment.bookingId,
-          `"${payment.customerName}"`, // Quotes để xử lý dấu phẩy trong tên
-          `"${payment.serviceName}"`,
+          `"${payment.serviceName || 'N/A'}"`, // Quotes để xử lý dấu phẩy trong tên dịch vụ
           payment.amount,
           payment.paymentMethod,
           payment.date,
@@ -262,27 +288,15 @@ const PaymentManagement = () => {
       dataIndex: 'id',
       key: 'id',
       render: (text) => <a style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>{text}</a>,
-      width: 150
+      width: 200
     },
-    {
-      title: 'Mã đặt hàng',
-      dataIndex: 'bookingId',
-      key: 'bookingId',
-      render: (text) => <span style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>{text}</span>,
-      width: 150
-    },
-    /* Tạm ẩn cột khách hàng và dịch vụ
-    {
-      title: 'Khách hàng',
-      dataIndex: 'customerName',
-      key: 'customerName'
-    },
+
     {
       title: 'Dịch vụ',
       dataIndex: 'serviceName',
-      key: 'serviceName'
+      key: 'serviceName',
+      width: 200
     },
-    */
     {
       title: 'Số tiền',
       dataIndex: 'amount',
@@ -325,9 +339,11 @@ const PaymentManagement = () => {
   ]
 
   return (
-    <div>
-      <div className='flex justify-between items-center mb-6'>
-        <Title level={4}>Quản lý Thanh toán</Title>
+    <div className='bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6 rounded-lg shadow-sm min-h-screen'>
+      <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-blue-100 to-blue-50 p-4 rounded-lg shadow-sm'>
+        <Title level={4} className='transition-all duration-300 hover:text-blue-600 hover:translate-x-1 mb-0'>
+          Quản lý Thanh toán
+        </Title>
         <Space>
           <Button icon={<RefreshCw size={16} />} onClick={fetchPayments}>
             Làm mới
@@ -341,38 +357,42 @@ const PaymentManagement = () => {
       <Tabs defaultActiveKey='statistics' className='mb-6'>
         <TabPane tab='Thống kê' key='statistics'>
           <div className='grid grid-cols-4 gap-4 mb-6'>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-blue-400 bg-white'>
               <Statistic
                 title='Tổng doanh thu'
                 value={payments.reduce((sum, item) => sum + (item.status === 'completed' ? item.amount : 0), 0)}
                 valueStyle={{ color: '#3f8600' }}
-                prefix={<DollarSign size={18} />}
+                prefix={<DollarSign size={18} className='text-blue-500 animate-pulse' />}
                 suffix='VND'
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-indigo-400 bg-white'>
               <Statistic
                 title='Số giao dịch'
                 value={payments.length}
                 valueStyle={{ color: '#1677ff' }}
-                prefix={<CreditCard size={18} />}
+                prefix={<CreditCard size={18} className='text-indigo-500 animate-pulse' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-green-400 bg-white'>
               <Statistic
                 title='Đơn thành công'
                 value={payments.filter((p) => p.status === 'completed').length}
                 valueStyle={{ color: '#52c41a' }}
-                prefix={<TrendingUp size={18} />}
+                prefix={<TrendingUp size={18} className='text-green-500 animate-pulse' />}
                 suffix={`/ ${payments.length}`}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-yellow-400 bg-white'>
               <Statistic
                 title='Đơn đang xử lý'
                 value={payments.filter((p) => p.status === 'pending').length}
                 valueStyle={{ color: '#faad14' }}
-                prefix={<Calendar size={18} />}
+                prefix={<Calendar size={18} className='text-yellow-500 animate-pulse' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
           </div>
@@ -461,14 +481,26 @@ const PaymentManagement = () => {
                 <Text strong>Mã đặt hàng:</Text>
                 <div>{selectedPayment.bookingId}</div>
               </div>
-              {/* <div>
+              <div>
                 <Text strong>Khách hàng:</Text>
                 <div>{selectedPayment.customerName}</div>
               </div>
               <div>
+                <Text strong>Email:</Text>
+                <div>{selectedPayment.email}</div>
+              </div>
+              <div>
+                <Text strong>Số điện thoại:</Text>
+                <div>{selectedPayment.phone}</div>
+              </div>
+              <div>
+                <Text strong>Giới tính:</Text>
+                <div>{selectedPayment.gender ? 'Nam' : 'Nữ'}</div>
+              </div>
+              <div>
                 <Text strong>Dịch vụ:</Text>
                 <div>{selectedPayment.serviceName}</div>
-              </div> */}
+              </div>
               <div>
                 <Text strong>Số tiền:</Text>
                 <div>{selectedPayment.amount.toLocaleString('vi-VN')}đ</div>

@@ -14,7 +14,7 @@ import {
   Modal,
   Tabs
 } from 'antd'
-import { Search, Trash2, Eye } from 'lucide-react'
+import { Search, Trash2, Eye, MessageSquare, Star } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import api from '../../../configs/axios'
 
@@ -182,7 +182,12 @@ const ManagerFeedbackManagement = () => {
       width: 180,
       render: (_, record) => (
         <Space>
-          <Button size='small' icon={<Eye size={14} />} onClick={() => showDetailModal(record)}>
+          <Button
+            className='bg-pink-300 hover:bg-pink-600 transition-all duration-300 hover:shadow-md'
+            size='small'
+            icon={<Eye size={14} />}
+            onClick={() => showDetailModal(record)}
+          >
             Chi tiết
           </Button>
           <Popconfirm
@@ -191,7 +196,12 @@ const ManagerFeedbackManagement = () => {
             okText='Xóa'
             cancelText='Huỷ'
           >
-            <Button danger size='small' icon={<Trash2 size={14} />}>
+            <Button
+              className='bg-red-300 hover:bg-red-600 transition-all duration-300 hover:shadow-md'
+              danger
+              size='small'
+              icon={<Trash2 size={14} />}
+            >
               Xóa
             </Button>
           </Popconfirm>
@@ -201,9 +211,11 @@ const ManagerFeedbackManagement = () => {
   ]
 
   return (
-    <div>
-      <div className='flex justify-between items-center mb-6'>
-        <Title level={4}>Quản lý Feedback</Title>
+    <div className='bg-gradient-to-br from-pink-50 via-white to-pink-50 p-6 rounded-lg shadow-sm min-h-screen'>
+      <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-pink-100 to-pink-50 p-4 rounded-lg shadow-sm'>
+        <Title level={4} className='transition-all duration-300 hover:text-pink-600 hover:translate-x-1 mb-0'>
+          Quản lý Feedback
+        </Title>
         <Space>
           <Select
             placeholder='Chọn dịch vụ'
@@ -222,6 +234,7 @@ const ManagerFeedbackManagement = () => {
           <Button
             type='primary'
             onClick={() => (selectedService ? fetchFeedbacksByService(selectedService) : fetchFeedbacks())}
+            className='bg-pink-500 hover:bg-pink-600 transition-all duration-300 hover:shadow-md'
           >
             Lọc
           </Button>
@@ -247,23 +260,40 @@ const ManagerFeedbackManagement = () => {
       <Tabs defaultActiveKey='statistics' className='mb-6'>
         <TabPane tab='Thống kê đánh giá' key='statistics'>
           <div className='grid grid-cols-3 gap-4 mb-6'>
-            <Card>
-              <Statistic title='Tổng đánh giá' value={stats.total} valueStyle={{ color: '#3f8600' }} />
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-pink-400 bg-white'>
+              <Statistic
+                title='Tổng đánh giá'
+                value={stats.total}
+                valueStyle={{ color: '#3f8600' }}
+                prefix={<MessageSquare size={18} className='text-pink-500 animate-pulse' />}
+                className='transition-all duration-300 hover:scale-105'
+              />
             </Card>
-            <Card>
-              <Statistic title='5 sao' value={stats.fiveStars} valueStyle={{ color: 'orange' }} />
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-yellow-400 bg-white'>
+              <Statistic
+                title='5 sao'
+                value={stats.fiveStars}
+                valueStyle={{ color: 'orange' }}
+                prefix={<Star size={18} className='text-yellow-500 animate-pulse fill-yellow-500' />}
+                className='transition-all duration-300 hover:scale-105'
+              />
             </Card>
-            <Card>
+            <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-blue-400 bg-white'>
               <Statistic
                 title='Trung bình'
                 value={stats.average}
                 suffix='/5'
                 precision={1}
                 valueStyle={{ color: 'blue' }}
+                prefix={<Star size={18} className='text-blue-500 animate-pulse' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             </Card>
           </div>
-          <Card title='Biểu đồ đánh giá trung bình theo tháng'>
+          <Card
+            title='Biểu đồ đánh giá trung bình theo tháng'
+            className='bg-white shadow-sm hover:shadow-md transition-all duration-300 border border-pink-100'
+          >
             <ResponsiveContainer width='100%' height={400}>
               <LineChart data={monthlyRatingData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                 <CartesianGrid strokeDasharray='3 3' />
@@ -288,7 +318,12 @@ const ManagerFeedbackManagement = () => {
             {monthlyRatingData
               .filter((item) => item.count > 0)
               .map((month, index) => (
-                <Card key={index} size='small' title={`${month.month}`}>
+                <Card
+                  key={index}
+                  size='small'
+                  title={`${month.month}`}
+                  className='hover:shadow-md transition-all duration-300 hover:border-pink-300 bg-white'
+                >
                   <p>
                     <strong>Đánh giá trung bình:</strong> {month.averageRating}/5
                   </p>
@@ -308,6 +343,8 @@ const ManagerFeedbackManagement = () => {
             loading={loading}
             pagination={{ pageSize: 10, showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đánh giá` }}
             scroll={{ x: 'max-content' }}
+            className='bg-white rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md'
+            rowClassName={() => 'transition-all duration-300 hover:bg-pink-50'}
           />
         </TabPane>
       </Tabs>
@@ -317,11 +354,17 @@ const ManagerFeedbackManagement = () => {
         open={detailModalVisible}
         onCancel={closeDetailModal}
         footer={[
-          <Button key='back' onClick={closeDetailModal}>
+          <Button
+            key='back'
+            onClick={closeDetailModal}
+            className='transition-all duration-300 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-400 hover:shadow-md'
+          >
             Đóng
           </Button>
         ]}
         width={700}
+        className='transition-all duration-500 bg-gradient-to-r from-pink-50 to-indigo-50'
+        bodyStyle={{ backgroundColor: '#fff5f8', borderRadius: '8px', padding: '20px' }}
       >
         {selectedFeedback && (
           <div>

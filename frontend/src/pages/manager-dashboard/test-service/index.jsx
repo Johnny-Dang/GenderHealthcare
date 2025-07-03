@@ -328,7 +328,7 @@ const TestServiceManagement = () => {
       title: 'Tên dịch vụ',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => <a>{text}</a>
+      render: (text) => <a className='transition-all duration-300 hover:text-purple-600 hover:font-medium'>{text}</a>
     },
     {
       title: 'Danh mục',
@@ -336,13 +336,19 @@ const TestServiceManagement = () => {
       key: 'category',
       filters: categories.map((c) => ({ text: c, value: c })),
       onFilter: (value, record) => record.category === value,
-      render: (category) => <Tag color='blue'>{category}</Tag>
+      render: (category) => (
+        <Tag color='purple' className='transition-all duration-300 hover:scale-110'>
+          {category}
+        </Tag>
+      )
     },
     {
       title: 'Giá',
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `${price.toLocaleString('vi-VN')}đ`,
+      render: (price) => (
+        <span className='transition-all duration-300 hover:text-red-500 hover:font-bold'>{`${price.toLocaleString('vi-VN')}đ`}</span>
+      ),
       sorter: (a, b) => a.price - b.price
     },
     {
@@ -352,8 +358,15 @@ const TestServiceManagement = () => {
       render: (url) => (
         <img
           src={url}
-          alt="Ảnh dịch vụ"
-          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, cursor: 'pointer', border: '1px solid #eee' }}
+          alt='Ảnh dịch vụ'
+          style={{
+            width: 60,
+            height: 60,
+            objectFit: 'cover',
+            borderRadius: 6,
+            cursor: 'pointer',
+            border: '1px solid #eee'
+          }}
           onClick={() => {
             setSelectedImageUrl(url)
             setImageModalVisible(true)
@@ -377,6 +390,11 @@ const TestServiceManagement = () => {
           onChange={() => toggleServiceStatus(record.id)}
           checkedChildren='Hoạt động'
           unCheckedChildren='Tạm dừng'
+          className='transition-all duration-300 hover:scale-110 hover:shadow-md'
+          style={{
+            backgroundColor: !isDeleted ? '#7c3aed' /* purple-600 */ : '#e5e7eb' /* gray-200 */,
+            borderColor: !isDeleted ? '#7c3aed' : '#d1d5db'
+          }}
         />
       )
     },
@@ -385,7 +403,13 @@ const TestServiceManagement = () => {
       key: 'action',
       render: (_, record) => (
         <Space size='middle'>
-          <Button type='primary' size='small' icon={<Edit size={14} />} onClick={() => showModal(record)}>
+          <Button
+            type='primary'
+            size='small'
+            icon={<Edit size={14} />}
+            onClick={() => showModal(record)}
+            className='bg-purple-500 hover:bg-purple-600 transition-all duration-300 hover:scale-110 hover:shadow-md'
+          >
             Cập nhật
           </Button>
         </Space>
@@ -396,67 +420,84 @@ const TestServiceManagement = () => {
   // Removed unused normFile function
 
   return (
-    <div>
-      <div className='flex justify-between items-center mb-6'>
-        <Title level={4}>Quản lý Dịch vụ</Title>
+    <div className='bg-gradient-to-br from-purple-50 via-white to-purple-50 p-6 rounded-lg shadow-sm min-h-screen'>
+      <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-purple-100 to-purple-50 p-4 rounded-lg shadow-sm'>
+        <Title level={4} className='transition-all duration-300 hover:text-purple-600 hover:translate-x-1 mb-0'>
+          Quản lý Dịch vụ
+        </Title>
         <Space>
-          <Button icon={<RefreshCw size={16} />} onClick={fetchServices}>
+          <Button
+            icon={<RefreshCw size={16} className='group-hover:rotate-180 transition-transform duration-500' />}
+            onClick={fetchServices}
+            className='transition-all duration-300 hover:shadow-md hover:text-purple-600 hover:border-purple-400 group bg-white'
+          >
             Làm mới
           </Button>
           <SearchInput
             placeholder='Tìm kiếm dịch vụ...'
             onSearch={handleSearch}
             style={{ width: 300 }}
-            prefix={<Search size={16} />}
+            prefix={<Search size={16} className='text-purple-400' />}
             onChange={(e) => setSearchText(e.target.value)}
+            className='transition-all duration-300 hover:shadow-md focus:border-purple-400'
           />
-          <Button type='primary' icon={<PlusSquare size={16} />} onClick={() => showModal()}>
+          <Button
+            type='primary'
+            icon={<PlusSquare size={16} />}
+            onClick={() => showModal()}
+            className='bg-purple-500 hover:bg-purple-600 transition-all duration-300 hover:shadow-lg hover:scale-105'
+          >
             Thêm dịch vụ
           </Button>
         </Space>
       </div>
 
       {/* Service Statistics */}
-      <Row gutter={16} className='mb-6'>
+      <Row gutter={16} className='mb-6 p-2 bg-purple-50/30 rounded-lg'>
         <Col span={6}>
-          <Card>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-purple-400 bg-white'>
             <Statistic
               title='Tổng số dịch vụ'
               value={services.length}
               valueStyle={{ color: '#1677ff' }}
-              prefix={<Package size={18} />}
+              prefix={<Package size={18} className='text-purple-500 animate-pulse' />}
+              className='transition-all duration-300 hover:scale-105'
             />
           </Card>
         </Col>
         <Col span={6}>
-          <Card>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-green-400 bg-white'>
             <Statistic
               title='Đang hoạt động'
               value={services.filter((s) => !s.isDeleted).length}
               valueStyle={{ color: '#52c41a' }}
+              prefix={<Stethoscope size={18} className='text-green-500 animate-pulse' />}
               suffix={`/ ${services.length}`}
+              className='transition-all duration-300 hover:scale-105'
             />
           </Card>
         </Col>
         <Col span={6}>
-          <Card>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-red-400 bg-white'>
             <Statistic
               title='Giá trung bình'
               value={services.reduce((acc, curr) => acc + curr.price, 0) / services.length}
               precision={0}
               valueStyle={{ color: '#cf1322' }}
-              prefix={<DollarSign size={18} />}
+              prefix={<DollarSign size={18} className='text-red-500 animate-pulse' />}
               suffix='đ'
+              className='transition-all duration-300 hover:scale-105'
             />
           </Card>
         </Col>
         <Col span={6}>
-          <Card>
+          <Card className='transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 border-indigo-400 bg-white'>
             <Statistic
               title='Danh mục'
               value={new Set(services.map((s) => s.category)).size}
               valueStyle={{ color: '#722ed1' }}
-              prefix={<PieChart size={18} />}
+              prefix={<PieChart size={18} className='text-indigo-500 animate-pulse' />}
+              className='transition-all duration-300 hover:scale-105'
             />
           </Card>
         </Col>
@@ -471,13 +512,15 @@ const TestServiceManagement = () => {
           pageSize: 10,
           showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} dịch vụ`
         }}
+        className='bg-white rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md border border-purple-200'
+        rowClassName={() => 'transition-all duration-300 hover:bg-purple-50'}
         expandable={{
           expandedRowRender: (record) => (
-            <div className='p-4'>
-              <Paragraph>
+            <div className='p-4 bg-purple-50/40 rounded-md transition-all duration-300 hover:bg-purple-100 border border-purple-200'>
+              <Paragraph className='transition-all duration-300 hover:text-purple-700'>
                 <strong>Mô tả:</strong> {record.description}
               </Paragraph>
-              <Paragraph>
+              <Paragraph className='transition-all duration-300 hover:text-purple-700'>
                 <strong>Chuẩn bị:</strong> {record.preparation}
               </Paragraph>
             </div>
@@ -491,13 +534,11 @@ const TestServiceManagement = () => {
         onCancel={handleCancel}
         onOk={() => form.submit()}
         okText={editingService ? 'Cập nhật' : 'Thêm mới'}
-        cancelText="Hủy"
+        cancelText='Hủy'
+        className='transition-all duration-500 bg-gradient-to-r from-purple-50 to-indigo-50'
+        bodyStyle={{ backgroundColor: '#f5f0ff', borderRadius: '8px', padding: '20px' }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout='vertical' onFinish={handleSubmit}>
           <Row gutter={16}>
             <Col span={16}>
               <Form.Item
@@ -554,26 +595,22 @@ const TestServiceManagement = () => {
             <TextArea rows={4} placeholder='Nhập mô tả chi tiết về dịch vụ' />
           </Form.Item>
 
-          <Form.Item label="Ảnh dịch vụ" name="imageUrl">
+          <Form.Item label='Ảnh dịch vụ' name='imageUrl'>
             <CloudinaryUpload
               onUploadSuccess={(url) => {
                 setImageUrl(url)
                 form.setFieldsValue({ imageUrl: url })
               }}
               currentImageUrl={imageUrl}
-              folder="testservices"
-              label="Chọn ảnh dịch vụ"
+              folder='testservices'
+              label='Chọn ảnh dịch vụ'
               size={160}
             />
           </Form.Item>
         </Form>
       </Modal>
 
-      <ImageModal
-        isOpen={imageModalVisible}
-        imageUrl={selectedImageUrl}
-        onClose={() => setImageModalVisible(false)}
-      />
+      <ImageModal isOpen={imageModalVisible} imageUrl={selectedImageUrl} onClose={() => setImageModalVisible(false)} />
     </div>
   )
 }
