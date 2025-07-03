@@ -1,4 +1,4 @@
-using backend.Domain.Entities;
+﻿using backend.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,6 +9,8 @@ namespace backend.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<BookingDetail> builder)
         {
             builder.HasKey(bd => bd.BookingDetailId);
+            builder.Property(x => x.SlotId)
+                .IsRequired();
 
             builder.Property(bd => bd.FirstName).IsRequired();
             builder.Property(bd => bd.LastName).IsRequired();
@@ -30,6 +32,12 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .WithMany(ts => ts.BookingDetails)
                 .HasForeignKey(bd => bd.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Quan hệ với TestServiceSlot
+            builder.HasOne(x => x.TestServiceSlot)
+               .WithMany(x => x.BookingDetails)
+               .HasForeignKey(x => x.SlotId)
+               .OnDelete(DeleteBehavior.Restrict);
         }
     }
 } 

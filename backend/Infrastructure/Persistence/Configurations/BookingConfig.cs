@@ -18,6 +18,12 @@ namespace backend.Infrastructure.Persistence.Configurations
                 .HasForeignKey(b => b.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Navigation property với BookingDetail
+            builder.HasMany(b => b.BookingDetails)
+                .WithOne(bd => bd.Booking)
+                .HasForeignKey(bd => bd.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

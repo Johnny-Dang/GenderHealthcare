@@ -1,4 +1,5 @@
 ﻿using backend.Application.DTOs.BookingDetailDTO;
+using backend.Application.DTOs.NotificationDTO;
 using backend.Application.Repositories;
 using backend.Application.Services;
 using backend.Domain.Entities;
@@ -12,11 +13,19 @@ namespace backend.Infrastructure.Services
     {
         private readonly IBookingDetailRepository _bookingDetailRepository;
         private readonly ITestServiceRepository _testServiceRepository;
+        private readonly ITestServiceSlotService _testServiceSlotService;
+        private readonly INotificationService _notificationService;
 
-        public BookingDetailService(IBookingDetailRepository bookingDetailRepository, ITestServiceRepository testServiceRepository)
+        public BookingDetailService(
+            IBookingDetailRepository bookingDetailRepository,
+            ITestServiceRepository testServiceRepository,
+            ITestServiceSlotService testServiceSlotService,
+            INotificationService notificationService)
         {
             _bookingDetailRepository = bookingDetailRepository;
             _testServiceRepository = testServiceRepository;
+            _testServiceSlotService = testServiceSlotService;
+            _notificationService = notificationService;
         }
 
         public async Task<BookingDetailResponse> CreateAsync(CreateBookingDetailRequest request)
@@ -30,11 +39,27 @@ namespace backend.Infrastructure.Services
             if (service == null)
                 return null;
 
+            // Find or create slot
+            var slotResult = await _testServiceSlotService.FindOrCreateSlotAsync(
+                request.ServiceId,
+                request.SlotDate,
+                request.Shift);
+
+            if (!slotResult.IsSuccess)
+                return null;
+
+            // Check if slot has available capacity
+            var hasCapacityResult = await _testServiceSlotService.HasAvailableCapacityAsync(slotResult.Data.SlotId);
+            if (!hasCapacityResult.IsSuccess || !hasCapacityResult.Data)
+                return null; // Slot is full
+
             // Create booking detail entity
             var bookingDetail = new BookingDetail
             {
+                BookingDetailId = Guid.NewGuid(),
                 BookingId = request.BookingId,
                 ServiceId = request.ServiceId,
+                SlotId = slotResult.Data.SlotId,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 DateOfBirth = request.DateOfBirth,
@@ -45,6 +70,15 @@ namespace backend.Infrastructure.Services
             // Save to database
             var createdDetail = await _bookingDetailRepository.CreateAsync(bookingDetail);
 
+            // Increment slot's current quantity
+            var incrementResult = await _testServiceSlotService.IncrementSlotQuantityAsync(slotResult.Data.SlotId);
+            if (!incrementResult.IsSuccess)
+            {
+                // Rollback if can't increment
+                await _bookingDetailRepository.DeleteAsync(createdDetail.BookingDetailId);
+                return null;
+            }
+
             // Map to response
             return new BookingDetailResponse
             {
@@ -52,17 +86,29 @@ namespace backend.Infrastructure.Services
                 BookingId = createdDetail.BookingId,
                 ServiceId = createdDetail.ServiceId,
                 ServiceName = service.ServiceName,
+                SlotId = slotResult.Data.SlotId,
+                SlotDate = slotResult.Data.SlotDate,
+                SlotShift = slotResult.Data.Shift,
                 Price = service.Price,
                 FirstName = createdDetail.FirstName,
                 LastName = createdDetail.LastName,
                 Phone = createdDetail.Phone,
                 DateOfBirth = createdDetail.DateOfBirth,
-                Gender = createdDetail.Gender
+                Gender = createdDetail.Gender,
+                Status = createdDetail.Status
             };
         }
 
         public async Task<bool> DeleteAsync(Guid id)
         {
+            var bookingDetail = await _bookingDetailRepository.GetByIdAsync(id);
+            if (bookingDetail == null)
+                return false;
+
+            // Decrement the slot's current quantity
+            await _testServiceSlotService.DecrementSlotQuantityAsync(bookingDetail.SlotId);
+
+            // Delete the booking detail
             return await _bookingDetailRepository.DeleteAsync(id);
         }
 
@@ -73,12 +119,19 @@ namespace backend.Infrastructure.Services
 
             foreach (var detail in bookingDetails)
             {
+                var slotResult = await _testServiceSlotService.GetSlotByIdAsync(detail.SlotId);
+                if (!slotResult.IsSuccess)
+                    continue;
+
                 response.Add(new BookingDetailResponse
                 {
                     BookingDetailId = detail.BookingDetailId,
                     BookingId = detail.BookingId,
                     ServiceId = detail.ServiceId,
                     ServiceName = detail.TestService?.ServiceName ?? string.Empty,
+                    SlotId = detail.SlotId,
+                    SlotDate = slotResult.Data.SlotDate,
+                    SlotShift = slotResult.Data.Shift,
                     Price = detail.TestService?.Price ?? 0,
                     Status = detail.Status,
                     FirstName = detail.FirstName,
@@ -95,8 +148,12 @@ namespace backend.Infrastructure.Services
         public async Task<BookingDetailResponse> GetByIdAsync(Guid id)
         {
             var bookingDetail = await _bookingDetailRepository.GetByIdAsync(id);
-            
+
             if (bookingDetail == null)
+                return null;
+
+            var slotResult = await _testServiceSlotService.GetSlotByIdAsync(bookingDetail.SlotId);
+            if (!slotResult.IsSuccess)
                 return null;
 
             return new BookingDetailResponse
@@ -105,6 +162,9 @@ namespace backend.Infrastructure.Services
                 BookingId = bookingDetail.BookingId,
                 ServiceId = bookingDetail.ServiceId,
                 ServiceName = bookingDetail.TestService?.ServiceName ?? string.Empty,
+                SlotId = bookingDetail.SlotId,
+                SlotDate = slotResult.Data.SlotDate,
+                SlotShift = slotResult.Data.Shift,
                 Price = bookingDetail.TestService?.Price ?? 0,
                 Status = bookingDetail.Status,
                 FirstName = bookingDetail.FirstName,
@@ -115,30 +175,50 @@ namespace backend.Infrastructure.Services
             };
         }
 
+        public async Task<BookingTotalAmountResponse> CalculateTotalAmountByBookingIdAsync(Guid bookingId)
+        {
+            if (!await _bookingDetailRepository.ExistsBookingAsync(bookingId))
+                return null;
+
+            var bookingDetails = await _bookingDetailRepository.GetByBookingIdAsync(bookingId);
+            decimal totalAmount = await _bookingDetailRepository.CalculateTotalAmountByBookingIdAsync(bookingId);
+
+            return new BookingTotalAmountResponse
+            {
+                BookingId = bookingId,
+                TotalAmount = totalAmount,
+                ServiceCount = bookingDetails.Count
+            };
+        }
+
         public async Task<BookingDetailResponse> UpdateInfoOnlyAsync(Guid bookingDetailId, UpdateBookingDetailRequest request)
         {
-            // Check if booking detail exists
             var existingDetail = await _bookingDetailRepository.GetByIdAsync(bookingDetailId);
             if (existingDetail == null)
                 return null;
 
-            // Update allowed fields only (không update status)
+            // Update personal information only
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
             existingDetail.Phone = request.Phone;
             existingDetail.Gender = request.Gender;
 
-            // Save changes
             var updatedDetail = await _bookingDetailRepository.UpdateAsync(existingDetail);
 
-            // Map to response
+            var slotResult = await _testServiceSlotService.GetSlotByIdAsync(updatedDetail.SlotId);
+            if (!slotResult.IsSuccess)
+                return null;
+
             return new BookingDetailResponse
             {
                 BookingDetailId = updatedDetail.BookingDetailId,
                 BookingId = updatedDetail.BookingId,
                 ServiceId = updatedDetail.ServiceId,
                 ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
+                SlotId = updatedDetail.SlotId,
+                SlotDate = slotResult.Data.SlotDate,
+                SlotShift = slotResult.Data.Shift,
                 Price = updatedDetail.TestService?.Price ?? 0,
                 Status = updatedDetail.Status,
                 FirstName = updatedDetail.FirstName,
@@ -148,39 +228,45 @@ namespace backend.Infrastructure.Services
                 Gender = updatedDetail.Gender
             };
         }
-        
-        public async Task<BookingTotalAmountResponse> CalculateTotalAmountByBookingIdAsync(Guid bookingId)
-        {
-            // Check if booking exists
-            if (!await _bookingDetailRepository.ExistsBookingAsync(bookingId))
-                return null;
-                
-            // Get booking details
-            var bookingDetails = await _bookingDetailRepository.GetByBookingIdAsync(bookingId);
-            
-            // Calculate total amount
-            decimal totalAmount = await _bookingDetailRepository.CalculateTotalAmountByBookingIdAsync(bookingId);
-            
-            // Create response
-            return new BookingTotalAmountResponse
-            {
-                BookingId = bookingId,
-                TotalAmount = totalAmount,
-                ServiceCount = bookingDetails.Count
-            };
-        }
 
         public async Task<BookingDetailResponse> UpdateStatusAsync(Guid bookingDetailId, string status)
         {
             var updatedDetail = await _bookingDetailRepository.UpdateStatusAsync(bookingDetailId, status);
             if (updatedDetail == null)
                 return null;
+
+            // Get booking information
+            var booking = await _bookingDetailRepository.GetBookingAsync(updatedDetail.BookingId);
+            if (booking == null)
+                return null;
+
+            // Get slot information
+            var slotResult = await _testServiceSlotService.GetSlotByIdAsync(updatedDetail.SlotId);
+            if (!slotResult.IsSuccess)
+                return null;
+
+            // Send notification to user about status update
+            if (booking.AccountId != Guid.Empty)
+            {
+                // note cái này nên bỏ bên notification service
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    RecipientId = booking.AccountId,
+                    Title = "Cập nhật trạng thái xét nghiệm",
+                    Content = $"Dịch vụ xét nghiệm {updatedDetail.TestService?.ServiceName} của bạn đã được cập nhật thành '{status}'.",
+                    Type = "BookingStatus"
+                });
+            }
+
             return new BookingDetailResponse
             {
                 BookingDetailId = updatedDetail.BookingDetailId,
                 BookingId = updatedDetail.BookingId,
                 ServiceId = updatedDetail.ServiceId,
                 ServiceName = updatedDetail.TestService?.ServiceName ?? string.Empty,
+                SlotId = updatedDetail.SlotId,
+                SlotDate = slotResult.Data.SlotDate,
+                SlotShift = slotResult.Data.Shift,
                 Price = updatedDetail.TestService?.Price ?? 0,
                 Status = updatedDetail.Status,
                 FirstName = updatedDetail.FirstName,
