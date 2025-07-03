@@ -131,5 +131,15 @@ namespace backend.Infrastructure.Repositories
                 .Include(b => b.Payment)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId);
         }
+
+        public async Task UpdateStatusByBookingIdAsync(Guid bookingId, string status)
+        {
+            var details = await _context.BookingDetail.Where(bd => bd.BookingId == bookingId).ToListAsync();
+            foreach (var detail in details)
+            {
+                detail.Status = status;
+            }
+            await _context.SaveChangesAsync();
+        }
     }
 }

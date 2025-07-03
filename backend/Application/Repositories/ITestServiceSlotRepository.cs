@@ -28,6 +28,8 @@ namespace backend.Application.Repositories
 
         // Find or create
         Task<TestServiceSlot> FindOrCreateSlotAsync(Guid serviceId, DateOnly date, string shift);
+
+        Task GenerateSlotsForUpcomingWeeksAsync(Guid serviceId, int numberOfWeeks = 2, int maxQuantity = 10);
     }
 }
 

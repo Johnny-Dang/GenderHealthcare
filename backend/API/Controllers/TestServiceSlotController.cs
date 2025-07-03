@@ -7,6 +7,7 @@ namespace backend.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TestServiceSlotController : ControllerBase
     {
         private readonly ITestServiceSlotService _slotService;
@@ -15,7 +16,7 @@ namespace backend.API.Controllers
         {
             _slotService = slotService;
         }
-
+        // GET: api/TestServiceSlot/{slotId}
         [HttpGet("{slotId}")]
         public async Task<IActionResult> GetSlotById(Guid slotId)
         {
@@ -26,6 +27,7 @@ namespace backend.API.Controllers
             return Ok(result.Data);
         }
 
+        // GET: api/TestServiceSlot/service/{serviceId}
         [HttpGet("service/{serviceId}")]
         public async Task<IActionResult> GetSlotsByServiceId(Guid serviceId)
         {
@@ -36,6 +38,7 @@ namespace backend.API.Controllers
             return Ok(result.Data);
         }
 
+        // GET: api/TestServiceSlot/service/{serviceId}/date/{date}
         [HttpGet("service/{serviceId}/date/{date}")]
         public async Task<IActionResult> GetSlotsByServiceIdAndDate(Guid serviceId, DateOnly date)
         {
@@ -45,7 +48,7 @@ namespace backend.API.Controllers
 
             return Ok(result.Data);
         }
-
+        // POST: api/TestServiceSlot
         [HttpPost]
         [Authorize(Roles = "Admin,Staff,Manager")]
         public async Task<IActionResult> CreateSlot([FromBody] CreateTestServiceSlotRequest request)
@@ -57,6 +60,7 @@ namespace backend.API.Controllers
             return CreatedAtAction(nameof(GetSlotById), new { slotId = result.Data.SlotId }, result.Data);
         }
 
+        // PUT: api/TestServiceSlot/{slotId}
         [HttpPut("{slotId}")]
         [Authorize(Roles = "Admin,Staff,Manager")]
         public async Task<IActionResult> UpdateSlot(Guid slotId, [FromBody] UpdateTestServiceSlotRequest request)
@@ -68,6 +72,7 @@ namespace backend.API.Controllers
             return Ok(result.Data);
         }
 
+        // DELETE: api/TestServiceSlot/{slotId}
         [HttpDelete("{slotId}")]
         [Authorize(Roles = "Admin,Staff,Manager")]
         public async Task<IActionResult> DeleteSlot(Guid slotId)
@@ -79,6 +84,7 @@ namespace backend.API.Controllers
             return NoContent();
         }
 
+        // GET: api/TestServiceSlot/{slotId}/available
         [HttpGet("{slotId}/available")]
         public async Task<IActionResult> CheckAvailability(Guid slotId)
         {

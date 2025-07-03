@@ -25,5 +25,6 @@ namespace backend.Application.Repositories
         
         // Additional method
         Task<bool> ExistsAsync(Guid id);
+
     }
 }

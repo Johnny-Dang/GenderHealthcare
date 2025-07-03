@@ -103,8 +103,11 @@ namespace backend.Infrastructure.Repositories
 
         public async Task<List<TestServiceSlot>> GetByServiceIdAsync(Guid serviceId)
         {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var endDate = today.AddDays(6); // 7 ngày (hôm nay + 6)
+
             return await _context.TestServiceSlot
-                .Where(s => s.ServiceId == serviceId)
+                .Where(s => s.ServiceId == serviceId && s.SlotDate >= today && s.SlotDate <= endDate)
                 .Include(s => s.TestService)
                 .OrderBy(s => s.SlotDate)
                 .ThenBy(s => s.Shift)
@@ -150,6 +153,49 @@ namespace backend.Infrastructure.Repositories
             _context.TestServiceSlot.Update(slot);
             await _context.SaveChangesAsync();
             return slot;
+        }
+
+        // <summary>
+        /// Generates slots for the next week starting from the next Monday.
+        ///     
+        public async Task GenerateSlotsForUpcomingWeeksAsync(Guid serviceId, int numberOfWeeks = 2, int maxQuantity = 10)
+        {
+            var shifts = new List<string> { "AM", "PM" };
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            // Tìm ngày thứ 2 tiếp theo
+            int daysUntilNextMonday = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
+            if (daysUntilNextMonday == 0) daysUntilNextMonday = 7;
+            var nextMonday = today.AddDays(daysUntilNextMonday);
+
+            for (int week = 0; week < numberOfWeeks; week++)
+            {
+                for (int i = 0; i < 6; i++) // Thứ 2 đến thứ 7
+                {
+                    var date = nextMonday.AddDays(week * 7 + i);
+                    foreach (var shift in shifts)
+                    {
+                        bool exists = await _context.TestServiceSlot
+                            .AnyAsync(s => s.ServiceId == serviceId && s.SlotDate == date && s.Shift == shift);
+                        if (!exists)
+                        {
+                            var slot = new TestServiceSlot
+                            {
+                                SlotId = Guid.NewGuid(),
+                                ServiceId = serviceId,
+                                SlotDate = date,
+                                Shift = shift,
+                                MaxQuantity = maxQuantity,
+                                CurrentQuantity = 0,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+                            await _context.TestServiceSlot.AddAsync(slot);
+                        }
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
         }
     }
 }
