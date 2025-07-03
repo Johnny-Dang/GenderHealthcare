@@ -4,18 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Navigate, useNavigate } from 'react-router-dom'
-import {
-  Calendar,
-  Clock,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  User,
-  Loader,
-  Eye,
-  CreditCard
-} from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog'
+import { Calendar, Clock, FileText, CheckCircle, AlertCircle, User, Loader, Eye, CreditCard } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useSelector } from 'react-redux'
 import api from '@/configs/axios'
 
@@ -25,7 +15,13 @@ const CustomerDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
-  const [paymentModal, setPaymentModal] = useState({ open: false, loading: false, data: null, error: null, bookingId: null })
+  const [paymentModal, setPaymentModal] = useState({
+    open: false,
+    loading: false,
+    data: null,
+    error: null,
+    bookingId: null
+  })
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -53,7 +49,7 @@ const CustomerDashboard = () => {
     if (!booking.hasPayment) {
       return <AlertCircle className='h-5 w-5 text-red-500' />
     }
-    
+
     // Nếu đã thanh toán thì dựa vào trạng thái booking
     switch (booking.status) {
       case 'chờ xác nhận':
@@ -72,9 +68,9 @@ const CustomerDashboard = () => {
   const getStatusColor = (booking) => {
     // Nếu chưa thanh toán thì hiển thị màu đỏ
     if (!booking.hasPayment) {
-      return 'border-l-red-500 bg-red-50';
+      return 'border-l-red-500 bg-red-50'
     }
-    
+
     // Nếu đã thanh toán thì dựa vào trạng thái booking
     const colors = {
       'chờ xác nhận': 'border-l-yellow-500 bg-yellow-50',
@@ -86,76 +82,94 @@ const CustomerDashboard = () => {
   }
 
   const handleShowPayment = async (bookingId) => {
-    setPaymentModal({ open: true, loading: true, data: null, error: null, bookingId });
+    setPaymentModal({ open: true, loading: true, data: null, error: null, bookingId })
     try {
-      const res = await api.get(`/api/payments/booking/${bookingId}`);
-      setPaymentModal({ open: true, loading: false, data: res.data, error: null, bookingId });
+      const res = await api.get(`/api/payments/booking/${bookingId}`)
+      setPaymentModal({ open: true, loading: false, data: res.data, error: null, bookingId })
     } catch (err) {
       if (err.response && err.response.status === 404) {
-        setPaymentModal({ open: true, loading: false, data: null, error: 'Bạn chưa thanh toán đơn này.', bookingId });
+        setPaymentModal({ open: true, loading: false, data: null, error: 'Bạn chưa thanh toán đơn này.', bookingId })
       } else {
-        setPaymentModal({ open: true, loading: false, data: null, error: 'Không thể tải thông tin thanh toán.', bookingId });
+        setPaymentModal({
+          open: true,
+          loading: false,
+          data: null,
+          error: 'Không thể tải thông tin thanh toán.',
+          bookingId
+        })
       }
     }
-  };
+  }
 
   // Hàm thanh toán lại
   const handleRepayment = async (bookingId) => {
     try {
       // Lấy tổng tiền và số dịch vụ
-      const totalRes = await api.get(`/api/booking-details/booking/${bookingId}/total`);
-      const { totalAmount } = totalRes.data;
+      const totalRes = await api.get(`/api/booking-details/booking/${bookingId}/total`)
+      const { totalAmount } = totalRes.data
       if (!totalAmount || totalAmount <= 0) {
-        alert('Không có dịch vụ nào để thanh toán!');
-        return;
+        alert('Không có dịch vụ nào để thanh toán!')
+        return
       }
       // Gọi API tạo link thanh toán
       const res = await api.post('/api/payments/create-vnpay-url', {
         bookingId,
         amount: totalAmount,
         orderDescription: 'Xét Nghiệm STis',
-        orderType: 'Xét Nghiệm',
-      });
+        orderType: 'Xét Nghiệm'
+      })
       if (res.data && typeof res.data === 'string') {
-        window.location.href = res.data;
+        window.location.href = res.data
       } else if (res.data && res.data.url) {
-        window.location.href = res.data.url;
+        window.location.href = res.data.url
       } else {
-        alert('Không nhận được link thanh toán!');
+        alert('Không nhận được link thanh toán!')
       }
     } catch (err) {
-      alert('Tạo link thanh toán thất bại!');
+      alert('Tạo link thanh toán thất bại!')
     }
-  };
+  }
 
   const getStatusBadgeContrast = (booking) => {
     // Kiểm tra trạng thái thanh toán trước
     if (!booking.hasPayment) {
       return (
-        <span className="inline-block px-3 py-1 rounded-full font-semibold text-sm shadow bg-red-500 text-white">
+        <span className='inline-block px-3 py-1 rounded-full font-semibold text-sm shadow bg-red-500 text-white'>
           Chưa thanh toán
         </span>
-      );
+      )
     }
-    
+
     // Nếu đã thanh toán thì hiển thị trạng thái booking
-    let bg = 'bg-gray-400', text = 'text-white', label = booking.status;
+    let bg = 'bg-gray-400',
+      text = 'text-white',
+      label = booking.status
     switch (booking.status?.toLowerCase()) {
       case 'chờ xác nhận':
-        bg = 'bg-yellow-500'; text = 'text-white'; break;
+        bg = 'bg-yellow-500'
+        text = 'text-white'
+        break
       case 'đã hủy':
-        bg = 'bg-red-500'; text = 'text-white'; break;
+        bg = 'bg-red-500'
+        text = 'text-white'
+        break
       case 'hoàn thành':
-        bg = 'bg-green-600'; text = 'text-white'; break;
+        bg = 'bg-green-600'
+        text = 'text-white'
+        break
       case 'đã thanh toán':
-        bg = 'bg-blue-600'; text = 'text-white'; break;
+        bg = 'bg-blue-600'
+        text = 'text-white'
+        break
       default:
-        bg = 'bg-gray-400'; text = 'text-white'; break;
+        bg = 'bg-gray-400'
+        text = 'text-white'
+        break
     }
     return (
       <span className={`inline-block px-3 py-1 rounded-full font-semibold text-sm shadow ${bg} ${text}`}>{label}</span>
-    );
-  };
+    )
+  }
 
   const dashboardStats = [
     {
@@ -292,16 +306,21 @@ const CustomerDashboard = () => {
                             <span className='text-sm font-medium text-gray-600'>Mã đặt lịch: {booking.bookingId}</span>
                           </div>
                         </div>
-                        
+
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
                           <div className='flex items-center gap-2'>
                             <Calendar className='h-4 w-4 text-gray-500' />
-                            <span className='text-sm text-gray-600'>Ngày tạo: {new Date(booking.createAt).toLocaleDateString('vi-VN')}</span>
+                            <span className='text-sm text-gray-600'>
+                              Ngày tạo: {new Date(booking.createAt).toLocaleDateString('vi-VN')}
+                            </span>
                           </div>
                           <div className='flex items-center gap-2'>
                             <Clock className='h-4 w-4 text-gray-500' />
                             <span className='text-sm text-gray-600'>
-                              Cập nhật: {booking.updateAt ? new Date(booking.updateAt).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                              Cập nhật:{' '}
+                              {booking.updateAt
+                                ? new Date(booking.updateAt).toLocaleDateString('vi-VN')
+                                : 'Chưa cập nhật'}
                             </span>
                           </div>
                           {/* Thêm thông tin thanh toán */}
@@ -314,9 +333,7 @@ const CustomerDashboard = () => {
                                 </span>
                               </div>
                               <div className='flex items-center gap-2'>
-                                <span className='text-sm text-gray-600'>
-                                  Phương thức: {booking.paymentMethod}
-                                </span>
+                                <span className='text-sm text-gray-600'>Phương thức: {booking.paymentMethod}</span>
                               </div>
                             </>
                           )}
@@ -326,12 +343,8 @@ const CustomerDashboard = () => {
                       {/* Status Badge - Nổi bật */}
                       <div className='flex flex-col items-center gap-3'>
                         <div className='text-center'>
-                          <div className='mb-2'>
-                            {getStatusBadgeContrast(booking)}
-                          </div>
-                          <div className='text-xs text-gray-500 font-medium'>
-                            Trạng thái hiện tại
-                          </div>
+                          <div className='mb-2'>{getStatusBadgeContrast(booking)}</div>
+                          <div className='text-xs text-gray-500 font-medium'>Trạng thái hiện tại</div>
                         </div>
                       </div>
 
@@ -341,14 +354,14 @@ const CustomerDashboard = () => {
                           size='sm'
                           variant='outline'
                           className='flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300'
-                          onClick={() => navigate(`/customer-dashboard/booking/${booking.bookingId}`)}
+                          onClick={() => navigate(`/customer/dashboard/booking/${booking.bookingId}`)}
                         >
                           <Eye className='h-4 w-4' />
                           Chi tiết
                         </Button>
                         {booking.hasPayment && (
-                          <Button 
-                            size='sm' 
+                          <Button
+                            size='sm'
                             variant='secondary'
                             className='flex items-center gap-2 hover:bg-yellow-50 hover:border-yellow-300'
                             onClick={() => handleShowPayment(booking.bookingId)}
