@@ -74,7 +74,7 @@ namespace backend.API.Controllers
 
         // DELETE: api/TestServiceSlot/{slotId}
         [HttpDelete("{slotId}")]
-        [Authorize(Roles = "Admin,Staff,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> DeleteSlot(Guid slotId)
         {
             var result = await _slotService.DeleteSlotAsync(slotId);

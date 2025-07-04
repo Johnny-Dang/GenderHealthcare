@@ -43,7 +43,7 @@ namespace backend.Infrastructure.Persistence.Configurations
 
             // Relationship with TestService
             builder.HasOne(x => x.TestService)
-                .WithMany()
+                .WithMany(t => t.TestServiceSlots)
                 .HasForeignKey(x => x.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
         }

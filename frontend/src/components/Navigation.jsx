@@ -59,7 +59,7 @@ const Navigation = () => {
 
       case 'Customer':
         return [
-          { path: '/customer-dashboard', label: 'Dashboard' },
+          { path: '/customer/dashboard', label: 'Bảng điều khiển' },
           { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
           { path: '/booking-consultant', label: 'Đặt tư vấn' },
           { path: '/blog', label: 'Blog' },

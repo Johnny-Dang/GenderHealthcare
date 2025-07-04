@@ -562,17 +562,12 @@ namespace backend.Migrations
                     b.Property<DateOnly>("SlotDate")
                         .HasColumnType("date");
 
-                    b.Property<Guid?>("TestServiceServiceId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("SlotId");
 
                     b.HasIndex("ServiceId");
-
-                    b.HasIndex("TestServiceServiceId");
 
                     b.ToTable("TestServiceSlot", (string)null);
                 });
@@ -643,24 +638,6 @@ namespace backend.Migrations
                     b.Navigation("TestService");
 
                     b.Navigation("TestServiceSlot");
-                });
-
-            modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
-                {
-                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Customer")
-                        .WithMany("CustomerBookings")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("DeployGenderSystem.Domain.Entity.Account", "Staff")
-                        .WithMany("StaffBookings")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.ConsultationBooking", b =>
@@ -758,14 +735,10 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Domain.Entities.TestServiceSlot", b =>
                 {
                     b.HasOne("backend.Domain.Entities.TestService", "TestService")
-                        .WithMany()
+                        .WithMany("TestServiceSlots")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("backend.Domain.Entities.TestService", null)
-                        .WithMany("TestServiceSlots")
-                        .HasForeignKey("TestServiceServiceId");
 
                     b.Navigation("TestService");
                 });
