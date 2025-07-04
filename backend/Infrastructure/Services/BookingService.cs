@@ -14,13 +14,15 @@ namespace backend.Infrastructure.Services
     {
         private readonly IBookingRepository _bookingRepository;
         private readonly IMapper _mapper;
-        
-        public BookingService(IBookingRepository bookingRepository, IMapper mapper)
+        private readonly IBookingDetailService _bookingDetailService;
+
+        public BookingService(IBookingRepository bookingRepository, IMapper mapper, IBookingDetailService bookingDetailService)
         {
             _bookingRepository = bookingRepository;
             _mapper = mapper;
+            _bookingDetailService = bookingDetailService;
         }
-        
+
         // Create a booking
         public async Task<BookingResponse> CreateAsync(CreateBookingRequest request)
         {
@@ -151,6 +153,14 @@ namespace backend.Infrastructure.Services
         // Delete a booking
         public async Task<bool> DeleteAsync(Guid id)
         {
+            var bookingDetails = await _bookingDetailService.GetByBookingIdAsync(id);
+            if (bookingDetails != null)
+            {
+                foreach (var detail in bookingDetails)
+                {
+                    await _bookingDetailService.DeleteAsync(detail.BookingDetailId);
+                }
+            }
             return await _bookingRepository.DeleteAsync(id);
         }
         
