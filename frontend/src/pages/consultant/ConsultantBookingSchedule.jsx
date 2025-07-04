@@ -5,10 +5,28 @@ import { format, parseISO } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
-import { Calendar, Clock, Mail, Phone, User, MessageSquare, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
-import { Table, Tag, Button, Card, Typography, Badge, Empty, Statistic, Row, Col } from 'antd'
+import {
+  Calendar,
+  Clock,
+  Mail,
+  Phone,
+  User,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Search,
+  Filter,
+  CalendarDays,
+  Bell,
+  CheckCheck,
+  XOctagon,
+  AlertCircle
+} from 'lucide-react'
+import { Table, Tag, Button, Card, Typography, Badge, Empty, Statistic, Row, Col, Tooltip, Spin } from 'antd'
 import { toast } from 'react-toastify'
 import Loading from '../../components/Loading'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const { Title, Text } = Typography
 
@@ -116,38 +134,56 @@ function ConsultantBookingSchedule() {
 
   // Get appropriate status badge - update to match the new status values
   const getStatusBadge = (status) => {
-    let color = 'default'
-    let text = status || 'N/A'
-    let icon = null
+    let config = {
+      color: 'default',
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-800',
+      borderColor: 'border-gray-200',
+      text: status || 'N/A',
+      icon: null
+    }
 
     switch (status) {
       case 'pending':
-        color = 'warning'
-        text = 'Đang chờ'
-        icon = <Clock className='w-4 h-4 mr-1 text-pink-500' />
+        config = {
+          color: 'warning',
+          bgColor: 'bg-yellow-100',
+          textColor: 'text-yellow-800',
+          borderColor: 'border-yellow-200',
+          text: 'Đang chờ',
+          icon: <Bell className='w-4 h-4 mr-1 text-yellow-500' />
+        }
         break
       case 'confirmed':
-        color = 'success'
-        text = 'Đã chấp nhận'
-        icon = <CheckCircle className='w-4 h-4 mr-1 text-pink-500' />
+        config = {
+          color: 'success',
+          bgColor: 'bg-green-100',
+          textColor: 'text-green-800',
+          borderColor: 'border-green-200',
+          text: 'Đã xác nhận',
+          icon: <CheckCircle className='w-4 h-4 mr-1 text-green-500' />
+        }
         break
       case 'cancelled':
-        color = 'error'
-        text = 'Đã từ chối'
-        icon = <XCircle className='w-4 h-4 mr-1 text-pink-500' />
+        config = {
+          color: 'error',
+          bgColor: 'bg-red-100',
+          textColor: 'text-red-800',
+          borderColor: 'border-red-200',
+          text: 'Đã từ chối',
+          icon: <XCircle className='w-4 h-4 mr-1 text-red-500' />
+        }
         break
-      default:
-        color = 'default'
-        text = status || 'N/A'
     }
 
     return (
-      <Tag color={color}>
-        <span className='flex items-center'>
-          {icon}
-          {text}
-        </span>
-      </Tag>
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        className={`inline-flex items-center px-3 py-1.5 rounded-full ${config.bgColor} ${config.textColor} ${config.borderColor} border`}
+      >
+        {config.icon}
+        <span className='font-medium'>{config.text}</span>
+      </motion.div>
     )
   }
 
@@ -161,58 +197,72 @@ function ConsultantBookingSchedule() {
       render: (_, record) => {
         if (record.customerId) {
           return (
-            <div className='flex flex-col gap-1'>
+            <motion.div
+              className='flex flex-col gap-1'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className='flex items-center gap-2'>
-                <Badge dot status='processing' />
-                <Text strong>{record.customerName}</Text>
+                <Badge dot status='processing' color='cyan' />
+                <Text strong className='text-gray-800'>
+                  {record.customerName}
+                </Text>
               </div>
               <div className='flex items-center text-gray-500 text-sm'>
-                <Mail className='w-3.5 h-3.5 mr-1.5 text-blue-500' />
+                <Mail className='w-3.5 h-3.5 mr-1.5 text-cyan-500' />
                 <Text type='secondary'>{record.customerEmail}</Text>
               </div>
               {record.customerPhone && (
                 <div className='flex items-center text-gray-500 text-sm'>
-                  <Phone className='w-3.5 h-3.5 mr-1.5 text-blue-500' />
+                  <Phone className='w-3.5 h-3.5 mr-1.5 text-cyan-500' />
                   <Text type='secondary'>{record.customerPhone}</Text>
                 </div>
               )}
-              <Tag color='blue' style={{ marginTop: '4px' }}>
+              <Tag color='cyan' style={{ marginTop: '4px' }} className='border-cyan-300'>
                 <span className='flex items-center'>
                   <User className='w-3.5 h-3.5 mr-1' />
                   Người dùng đã đăng ký
                 </span>
               </Tag>
-            </div>
+            </motion.div>
           )
         } else {
           return (
-            <div className='flex flex-col gap-1'>
+            <motion.div
+              className='flex flex-col gap-1'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className='flex items-center gap-2'>
                 <Badge dot status='default' />
-                <Text strong>{record.guestName}</Text>
+                <Text strong className='text-gray-800'>
+                  {record.guestName}
+                </Text>
               </div>
               <div className='flex items-center text-gray-500 text-sm'>
-                <Mail className='w-3.5 h-3.5 mr-1.5 text-blue-500' />
+                <Mail className='w-3.5 h-3.5 mr-1.5 text-pink-500' />
                 <Text type='secondary'>{record.guestEmail}</Text>
               </div>
               <div className='flex items-center text-gray-500 text-sm'>
-                <Phone className='w-3.5 h-3.5 mr-1.5 text-blue-500' />
+                <Phone className='w-3.5 h-3.5 mr-1.5 text-pink-500' />
                 <Text type='secondary'>{record.guestPhone}</Text>
               </div>
-              <Tag color='default' style={{ marginTop: '4px' }}>
+              <Tag color='pink' style={{ marginTop: '4px' }} className='border-pink-300'>
                 <span className='flex items-center'>
                   <User className='w-3.5 h-3.5 mr-1' />
-                  Khách
+                  Khách vãng lai
                 </span>
               </Tag>
-            </div>
+            </motion.div>
           )
         }
       },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div className='p-2'>
+        <div className='p-4 shadow-lg rounded-lg bg-white'>
           <input
-            className='border rounded px-2 py-1 w-full mb-2'
+            className='border border-pink-200 rounded-lg px-3 py-2 w-full mb-3 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent'
             placeholder='Tìm theo số điện thoại'
             value={selectedKeys[0]}
             onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
@@ -220,16 +270,16 @@ function ConsultantBookingSchedule() {
           />
           <div className='flex gap-2'>
             <button
-              className='bg-pink-500 text-white rounded px-3 py-1 text-sm hover:bg-pink-600'
+              className='bg-gradient-to-r from-pink-500 to-cyan-500 text-white rounded-lg px-4 py-2 text-sm hover:shadow-lg transition-shadow flex-1'
               onClick={() => confirm()}
             >
-              Tìm
+              Tìm kiếm
             </button>
             <button
-              className='bg-gray-200 text-gray-700 rounded px-3 py-1 text-sm hover:bg-gray-300'
+              className='bg-gray-100 text-gray-700 rounded-lg px-4 py-2 text-sm hover:bg-gray-200 transition-colors flex-1'
               onClick={() => clearFilters()}
             >
-              Xóa
+              Xóa bộ lọc
             </button>
           </div>
         </div>
@@ -248,10 +298,12 @@ function ConsultantBookingSchedule() {
       key: 'scheduledAt',
       width: '20%',
       render: (scheduledAt) => (
-        <div className='flex items-center'>
-          <Calendar className='w-4 h-4 mr-2 text-pink-500' />
-          <span>{formatDateTime(scheduledAt)}</span>
-        </div>
+        <Tooltip title='Thời gian đã đặt lịch'>
+          <div className='flex items-center bg-pink-50 px-3 py-2 rounded-lg border border-pink-100 w-fit'>
+            <Calendar className='w-4 h-4 mr-2 text-pink-500' />
+            <span className='font-medium'>{formatDateTime(scheduledAt)}</span>
+          </div>
+        </Tooltip>
       ),
       sorter: (a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt)
     },
@@ -261,9 +313,15 @@ function ConsultantBookingSchedule() {
       key: 'message',
       width: '30%',
       render: (message) => (
-        <div className='flex'>
-          <MessageSquare className='w-4 h-4 mr-2 mt-1 text-pink-400 flex-shrink-0' />
-          <span className='truncate'>{message || <span className='text-gray-400 italic'>Không có ghi chú</span>}</span>
+        <div className='flex bg-gray-50 p-3 rounded-lg border border-gray-100'>
+          <MessageSquare className='w-5 h-5 mr-3 text-pink-400 flex-shrink-0' />
+          <div className='overflow-hidden'>
+            {message ? (
+              <div className='line-clamp-2 text-gray-700'>{message}</div>
+            ) : (
+              <span className='text-gray-400 italic'>Không có ghi chú</span>
+            )}
+          </div>
         </div>
       )
     },
@@ -288,32 +346,36 @@ function ConsultantBookingSchedule() {
         // Hiển thị 2 nút luôn, mỗi nút sẽ disabled nếu trạng thái đã đúng
         return (
           <div className='flex gap-2'>
-            <button
-              className={`flex items-center gap-1 px-3 py-1 rounded text-sm transition font-medium ${
+            <motion.button
+              whileHover={{ scale: record.status !== 'confirmed' ? 1.05 : 1 }}
+              whileTap={{ scale: record.status !== 'confirmed' ? 0.95 : 1 }}
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition font-medium ${
                 record.status === 'confirmed'
                   ? 'bg-green-100 text-green-600 cursor-not-allowed opacity-60'
-                  : 'bg-pink-500 text-white hover:bg-pink-600'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-md'
               }`}
               disabled={record.status === 'confirmed'}
               onClick={() => updateBookingStatus(record.bookingId, 'confirmed')}
               type='button'
             >
               <CheckCircle className='w-4 h-4' />
-              Đã xác nhận
-            </button>
-            <button
-              className={`flex items-center gap-1 px-3 py-1 rounded text-sm transition font-medium ${
+              Xác nhận
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: record.status !== 'cancelled' ? 1.05 : 1 }}
+              whileTap={{ scale: record.status !== 'cancelled' ? 0.95 : 1 }}
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition font-medium ${
                 record.status === 'cancelled'
                   ? 'bg-red-100 text-red-600 cursor-not-allowed opacity-60'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gradient-to-r from-pink-500 to-red-500 text-white hover:shadow-md'
               }`}
               disabled={record.status === 'cancelled'}
               onClick={() => updateBookingStatus(record.bookingId, 'cancelled')}
               type='button'
             >
               <XCircle className='w-4 h-4' />
-              không thể liên hệ
-            </button>
+              Từ chối
+            </motion.button>
           </div>
         )
       }
@@ -340,105 +402,259 @@ function ConsultantBookingSchedule() {
   // Nếu không có userInfo thì return luôn (không render gì cả)
   if (!userInfo) return null
 
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.6 } }
+  }
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const cardVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 12
+      }
+    }
+  }
+
   return (
-    <div className='min-h-screen flex flex-col bg-pink-50'>
+    <div className='min-h-screen flex flex-col bg-gradient-to-b from-pink-50 to-pink-100'>
       <Navigation />
 
       <main className='flex-1 container mx-auto px-4 py-8 max-w-7xl'>
-        <div className='mb-8'>
-          <div className='bg-white border border-pink-100 p-6 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row md:items-center md:justify-between'>
-            <div>
-              <Title level={3} className='text-[#be185d] m-0 flex items-center'>
-                <Calendar className='w-7 h-7 mr-3 text-pink-500' /> Quản lý lịch đặt tư vấn
-              </Title>
-              <Text className='text-pink-600'>Xem và quản lý các lịch hẹn tư vấn từ khách hàng</Text>
-            </div>
-            <div className='mt-4 md:mt-0 flex gap-2'>
-              <button
-                className='flex items-center gap-2 px-4 py-2 rounded bg-pink-500 text-white font-medium hover:bg-pink-600 transition'
-                onClick={fetchBookings}
-                type='button'
-              >
-                <RefreshCw className='w-4 h-4' />
-                Làm mới
-              </button>
+        <motion.div initial='hidden' animate='visible' variants={fadeIn} className='mb-8'>
+          <div className='bg-white border border-pink-100 p-6 rounded-xl shadow-lg mb-6 bg-gradient-to-r from-white to-pink-50'>
+            <div className='flex flex-col md:flex-row md:items-center md:justify-between'>
+              <div className='mb-4 md:mb-0'>
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Title
+                    level={3}
+                    className='text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-cyan-500 m-0 flex items-center'
+                  >
+                    <Calendar className='w-7 h-7 mr-3 text-pink-500' />
+                    Quản lý lịch đặt tư vấn
+                  </Title>
+                </motion.div>
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <Text className='text-pink-600'>Xem và quản lý các lịch hẹn tư vấn từ khách hàng</Text>
+                </motion.div>
+              </div>
+              <motion.div className='flex gap-2' whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <button
+                  className='flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-shadow'
+                  onClick={fetchBookings}
+                  type='button'
+                >
+                  <RefreshCw className='w-4 h-4 animate-pulse' />
+                  Làm mới dữ liệu
+                </button>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {loading ? (
-          <Loading />
+          <div className='flex justify-center items-center h-64'>
+            <Spin size='large' tip='Đang tải dữ liệu...' />
+          </div>
         ) : (
-          <>
-            {/* Bộ lọc */}
-            <div className='mb-6 shadow-sm rounded-xl bg-white p-4 flex flex-wrap gap-4 items-center'>
-              <input
-                placeholder='Tìm kiếm theo số điện thoại...'
-                className='border border-pink-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400'
-                onChange={(e) => setSearchTerm(e.target.value)}
-                value={searchTerm}
-                style={{ width: 220 }}
-              />
-              <select
-                className='border border-pink-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400'
-                onChange={(e) => setStatusFilter(e.target.value)}
-                value={statusFilter}
-                style={{ minWidth: 150 }}
+          <AnimatePresence>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              {/* Bộ lọc */}
+              <motion.div
+                className='mb-6 shadow-lg rounded-xl bg-white p-6 flex flex-wrap gap-4 items-center border border-pink-100'
+                whileHover={{ boxShadow: '0 10px 25px -5px rgba(236, 72, 153, 0.1)' }}
               >
-                <option value='all'>Tất cả trạng thái</option>
-                <option value='pending'>Đang chờ</option>
-                <option value='confirmed'>Đã chấp nhận</option>
-                <option value='cancelled'>Đã từ chối</option>
-              </select>
-              <input
-                type='date'
-                className='border border-pink-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400'
-                onChange={(e) => setDateFilter(e.target.value)}
-                value={dateFilter || ''}
-                style={{ minWidth: 150 }}
-              />
-            </div>
-
-            <div className='bg-white rounded-xl shadow-sm'>
-              <div className='p-6'>
-                {/* Tổng quan */}
-                <div className='mb-8 grid grid-cols-1 md:grid-cols-4 gap-4'>
-                  <div className='bg-pink-100 rounded-lg p-4 text-center'>
-                    <div className='text-2xl font-bold text-pink-600'>{stats.total}</div>
-                    <div className='text-sm text-pink-700'>Tổng số lịch hẹn</div>
-                  </div>
-                  <div className='bg-yellow-100 rounded-lg p-4 text-center'>
-                    <div className='text-2xl font-bold text-yellow-600'>{stats.pending}</div>
-                    <div className='text-sm text-yellow-700'>Đang chờ xác nhận</div>
-                  </div>
-                  <div className='bg-purple-100 rounded-lg p-4 text-center'>
-                    <div className='text-2xl font-bold text-purple-600'>{stats.confirmed}</div>
-                    <div className='text-sm text-purple-700'>Đã chấp nhận</div>
-                  </div>
-                  <div className='bg-red-100 rounded-lg p-4 text-center'>
-                    <div className='text-2xl font-bold text-red-500'>{stats.cancelled}</div>
-                    <div className='text-sm text-red-700'>Đã từ chối</div>
-                  </div>
+                <div className='flex items-center gap-2 bg-pink-50 px-3 py-2 rounded-lg border border-pink-100 flex-grow md:flex-grow-0'>
+                  <Search className='w-5 h-5 text-pink-400' />
+                  <input
+                    placeholder='Tìm kiếm theo số điện thoại...'
+                    className='bg-transparent border-none w-full focus:outline-none'
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={searchTerm}
+                  />
                 </div>
 
-                <Table
-                  columns={columns}
-                  dataSource={filteredBookings.map((booking) => ({ ...booking, key: booking.bookingId }))}
-                  loading={loading}
-                  pagination={{
-                    pageSize: 10,
-                    showTotal: (total) => `Tổng cộng: ${total} lịch hẹn`,
-                    showSizeChanger: true
-                  }}
-                  bordered
-                  rowClassName={(record) => (record.status === 'pending' ? 'bg-pink-50' : '')}
-                  locale={{
-                    emptyText: 'Không tìm thấy lịch đặt nào'
-                  }}
-                />
-              </div>
-            </div>
-          </>
+                <div className='flex items-center gap-2 bg-pink-50 px-3 py-2 rounded-lg border border-pink-100'>
+                  <Filter className='w-5 h-5 text-pink-400' />
+                  <select
+                    className='bg-transparent border-none focus:outline-none'
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    value={statusFilter}
+                    style={{ minWidth: 150 }}
+                  >
+                    <option value='all'>Tất cả trạng thái</option>
+                    <option value='pending'>Đang chờ</option>
+                    <option value='confirmed'>Đã chấp nhận</option>
+                    <option value='cancelled'>Đã từ chối</option>
+                  </select>
+                </div>
+
+                <div className='flex items-center gap-2 bg-pink-50 px-3 py-2 rounded-lg border border-pink-100'>
+                  <CalendarDays className='w-5 h-5 text-pink-400' />
+                  <input
+                    type='date'
+                    className='bg-transparent border-none focus:outline-none'
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    value={dateFilter || ''}
+                    style={{ minWidth: 150 }}
+                  />
+                </div>
+              </motion.div>
+
+              <motion.div
+                className='bg-white rounded-xl shadow-lg border border-pink-100 overflow-hidden'
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <div className='p-6'>
+                  {/* Tổng quan */}
+                  <motion.div
+                    className='mb-8 grid grid-cols-1 md:grid-cols-4 gap-4'
+                    variants={staggerContainer}
+                    initial='hidden'
+                    animate='visible'
+                  >
+                    <motion.div
+                      variants={cardVariants}
+                      className='bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg p-6 shadow-sm border border-pink-200 hover:shadow-md transition-shadow'
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <div className='text-3xl font-bold text-pink-600'>{stats.total}</div>
+                          <div className='text-sm text-pink-700 font-medium mt-1'>Tổng số lịch hẹn</div>
+                        </div>
+                        <div className='p-3 bg-pink-200 bg-opacity-50 rounded-full'>
+                          <Calendar className='w-6 h-6 text-pink-600' />
+                        </div>
+                      </div>
+                      <div className='w-full h-2 bg-pink-200 bg-opacity-50 rounded-full mt-4'>
+                        <div className='h-2 bg-pink-500 rounded-full' style={{ width: '100%' }}></div>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      variants={cardVariants}
+                      className='bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-6 shadow-sm border border-yellow-200 hover:shadow-md transition-shadow'
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <div className='text-3xl font-bold text-yellow-600'>{stats.pending}</div>
+                          <div className='text-sm text-yellow-700 font-medium mt-1'>Đang chờ xác nhận</div>
+                        </div>
+                        <div className='p-3 bg-yellow-200 bg-opacity-50 rounded-full'>
+                          <Bell className='w-6 h-6 text-yellow-600' />
+                        </div>
+                      </div>
+                      <div className='w-full h-2 bg-yellow-200 bg-opacity-50 rounded-full mt-4'>
+                        <div
+                          className='h-2 bg-yellow-500 rounded-full'
+                          style={{ width: `${stats.total ? (stats.pending / stats.total) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      variants={cardVariants}
+                      className='bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 shadow-sm border border-green-200 hover:shadow-md transition-shadow'
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <div className='text-3xl font-bold text-green-600'>{stats.confirmed}</div>
+                          <div className='text-sm text-green-700 font-medium mt-1'>Đã chấp nhận</div>
+                        </div>
+                        <div className='p-3 bg-green-200 bg-opacity-50 rounded-full'>
+                          <CheckCheck className='w-6 h-6 text-green-600' />
+                        </div>
+                      </div>
+                      <div className='w-full h-2 bg-green-200 bg-opacity-50 rounded-full mt-4'>
+                        <div
+                          className='h-2 bg-green-500 rounded-full'
+                          style={{ width: `${stats.total ? (stats.confirmed / stats.total) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      variants={cardVariants}
+                      className='bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-6 shadow-sm border border-red-200 hover:shadow-md transition-shadow'
+                    >
+                      <div className='flex items-center justify-between'>
+                        <div>
+                          <div className='text-3xl font-bold text-red-600'>{stats.cancelled}</div>
+                          <div className='text-sm text-red-700 font-medium mt-1'>Đã từ chối</div>
+                        </div>
+                        <div className='p-3 bg-red-200 bg-opacity-50 rounded-full'>
+                          <XOctagon className='w-6 h-6 text-red-600' />
+                        </div>
+                      </div>
+                      <div className='w-full h-2 bg-red-200 bg-opacity-50 rounded-full mt-4'>
+                        <div
+                          className='h-2 bg-red-500 rounded-full'
+                          style={{ width: `${stats.total ? (stats.cancelled / stats.total) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  >
+                    <Table
+                      columns={columns}
+                      dataSource={filteredBookings.map((booking) => ({ ...booking, key: booking.bookingId }))}
+                      loading={loading}
+                      pagination={{
+                        pageSize: 10,
+                        showTotal: (total) => `Tổng cộng: ${total} lịch hẹn`,
+                        showSizeChanger: true
+                      }}
+                      bordered
+                      rowClassName={(record) => {
+                        if (record.status === 'pending') return 'bg-yellow-50 hover:bg-yellow-100 transition-colors'
+                        if (record.status === 'confirmed') return 'bg-green-50 hover:bg-green-100 transition-colors'
+                        if (record.status === 'cancelled') return 'bg-red-50 hover:bg-red-100 transition-colors'
+                        return ''
+                      }}
+                      locale={{
+                        emptyText: (
+                          <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description={<span className='text-gray-500'>Không tìm thấy lịch đặt nào</span>}
+                          />
+                        )
+                      }}
+                    />
+                  </motion.div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
         )}
       </main>
 
