@@ -112,9 +112,9 @@ const NotificationBell = () => {
     if (userInfo) {
       fetchNotifications()
 
-      // Set up polling for new notifications (every 30 seconds)
-      const interval = setInterval(fetchNotifications, 30000)
-      return () => clearInterval(interval)
+      // // Set up polling for new notifications (every 30 seconds)
+      // const interval = setInterval(fetchNotifications, 30000)
+      // return () => clearInterval(interval)
     }
   }, [userInfo])
 
