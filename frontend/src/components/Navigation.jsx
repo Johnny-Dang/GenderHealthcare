@@ -153,6 +153,7 @@ const Navigation = () => {
 
   const guestNavItems = [
     { path: '/', label: 'Trang chủ' },
+    { path: '/about', label: 'Về chúng tôi' },
     { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
     { path: '/booking-consultant', label: 'Đặt tư vấn' }, // Thêm đặt tư vấn vào đây
     { path: '/blog', label: 'Blog' },
