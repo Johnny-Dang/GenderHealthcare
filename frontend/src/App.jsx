@@ -39,6 +39,7 @@ import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
 import ManagerPaymentManagement from './pages/manager-dashboard/payment'
 import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
+import AboutPage from './pages/about'
 
 /**
  * Application root with routing and Redux persistence
@@ -55,7 +56,7 @@ function App() {
     { path: '/cycle-tracking/result', element: <CycleTrackingResultPage /> },
     { path: '/test-service', element: <TestServicePage /> },
     { path: '/booking-consultant', element: <BookConsultantPage /> },
-
+    { path: '/about', element: <AboutPage /> },
     // Authenticated
     {
       path: '/profile',
