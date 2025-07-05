@@ -9,6 +9,33 @@ import ServiceBookingForm from '@/components/ServiceBookingForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Loading from '../../components/Loading';
+import { toast } from 'react-toastify';
+
+// Helper function for toast configuration
+const showToast = (type, message) => {
+  const config = {
+    position: 'top-center',
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true
+  };
+  
+  switch (type) {
+    case 'success':
+      toast.success(message, config);
+      break;
+    case 'error':
+      toast.error(message, config);
+      break;
+    case 'info':
+      toast.info(message, config);
+      break;
+    default:
+      toast(message, config);
+  }
+};
 
 export default function CartPage() {
   const bookingId = useSelector(state => state.user.bookingId);
@@ -51,14 +78,15 @@ export default function CartPage() {
     try {
       await axios.delete(`/api/booking-details/${bookingDetailId}`);
       fetchServices();
+      showToast('success', 'Đã xóa dịch vụ khỏi giỏ hàng!');
     } catch {
-      alert('Xoá thất bại!');
+      showToast('error', 'Xoá thất bại!');
     }
   };
 
   const handleDeleteCart = async () => {
     if (!bookingId) {
-      alert('Không có giỏ hàng để xóa!');
+      showToast('error', 'Không có giỏ hàng để xóa!');
       return;
     }
 
@@ -68,10 +96,10 @@ export default function CartPage() {
       dispatch(resetCart());
       setServices([]);
       setDeleteCartModal(false);
-      alert('Đã xóa giỏ hàng thành công! Bạn có thể tạo giỏ hàng mới.');
+      showToast('success', 'Đã xóa giỏ hàng thành công!');
     } catch (error) {
       console.error('Error deleting cart:', error);
-      alert('Xóa giỏ hàng thất bại! Vui lòng thử lại.');
+      showToast('error', 'Xóa giỏ hàng thất bại! Vui lòng thử lại.');
     } finally {
       setDeleteLoading(false);
     }
@@ -82,7 +110,7 @@ export default function CartPage() {
 
   const handlePayment = async () => {
     if (!bookingId || total <= 0) {
-      alert('Không có dịch vụ nào để thanh toán!');
+      showToast('error', 'Không có dịch vụ nào để thanh toán!');
       return;
     }
     try {
@@ -97,10 +125,10 @@ export default function CartPage() {
       } else if (res.data && res.data.url) {
         window.location.href = res.data.url;
       } else {
-        alert('Không nhận được link thanh toán!');
+        showToast('error', 'Không nhận được link thanh toán!');
       }
     } catch (err) {
-      alert('Tạo link thanh toán thất bại!');
+      showToast('error', 'Tạo link thanh toán thất bại!');
     }
   };
 
@@ -117,7 +145,7 @@ export default function CartPage() {
               onClick={() => setDeleteCartModal(true)}
             >
               <Trash2 className="w-4 h-4" />
-              Xóa toàn bộ giỏ hàng
+              Xóa  giỏ hàng
             </Button>
           )}
         </div>
@@ -197,6 +225,7 @@ export default function CartPage() {
             fetchServices();
             setEditOpen(false);
           }}
+          onSlotUpdate={() => {}}
         />
       )}
 

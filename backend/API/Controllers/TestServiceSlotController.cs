@@ -7,7 +7,6 @@ namespace backend.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class TestServiceSlotController : ControllerBase
     {
         private readonly ITestServiceSlotService _slotService;
@@ -48,6 +47,7 @@ namespace backend.API.Controllers
 
             return Ok(result.Data);
         }
+
         // POST: api/TestServiceSlot
         [HttpPost]
         [Authorize(Roles = "Admin,Staff,Manager")]
