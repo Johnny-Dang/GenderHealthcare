@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 
-export default function PersonalInfoForm({ open, onOpenChange, selectedService, selectedSlot, onSuccess }) {
+export default function PersonalInfoForm({ open, onOpenChange, selectedService, selectedSlot, onSuccess, onSlotUpdate }) {
   const dispatch = useDispatch()
   const accountId = useSelector((state) => state.user.userInfo?.accountId)
   const bookingId = useSelector((state) => state.user.bookingId)
@@ -57,6 +57,11 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
 
       toast.success('Đặt lịch thành công!')
       dispatch(incrementCart())
+      
+      // Gọi callback để cập nhật thông tin slot
+      if (onSlotUpdate) {
+        onSlotUpdate()
+      }
       
       if (onSuccess) onSuccess()
       onOpenChange(false)
