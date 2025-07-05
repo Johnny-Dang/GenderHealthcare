@@ -19,6 +19,8 @@ import {
   Phone,
   Mail
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 
 const AboutPage = () => {
   // Thông tin công ty
@@ -560,7 +562,8 @@ const AboutPage = () => {
           <div className='grid lg:grid-cols-5 gap-8'>
             {/* Bản đồ Google Maps */}
             <div
-              className={`lg:col-span-3 rounded-xl overflow-hidden shadow-md h-[450px] transition-all duration-1000 ${isVisible.contact ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}
+              className={`lg:col-span-3 rounded-xl overflow-hidden shadow-md h-auto flex transition-all duration-1000 ${isVisible.contact ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}
+              style={{ height: '100%' }}
             >
               <iframe
                 src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.5272031630207!2d106.84166977451802!3d10.84744815788076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317521003765a9f5%3A0x8ea99e10017a1831!2sT%C3%B2a%20BS16%20-%20The%20Oasis%20-%20Vinhomes%20Grand%20Park!5e0!3m2!1svi!2s!4v1751703515467!5m2!1svi!2s'
@@ -644,12 +647,19 @@ const AboutPage = () => {
             của chúng tôi.
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-            <button className='px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1'>
-              Đặt lịch ngay
-            </button>
-            <button className='px-6 py-3 border border-primary-600 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-300 hover:shadow-md hover:-translate-y-1'>
-              Liên hệ tư vấn
-            </button>
+            <Button
+              asChild
+              className='px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1'
+            >
+              <Link to='/test-service'>Đặt lịch ngay</Link>
+            </Button>
+            <Button
+              asChild
+              variant='outline'
+              className='px-6 py-3 border border-primary-600 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-300 hover:shadow-md hover:-translate-y-1'
+            >
+              <Link to='/booking-consultant'>Liên hệ tư vấn</Link>
+            </Button>
           </div>
         </div>
       </section>
