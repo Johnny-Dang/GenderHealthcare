@@ -31,8 +31,13 @@ const Hero = () => {
                 <Link to='/booking-consultant'>Đặt lịch tư vấn</Link>
               </Button>
 
-              <Button size='lg' variant='outline' className='border-primary-200 text-primary-600 hover:bg-primary-50'>
-                Tìm hiểu thêm
+              <Button
+                asChild
+                size='lg'
+                variant='outline'
+                className='border-primary-200 text-primary-600 hover:bg-primary-50'
+              >
+                <Link to='/about'>Tìm hiểu thêm</Link>
               </Button>
             </div>
 
