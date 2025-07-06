@@ -2,31 +2,39 @@ import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Heart, Calendar, MessageSquare } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const Services = () => {
+  const navigate = useNavigate()
+
   const services = [
     {
       icon: Heart,
       title: 'Xét nghiệm sức khỏe',
       description: 'Gói xét nghiệm toàn diện về sức khỏe sinh sản, hormone và phát hiện sớm các bệnh phụ khoa.',
       features: ['Xét nghiệm hormone', 'Tầm soát ung thư', 'Kiểm tra STD', 'Xét nghiệm tiền hôn nhân'],
-      link: '/dich-vu'
+      link: '/test-service'
     },
     {
       icon: MessageSquare,
       title: 'Tư vấn chuyên khoa',
       description: 'Tư vấn riêng tư với các chuyên gia hàng đầu về sức khỏe giới tính và sinh sản.',
       features: ['Tư vấn trực tuyến', 'Khám định kỳ', 'Tư vấn tâm lý', 'Hỗ trợ 24/7'],
-      link: '/tu-van'
+      link: '/booking-consultant'
     },
     {
       icon: Calendar,
       title: 'Theo dõi chu kỳ',
       description: 'Ứng dụng thông minh giúp theo dõi và dự đoán chu kỳ kinh nguyệt một cách chính xác.',
       features: ['Dự đoán chu kỳ', 'Nhắc nhở thông minh', 'Theo dõi triệu chứng', 'Báo cáo sức khỏe'],
-      link: '/chu-ky'
+      link: '/cycle-tracking'
     }
   ]
+
+  // Hàm xử lý điều hướng
+  const handleNavigate = (path) => {
+    navigate(path)
+  }
 
   return (
     <section className='py-20 bg-gradient-soft'>
@@ -63,7 +71,12 @@ const Services = () => {
                   ))}
                 </ul>
 
-                <Button className='w-full bg-gradient-primary hover:opacity-90 text-white'>Tìm hiểu thêm</Button>
+                <Button
+                  className='w-full bg-gradient-primary hover:opacity-90 text-white'
+                  onClick={() => handleNavigate(service.link)}
+                >
+                  Tìm hiểu thêm
+                </Button>
               </CardContent>
             </Card>
           ))}
