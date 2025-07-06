@@ -40,110 +40,116 @@ import ManagerPaymentManagement from './pages/manager-dashboard/payment'
 import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
 import AboutPage from './pages/about'
+import ScrollToTop from './components/ScrollToTop'
 
 /**
  * Application root with routing and Redux persistence
  */
 function App() {
   const router = createBrowserRouter([
-    // Public Routes
-    { path: '/', element: <HomePage /> },
-    { path: '/login', element: <LoginPage /> },
-    { path: '/register', element: <RegisterPage /> },
-    { path: '/blog', element: <BlogPage /> },
-    { path: '/blog/:id', element: <BlogDetailPage /> },
-    { path: '/cycle-tracking', element: <CycleTrackingPage /> },
-    { path: '/cycle-tracking/result', element: <CycleTrackingResultPage /> },
-    { path: '/test-service', element: <TestServicePage /> },
-    { path: '/booking-consultant', element: <BookConsultantPage /> },
-    { path: '/about', element: <AboutPage /> },
-    // Authenticated
     {
-      path: '/profile',
-      element: (
-        <AuthGuard allowedRoles={['Customer', 'Staff', 'Consultant', 'Manager', 'Admin']}>
-          <ProfilePage />
-        </AuthGuard>
-      )
-    },
-    { path: '/cart', element: <CartPage /> },
-    { path: '/checkout/vnpay-return', element: <VnPayReturn /> },
-
-    // Staff Dashboard
-    {
-      path: '/staff',
-      element: (
-        <AuthGuard allowedRoles={['Staff']}>
-          <StaffLayout />
-        </AuthGuard>
-      ),
+      element: <ScrollToTop />,
       children: [
-        { index: true, element: <Navigate to='dashboard' replace /> },
-        { path: 'dashboard', element: <StaffDashboard /> },
-        { path: 'blog', element: <BlogManagement /> },
-        { path: 'appointments', element: <AppointmentsManagement /> },
-        { path: 'test-results', element: <TestResultsManagement /> }
-      ]
-    },
+        // Public Routes
+        { path: '/', element: <HomePage /> },
+        { path: '/login', element: <LoginPage /> },
+        { path: '/register', element: <RegisterPage /> },
+        { path: '/blog', element: <BlogPage /> },
+        { path: '/blog/:id', element: <BlogDetailPage /> },
+        { path: '/cycle-tracking', element: <CycleTrackingPage /> },
+        { path: '/cycle-tracking/result', element: <CycleTrackingResultPage /> },
+        { path: '/test-service', element: <TestServicePage /> },
+        { path: '/booking-consultant', element: <BookConsultantPage /> },
+        { path: '/about', element: <AboutPage /> },
+        // Authenticated
+        {
+          path: '/profile',
+          element: (
+            <AuthGuard allowedRoles={['Customer', 'Staff', 'Consultant', 'Manager', 'Admin']}>
+              <ProfilePage />
+            </AuthGuard>
+          )
+        },
+        { path: '/cart', element: <CartPage /> },
+        { path: '/checkout/vnpay-return', element: <VnPayReturn /> },
 
-    // Admin Dashboard
-    {
-      path: '/admin',
-      element: (
-        <AuthGuard allowedRoles={['Admin', 'Manager']}>
-          <AdminPage />
-        </AuthGuard>
-      ),
-      children: [
-        { index: true, element: <Navigate to='dashboard' replace /> },
-        { path: 'dashboard', element: <DashboardHome /> },
-        { path: 'users', element: <UserManagement /> },
-        { path: 'services', element: <TestServiceManagement /> }
-      ]
-    },
+        // Staff Dashboard
+        {
+          path: '/staff',
+          element: (
+            <AuthGuard allowedRoles={['Staff']}>
+              <StaffLayout />
+            </AuthGuard>
+          ),
+          children: [
+            { index: true, element: <Navigate to='dashboard' replace /> },
+            { path: 'dashboard', element: <StaffDashboard /> },
+            { path: 'blog', element: <BlogManagement /> },
+            { path: 'appointments', element: <AppointmentsManagement /> },
+            { path: 'test-results', element: <TestResultsManagement /> }
+          ]
+        },
 
-    // Manager Dashboard
-    {
-      path: '/manager/dashboard',
-      element: (
-        <AuthGuard allowedRoles={['Manager', 'Admin']}>
-          <ManagerDashboard />
-        </AuthGuard>
-      ),
-      children: [
-        { index: true, element: <Navigate to='feedback' replace /> },
-        { path: 'feedback', element: <ManagerFeedbackManagement /> },
-        { path: 'payment', element: <ManagerPaymentManagement /> },
-        { path: 'staff', element: <ManagerStaffManagement /> },
-        { path: 'test-service', element: <ManagerTestServiceManagement /> }
-      ]
-    },
+        // Admin Dashboard
+        {
+          path: '/admin',
+          element: (
+            <AuthGuard allowedRoles={['Admin', 'Manager']}>
+              <AdminPage />
+            </AuthGuard>
+          ),
+          children: [
+            { index: true, element: <Navigate to='dashboard' replace /> },
+            { path: 'dashboard', element: <DashboardHome /> },
+            { path: 'users', element: <UserManagement /> },
+            { path: 'services', element: <TestServiceManagement /> }
+          ]
+        },
 
-    // Consultant
-    {
-      path: '/consultant',
-      element: (
-        <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']}>
-          <Outlet />
-        </AuthGuard>
-      ),
-      children: [
-        { path: 'schedule', element: <ConsultantBookingSchedule /> },
-        { path: 'test-results', element: <TestResultsPage /> }
-      ]
-    },
+        // Manager Dashboard
+        {
+          path: '/manager/dashboard',
+          element: (
+            <AuthGuard allowedRoles={['Manager', 'Admin']}>
+              <ManagerDashboard />
+            </AuthGuard>
+          ),
+          children: [
+            { index: true, element: <Navigate to='feedback' replace /> },
+            { path: 'feedback', element: <ManagerFeedbackManagement /> },
+            { path: 'payment', element: <ManagerPaymentManagement /> },
+            { path: 'staff', element: <ManagerStaffManagement /> },
+            { path: 'test-service', element: <ManagerTestServiceManagement /> }
+          ]
+        },
 
-    // Customer Dashboard
-    {
-      path: '/customer',
-      element: (
-        <AuthGuard allowedRoles={['Customer']}>
-          <Outlet />
-        </AuthGuard>
-      ),
-      children: [
-        { path: 'dashboard', element: <CustomerDashboard /> },
-        { path: 'booking/:bookingId', element: <BookingDetailPage /> }
+        // Consultant
+        {
+          path: '/consultant',
+          element: (
+            <AuthGuard allowedRoles={['Consultant', 'Staff', 'Manager']}>
+              <Outlet />
+            </AuthGuard>
+          ),
+          children: [
+            { path: 'schedule', element: <ConsultantBookingSchedule /> },
+            { path: 'test-results', element: <TestResultsPage /> }
+          ]
+        },
+
+        // Customer Dashboard
+        {
+          path: '/customer',
+          element: (
+            <AuthGuard allowedRoles={['Customer']}>
+              <Outlet />
+            </AuthGuard>
+          ),
+          children: [
+            { path: 'dashboard', element: <CustomerDashboard /> },
+            { path: 'booking/:bookingId', element: <BookingDetailPage /> }
+          ]
+        }
       ]
     },
 
