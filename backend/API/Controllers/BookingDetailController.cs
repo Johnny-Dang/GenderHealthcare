@@ -112,5 +112,41 @@ namespace backend.API.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("{id}/upload-result")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> UploadResult(Guid id, IFormFile file)
+        {
+            var result = await _bookingDetailService.UploadTestResultAsync(id, file);
+            if (result == null)
+                return BadRequest("Không thể upload kết quả.");
+
+            return Ok(new { url = result });
+        }
+
+        [HttpGet("{id}/result-file")]
+        [Authorize]
+        public async Task<IActionResult> GetResultFile(Guid id)
+        {
+            var detail = await _bookingDetailService.GetByIdAsync(id);
+            if (detail == null || string.IsNullOrEmpty(detail.ResultFileUrl))
+                return NotFound("Không có file kết quả.");
+
+            return Ok(new { url = detail.ResultFileUrl });
+        }
+
+        /// <summary>
+        /// Lấy danh sách booking detail theo service ID và trạng thái (nếu có).
+        /// </summary>
+        /// <param name="serviceId"></param>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        [HttpGet("service/{serviceId}")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> GetByServiceId(Guid serviceId, [FromQuery] string status = null)
+        {
+            var details = await _bookingDetailService.GetByServiceIdAsync(serviceId, status);
+            return Ok(details);
+        }
     }
 }

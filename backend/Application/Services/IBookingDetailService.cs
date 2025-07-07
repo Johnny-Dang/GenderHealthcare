@@ -23,5 +23,9 @@ namespace backend.Application.Services
         
         // Calculate total amount for a booking
         Task<BookingTotalAmountResponse> CalculateTotalAmountByBookingIdAsync(Guid bookingId);
+
+        Task<string?> UploadTestResultAsync(Guid bookingDetailId, IFormFile file);
+
+        Task<List<BookingDetailResponse>> GetByServiceIdAsync(Guid serviceId, string status = null);
     }
 }

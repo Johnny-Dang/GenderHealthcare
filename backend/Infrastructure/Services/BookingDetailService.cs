@@ -15,17 +15,20 @@ namespace backend.Infrastructure.Services
         private readonly ITestServiceRepository _testServiceRepository;
         private readonly ITestServiceSlotService _testServiceSlotService;
         private readonly INotificationService _notificationService;
+        private readonly ICloudinaryService _cloudinaryService;
 
         public BookingDetailService(
             IBookingDetailRepository bookingDetailRepository,
             ITestServiceRepository testServiceRepository,
             ITestServiceSlotService testServiceSlotService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ICloudinaryService cloudinaryService)
         {
             _bookingDetailRepository = bookingDetailRepository;
             _testServiceRepository = testServiceRepository;
             _testServiceSlotService = testServiceSlotService;
             _notificationService = notificationService;
+            _cloudinaryService = cloudinaryService;
         }
 
         public async Task<BookingDetailResponse> CreateAsync(CreateBookingDetailRequest request)
@@ -171,7 +174,8 @@ namespace backend.Infrastructure.Services
                 LastName = bookingDetail.LastName,
                 Phone = bookingDetail.Phone,
                 DateOfBirth = bookingDetail.DateOfBirth,
-                Gender = bookingDetail.Gender
+                Gender = bookingDetail.Gender,
+                ResultFileUrl = bookingDetail.TestResult?.Result
             };
         }
 
@@ -275,6 +279,70 @@ namespace backend.Infrastructure.Services
                 DateOfBirth = updatedDetail.DateOfBirth,
                 Gender = updatedDetail.Gender
             };
+        }
+
+        public async Task<string?> UploadTestResultAsync(Guid bookingDetailId, IFormFile file)
+        {
+            var bookingDetail = await _bookingDetailRepository.GetByIdAsync(bookingDetailId);
+            if (bookingDetail == null)
+                return null;
+
+            var fileUrl = await _cloudinaryService.UploadPdfAsync(file, "test-results");
+
+            // Lưu vào TestResult (nếu chưa có thì tạo mới)
+            if (bookingDetail.TestResult == null)
+            {
+                bookingDetail.TestResult = new TestResult
+                {
+                    BookingDetailId = bookingDetailId,
+                    Result = fileUrl,
+                    Status = "Đã có kết quả"
+                };
+            }
+            else
+            {
+                bookingDetail.TestResult.Result = fileUrl;
+                bookingDetail.TestResult.Status = "Đã có kết quả";
+            }
+
+            bookingDetail.Status = "Đã có kết quả";
+            await _bookingDetailRepository.UpdateAsync(bookingDetail);
+
+            return fileUrl;
+        }
+
+        public async Task<List<BookingDetailResponse>> GetByServiceIdAsync(Guid serviceId, string status = null)
+        {
+            var bookingDetails = await _bookingDetailRepository.GetByServiceIdAsync(serviceId, status);
+            var response = new List<BookingDetailResponse>();
+
+            foreach (var detail in bookingDetails)
+            {
+                var slotResult = await _testServiceSlotService.GetSlotByIdAsync(detail.SlotId);
+                if (!slotResult.IsSuccess)
+                    continue;
+
+                response.Add(new BookingDetailResponse
+                {
+                    BookingDetailId = detail.BookingDetailId,
+                    BookingId = detail.BookingId,
+                    ServiceId = detail.ServiceId,
+                    ServiceName = detail.TestService?.ServiceName ?? string.Empty,
+                    SlotId = detail.SlotId,
+                    SlotDate = slotResult.Data.SlotDate,
+                    SlotShift = slotResult.Data.Shift,
+                    Price = detail.TestService?.Price ?? 0,
+                    Status = detail.Status,
+                    FirstName = detail.FirstName,
+                    LastName = detail.LastName,
+                    Phone = detail.Phone,
+                    DateOfBirth = detail.DateOfBirth,
+                    Gender = detail.Gender,
+                    ResultFileUrl = detail.TestResult?.Result
+                });
+            }
+
+            return response;
         }
     }
 }

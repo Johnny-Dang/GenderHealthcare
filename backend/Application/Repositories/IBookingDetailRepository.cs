@@ -32,5 +32,7 @@ namespace backend.Application.Repositories
         Task<Booking> GetBookingAsync(Guid bookingId);
         // tự động cập nhật trạng thái của booking detail theo booking id
         Task UpdateStatusByBookingIdAsync(Guid bookingId, string status);
+
+        Task<List<BookingDetail>> GetByServiceIdAsync(Guid serviceId, string status = null);
     }
 }

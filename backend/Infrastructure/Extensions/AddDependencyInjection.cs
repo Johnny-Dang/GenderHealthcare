@@ -36,6 +36,7 @@ namespace backend.Infrastructure.Extensions
 
             serviceCollection.AddScoped<INotificationService, NotificationService>();
             serviceCollection.AddScoped<ITestServiceSlotService, TestServiceSlotService>();
+            serviceCollection.AddScoped<ICloudinaryService, CloudinaryService>();
 
             // Repositories
             serviceCollection.AddScoped<ITestServiceRepository, TestServiceRepository>();
