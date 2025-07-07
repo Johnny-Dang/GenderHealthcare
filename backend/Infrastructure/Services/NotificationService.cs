@@ -9,17 +9,11 @@ namespace backend.Infrastructure.Services
     {
         // muốn thông báo cho gì thì thêm vô
         private readonly INotificationRepository _notificationRepository;
-        private readonly IConsultationBookingRepository _consultationRepository;
-        private readonly ITestResultRepository _testResultRepository;
 
         public NotificationService(
-            INotificationRepository notificationRepository,
-            IConsultationBookingRepository consultationRepository,
-            ITestResultRepository testResultRepository)
+            INotificationRepository notificationRepository)
         {
             _notificationRepository = notificationRepository;
-            _consultationRepository = consultationRepository;
-            _testResultRepository = testResultRepository;
         }
 
         public async Task<Result<List<NotificationResponse>>> GetNotificationsForUserAsync(Guid userId)
@@ -113,38 +107,5 @@ namespace backend.Infrastructure.Services
             return Result<bool>.Success(true);
         }
 
-        public async Task<Result<NotificationResponse>> CreateBookingNotificationAsync(Guid bookingId, Guid recipientId)
-        {
-            var booking = await _consultationRepository.GetBookingByIdAsync(bookingId);
-            if (booking == null)
-                return Result<NotificationResponse>.Failure("Booking not found");
-
-            var request = new CreateNotificationRequest
-            {
-                RecipientId = recipientId,
-                Title = "Lịch hẹn tư vấn mới",
-                Content = $"Bạn có lịch hẹn yêu cầu tư vấn vào lúc {booking.ScheduledAt.ToString("dd/MM/yyyy HH:mm")}",
-                Type = "Consultation Booking"
-            };
-
-            return await CreateNotificationAsync(request);
-        }
-
-        public async Task<Result<NotificationResponse>> CreateTestResultNotificationAsync(Guid testResultId, Guid recipientId)
-        {
-            var testResult = await _testResultRepository.GetTestResultByIdAsync(testResultId);
-            if (testResult == null)
-                return Result<NotificationResponse>.Failure("Test result not found");
-
-            var request = new CreateNotificationRequest
-            {
-                RecipientId = recipientId,
-                Title = "Kết quả xét nghiệm đã sẵn sàng",
-                Content = "Kết quả xét nghiệm của bạn đã sẵn sàng để xem",
-                Type = "TestResult",
-            };
-
-            return await CreateNotificationAsync(request);
-        }
     }
 }

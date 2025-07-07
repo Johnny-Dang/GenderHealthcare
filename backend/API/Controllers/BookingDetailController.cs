@@ -135,18 +135,24 @@ namespace backend.API.Controllers
             return Ok(new { url = detail.ResultFileUrl });
         }
 
-        /// <summary>
-        /// Lấy danh sách booking detail theo service ID và trạng thái (nếu có).
-        /// </summary>
-        /// <param name="serviceId"></param>
-        /// <param name="status"></param>
-        /// <returns></returns>
         [HttpGet("service/{serviceId}")]
         [Authorize(Roles = "Admin,Staff,Manager")]
         public async Task<IActionResult> GetByServiceId(Guid serviceId, [FromQuery] string status = null)
         {
             var details = await _bookingDetailService.GetByServiceIdAsync(serviceId, status);
             return Ok(details);
+        }
+
+        //api/booking-details/{id}/confirm
+        [HttpPut("{id}/confirm")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> ConfirmBookingDetail(Guid id)
+        {
+            var result = await _bookingDetailService.ConfirmBookingDetailAsync(id);
+            if (!result)
+                return BadRequest("Chỉ xác nhận được khi trạng thái là 'Chờ xét nghiệm'.");
+
+            return Ok("Đã xác nhận lịch hẹn thành công và đã gửi thông báo cho khách hàng.");
         }
     }
 }

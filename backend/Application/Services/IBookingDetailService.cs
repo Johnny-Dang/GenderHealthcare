@@ -27,5 +27,7 @@ namespace backend.Application.Services
         Task<string?> UploadTestResultAsync(Guid bookingDetailId, IFormFile file);
 
         Task<List<BookingDetailResponse>> GetByServiceIdAsync(Guid serviceId, string status = null);
+
+        Task<bool> ConfirmBookingDetailAsync(Guid bookingDetailId);
     }
 }

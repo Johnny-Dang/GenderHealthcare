@@ -16,19 +16,22 @@ namespace backend.Infrastructure.Services
         private readonly ITestServiceSlotService _testServiceSlotService;
         private readonly INotificationService _notificationService;
         private readonly ICloudinaryService _cloudinaryService;
+        private readonly INotificationDomainService _notificationDomainService;
 
         public BookingDetailService(
             IBookingDetailRepository bookingDetailRepository,
             ITestServiceRepository testServiceRepository,
             ITestServiceSlotService testServiceSlotService,
             INotificationService notificationService,
-            ICloudinaryService cloudinaryService)
+            ICloudinaryService cloudinaryService,
+            INotificationDomainService notificationDomainService)
         {
             _bookingDetailRepository = bookingDetailRepository;
             _testServiceRepository = testServiceRepository;
             _testServiceSlotService = testServiceSlotService;
             _notificationService = notificationService;
             _cloudinaryService = cloudinaryService;
+            _notificationDomainService = notificationDomainService;
         }
 
         public async Task<BookingDetailResponse> CreateAsync(CreateBookingDetailRequest request)
@@ -287,9 +290,12 @@ namespace backend.Infrastructure.Services
             if (bookingDetail == null)
                 return null;
 
+            // Chỉ cho upload nếu đã xác nhận
+            if (bookingDetail.Status != "Đã xét nghiệm")
+                return null;
+
             var fileUrl = await _cloudinaryService.UploadPdfAsync(file, "test-results");
 
-            // Lưu vào TestResult (nếu chưa có thì tạo mới)
             if (bookingDetail.TestResult == null)
             {
                 bookingDetail.TestResult = new TestResult
@@ -307,6 +313,9 @@ namespace backend.Infrastructure.Services
 
             bookingDetail.Status = "Đã có kết quả";
             await _bookingDetailRepository.UpdateAsync(bookingDetail);
+
+            // Gửi thông báo cho khách hàng
+            await _notificationDomainService.NotifyTestResultReadyAsync(bookingDetailId);
 
             return fileUrl;
         }
@@ -343,6 +352,25 @@ namespace backend.Infrastructure.Services
             }
 
             return response;
+        }
+
+        public async Task<bool> ConfirmBookingDetailAsync(Guid bookingDetailId)
+        {
+            var bookingDetail = await _bookingDetailRepository.GetByIdAsync(bookingDetailId);
+            if (bookingDetail == null)
+                return false;
+
+            // Chỉ xác nhận nếu trạng thái là "Chờ xét nghiệm"
+            if (bookingDetail.Status != "Chưa xét nghiệm".ToLower())
+                return false;
+
+            bookingDetail.Status = "Đã xét nghiệm";
+            await _bookingDetailRepository.UpdateAsync(bookingDetail);
+
+            // Gửi thông báo cho khách hàng
+            await _notificationDomainService.NotifyBookingDetailConfirmedAsync(bookingDetailId);
+
+            return true;
         }
     }
 }
