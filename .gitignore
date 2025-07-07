@@ -43,3 +43,20 @@ backend/appsettings.*.json
 
 # Others
 *.log
+
+# Ignore publish profile user settings (per user config)
+**/*.pubxml.user
+
+# Ignore deployment ARM profiles
+**/profile.arm.json
+
+# Optional: Ignore other user-local or sensitive files
+**/*.user
+**/*.suo
+**/*.vscode
+
+# Web deploy profiles - optional
+**/*.pubxml
+
+# Absolutely ignore user secrets
+**/*.pubxml.user
