@@ -82,9 +82,6 @@ const TestResultsByService = () => {
         return 'completed'
       case 'đã xét nghiệm':
         return 'tested'
-      case 'chờ xét nghiệm':
-      case 'chưa xét nghiệm':
-      case 'đang chờ':
       default:
         return 'pending'
     }

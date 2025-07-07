@@ -13,6 +13,12 @@ namespace backend.Infrastructure.Services
         public CloudinaryService(IOptions<CloudinarySettings> options)
         {
             var settings = options.Value;
+            if (string.IsNullOrWhiteSpace(settings.CloudName) ||
+                string.IsNullOrWhiteSpace(settings.ApiKey) ||
+                string.IsNullOrWhiteSpace(settings.ApiSecret))
+            {
+                throw new InvalidOperationException("Cloudinary configuration is incomplete.");
+            }
             var account = new Account(
                 settings.CloudName,
                 settings.ApiKey,
@@ -22,8 +28,15 @@ namespace backend.Infrastructure.Services
 
         public async Task<string> UploadPdfAsync(IFormFile file, string folder)
         {
+            if (string.IsNullOrWhiteSpace(folder))
+                throw new ArgumentException("Folder không được để trống.");
+            
             if (file == null || file.Length == 0 || !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("File không hợp lệ. Chỉ nhận PDF.");
+
+            // Validate MIME type for security
+            if (file.ContentType != "application/pdf")
+                throw new ArgumentException("File không hợp lệ. MIME type phải là application/pdf.");
 
             using var stream = file.OpenReadStream();
             var uploadParams = new RawUploadParams
@@ -35,7 +48,7 @@ namespace backend.Infrastructure.Services
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
             if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
                 return uploadResult.SecureUrl.ToString();
-            throw new Exception("Upload failed");
+            throw new Exception($"Upload failed: {uploadResult.Error?.Message ?? "Unknown error"}");
         }
     }
 }

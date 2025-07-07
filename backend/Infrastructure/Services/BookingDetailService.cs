@@ -2,6 +2,7 @@
 using backend.Application.DTOs.NotificationDTO;
 using backend.Application.Repositories;
 using backend.Application.Services;
+using backend.Domain.Constants;
 using backend.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -291,7 +292,7 @@ namespace backend.Infrastructure.Services
                 return null;
 
             // Chỉ cho upload nếu đã xác nhận
-            if (bookingDetail.Status != "Đã xét nghiệm")
+            if (bookingDetail.Status != BookingDetailStatus.Tested)
                 return null;
 
             var fileUrl = await _cloudinaryService.UploadPdfAsync(file, "test-results");
@@ -302,16 +303,16 @@ namespace backend.Infrastructure.Services
                 {
                     BookingDetailId = bookingDetailId,
                     Result = fileUrl,
-                    Status = "Đã có kết quả"
+                    Status = BookingDetailStatus.ResultReady
                 };
             }
             else
             {
                 bookingDetail.TestResult.Result = fileUrl;
-                bookingDetail.TestResult.Status = "Đã có kết quả";
+                bookingDetail.TestResult.Status = BookingDetailStatus.ResultReady;
             }
 
-            bookingDetail.Status = "Đã có kết quả";
+            bookingDetail.Status = BookingDetailStatus.ResultReady;
             await _bookingDetailRepository.UpdateAsync(bookingDetail);
 
             // Gửi thông báo cho khách hàng
@@ -361,10 +362,10 @@ namespace backend.Infrastructure.Services
                 return false;
 
             // Chỉ xác nhận nếu trạng thái là "Chờ xét nghiệm"
-            if (bookingDetail.Status != "Chưa xét nghiệm".ToLower())
+            if (bookingDetail.Status.ToLower() != BookingDetailStatus.Pending.ToLower())
                 return false;
 
-            bookingDetail.Status = "Đã xét nghiệm";
+            bookingDetail.Status = BookingDetailStatus.Tested;
             await _bookingDetailRepository.UpdateAsync(bookingDetail);
 
             // Gửi thông báo cho khách hàng

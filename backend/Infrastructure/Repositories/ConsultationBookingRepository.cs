@@ -114,7 +114,7 @@ namespace backend.Infrastructure.Repositories
         public async Task<List<ConsultationBookingResponse>> GetBookingsByStaffIdAsync(Guid staffId)
         {
             return await _context.ConsultationBooking
-                .Where(b => b.StaffId == staffId && b.ScheduledAt > DateTime.Now)
+                .Where(b => b.StaffId == staffId && b.ScheduledAt > DateTime.UtcNow)
                 .Select(booking => new ConsultationBookingResponse
                 {
                     BookingId = booking.BookingId,

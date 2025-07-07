@@ -46,7 +46,6 @@ const AppointmentsManagement = () => {
         id: item.bookingDetailId,
         bookingId: item.bookingId,
         customerName: `${item.firstName} ${item.lastName}`,
-        customerEmail: item.email || 'N/A',
         date: item.slotDate,
         time: item.slotShift === 'AM' ? '08:00 - 12:00' : '13:00 - 17:00',
         shift: item.slotShift,
@@ -106,7 +105,7 @@ const AppointmentsManagement = () => {
     if (!selectedAppointment) return
     setConfirmLoading(true)
     try {
-      await api.put(`api/booking-details/${selectedAppointment.id}/confirm`)
+      await api.put(`/api/booking-details/${selectedAppointment.id}/confirm`)
       message.success('Đã xác nhận xét nghiệm thành công')
       setConfirmModalVisible(false)
       if (selectedService) fetchAppointments(selectedService)
