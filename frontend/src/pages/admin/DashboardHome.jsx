@@ -112,7 +112,7 @@ const DashboardHome = () => {
       setUsersByRole([
         { role: 'Customer', count: 980 },
         { role: 'Consultant', count: 45 },
-        { role: 'Manager', count: 12 }, // Thêm role Manager
+        { role: 'Manager', count: 12 },
         { role: 'Staff', count: 28 },
         { role: 'Admin', count: 5 }
       ])

@@ -18,5 +18,6 @@ namespace backend.Application.DTOs.BookingDetailDTO
         public string Phone { get; set; } = string.Empty;
         public DateOnly DateOfBirth { get; set; }
         public bool Gender { get; set; }
+        public string? ResultFileUrl { get; set; }
     }
 } 

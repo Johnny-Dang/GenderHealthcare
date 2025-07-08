@@ -97,8 +97,6 @@ function ConsultantBookingSchedule() {
         return
       }
 
-      // The server expects a simple string value, not an object
-      // Send the status as a direct string value, not wrapped in an object
       const response = await api.patch(`/api/ConsultationBooking/${bookingId}/status`, `"${newStatus}"`, {
         headers: {
           'Content-Type': 'application/json'
@@ -132,7 +130,6 @@ function ConsultantBookingSchedule() {
     }
   }
 
-  // Get appropriate status badge - update to match the new status values
   const getStatusBadge = (status) => {
     let config = {
       color: 'default',
@@ -187,7 +184,6 @@ function ConsultantBookingSchedule() {
     )
   }
 
-  // Table columns for Ant Design Table with enhanced styling
   const columns = [
     {
       title: 'Người đặt',

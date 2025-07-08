@@ -2,6 +2,7 @@
 using backend.Application.DTOs.NotificationDTO;
 using backend.Application.Repositories;
 using backend.Application.Services;
+using backend.Domain.Constants;
 using backend.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -15,17 +16,23 @@ namespace backend.Infrastructure.Services
         private readonly ITestServiceRepository _testServiceRepository;
         private readonly ITestServiceSlotService _testServiceSlotService;
         private readonly INotificationService _notificationService;
+        private readonly ICloudinaryService _cloudinaryService;
+        private readonly INotificationDomainService _notificationDomainService;
 
         public BookingDetailService(
             IBookingDetailRepository bookingDetailRepository,
             ITestServiceRepository testServiceRepository,
             ITestServiceSlotService testServiceSlotService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ICloudinaryService cloudinaryService,
+            INotificationDomainService notificationDomainService)
         {
             _bookingDetailRepository = bookingDetailRepository;
             _testServiceRepository = testServiceRepository;
             _testServiceSlotService = testServiceSlotService;
             _notificationService = notificationService;
+            _cloudinaryService = cloudinaryService;
+            _notificationDomainService = notificationDomainService;
         }
 
         public async Task<BookingDetailResponse> CreateAsync(CreateBookingDetailRequest request)
@@ -171,7 +178,8 @@ namespace backend.Infrastructure.Services
                 LastName = bookingDetail.LastName,
                 Phone = bookingDetail.Phone,
                 DateOfBirth = bookingDetail.DateOfBirth,
-                Gender = bookingDetail.Gender
+                Gender = bookingDetail.Gender,
+                ResultFileUrl = bookingDetail.TestResult?.Result
             };
         }
 
@@ -275,6 +283,95 @@ namespace backend.Infrastructure.Services
                 DateOfBirth = updatedDetail.DateOfBirth,
                 Gender = updatedDetail.Gender
             };
+        }
+
+        public async Task<string?> UploadTestResultAsync(Guid bookingDetailId, IFormFile file)
+        {
+            var bookingDetail = await _bookingDetailRepository.GetByIdAsync(bookingDetailId);
+            if (bookingDetail == null)
+                return null;
+
+            // Chỉ cho upload nếu đã xác nhận
+            if (bookingDetail.Status != BookingDetailStatus.Tested)
+                return null;
+
+            var fileUrl = await _cloudinaryService.UploadPdfAsync(file, "test-results");
+
+            if (bookingDetail.TestResult == null)
+            {
+                bookingDetail.TestResult = new TestResult
+                {
+                    BookingDetailId = bookingDetailId,
+                    Result = fileUrl,
+                    Status = BookingDetailStatus.ResultReady
+                };
+            }
+            else
+            {
+                bookingDetail.TestResult.Result = fileUrl;
+                bookingDetail.TestResult.Status = BookingDetailStatus.ResultReady;
+            }
+
+            bookingDetail.Status = BookingDetailStatus.ResultReady;
+            await _bookingDetailRepository.UpdateAsync(bookingDetail);
+
+            // Gửi thông báo cho khách hàng
+            await _notificationDomainService.NotifyTestResultReadyAsync(bookingDetailId);
+
+            return fileUrl;
+        }
+
+        public async Task<List<BookingDetailResponse>> GetByServiceIdAsync(Guid serviceId, string status = null)
+        {
+            var bookingDetails = await _bookingDetailRepository.GetByServiceIdAsync(serviceId, status);
+            var response = new List<BookingDetailResponse>();
+
+            foreach (var detail in bookingDetails)
+            {
+                var slotResult = await _testServiceSlotService.GetSlotByIdAsync(detail.SlotId);
+                if (!slotResult.IsSuccess)
+                    continue;
+
+                response.Add(new BookingDetailResponse
+                {
+                    BookingDetailId = detail.BookingDetailId,
+                    BookingId = detail.BookingId,
+                    ServiceId = detail.ServiceId,
+                    ServiceName = detail.TestService?.ServiceName ?? string.Empty,
+                    SlotId = detail.SlotId,
+                    SlotDate = slotResult.Data.SlotDate,
+                    SlotShift = slotResult.Data.Shift,
+                    Price = detail.TestService?.Price ?? 0,
+                    Status = detail.Status,
+                    FirstName = detail.FirstName,
+                    LastName = detail.LastName,
+                    Phone = detail.Phone,
+                    DateOfBirth = detail.DateOfBirth,
+                    Gender = detail.Gender,
+                    ResultFileUrl = detail.TestResult?.Result
+                });
+            }
+
+            return response;
+        }
+
+        public async Task<bool> ConfirmBookingDetailAsync(Guid bookingDetailId)
+        {
+            var bookingDetail = await _bookingDetailRepository.GetByIdAsync(bookingDetailId);
+            if (bookingDetail == null)
+                return false;
+
+            // Chỉ xác nhận nếu trạng thái là "Chờ xét nghiệm"
+            if (bookingDetail.Status.ToLower() != BookingDetailStatus.Pending.ToLower())
+                return false;
+
+            bookingDetail.Status = BookingDetailStatus.Tested;
+            await _bookingDetailRepository.UpdateAsync(bookingDetail);
+
+            // Gửi thông báo cho khách hàng
+            await _notificationDomainService.NotifyBookingDetailConfirmedAsync(bookingDetailId);
+
+            return true;
         }
     }
 }

@@ -33,7 +33,7 @@ namespace backend.Infrastructure.Repositories
         public async Task<BookingDetail> GetByIdAsync(Guid id)
         {
             return await _context.BookingDetail
-                .Include(bd => bd.TestService)
+                .Include(bd => bd.TestResult)
                 .FirstOrDefaultAsync(bd => bd.BookingDetailId == id);
         }
         
@@ -140,6 +140,24 @@ namespace backend.Infrastructure.Repositories
                 detail.Status = status;
             }
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<BookingDetail>> GetByServiceIdAsync(Guid serviceId, string status = null)
+        {
+            // Tạo truy vấn cơ bản - chỉ lấy những thông tin cần thiết
+            var query = _context.BookingDetail
+                .Include(bd => bd.TestService)
+                .Include(bd => bd.TestResult)
+                .Where(bd => bd.ServiceId == serviceId)
+                .AsQueryable();
+
+            // Lọc theo trạng thái nếu có
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(bd => bd.Status == status);
+            }
+
+            return await query.ToListAsync();
         }
     }
 }

@@ -112,5 +112,47 @@ namespace backend.API.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("{id}/upload-result")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> UploadResult(Guid id, IFormFile file)
+        {
+            var result = await _bookingDetailService.UploadTestResultAsync(id, file);
+            if (result == null)
+                return BadRequest("Không thể upload kết quả.");
+
+            return Ok(new { url = result });
+        }
+
+        [HttpGet("{id}/result-file")]
+        [Authorize]
+        public async Task<IActionResult> GetResultFile(Guid id)
+        {
+            var detail = await _bookingDetailService.GetByIdAsync(id);
+            if (detail == null || string.IsNullOrEmpty(detail.ResultFileUrl))
+                return NotFound("Không có file kết quả.");
+
+            return Ok(new { url = detail.ResultFileUrl });
+        }
+
+        [HttpGet("service/{serviceId}")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> GetByServiceId(Guid serviceId, [FromQuery] string status = null)
+        {
+            var details = await _bookingDetailService.GetByServiceIdAsync(serviceId, status);
+            return Ok(details);
+        }
+
+        //api/booking-details/{id}/confirm
+        [HttpPut("{id}/confirm")]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> ConfirmBookingDetail(Guid id)
+        {
+            var result = await _bookingDetailService.ConfirmBookingDetailAsync(id);
+            if (!result)
+                return BadRequest("Chỉ xác nhận được khi trạng thái là 'Chờ xét nghiệm'.");
+
+            return Ok("Đã xác nhận lịch hẹn thành công và đã gửi thông báo cho khách hàng.");
+        }
     }
 }

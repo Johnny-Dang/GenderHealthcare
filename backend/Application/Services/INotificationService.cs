@@ -11,9 +11,5 @@ namespace backend.Application.Services
         Task<Result<bool>> MarkAllNotificationsAsReadAsync(Guid userId);
         Task<Result<int>> GetUnreadNotificationCountAsync(Guid userId);
         Task<Result<bool>> DeleteNotificationAsync(Guid notificationId);
-
-        // Helper methods for specific notifications
-        Task<Result<NotificationResponse>> CreateBookingNotificationAsync(Guid bookingId, Guid recipientId);
-        Task<Result<NotificationResponse>> CreateTestResultNotificationAsync(Guid testResultId, Guid recipientId);
     }
 }
