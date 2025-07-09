@@ -1,6 +1,7 @@
 ﻿using backend.Application.DTOs.PaymentDTO;
 using backend.Application.Repositories;
 using backend.Application.Services;
+using backend.Domain.Constants;
 using backend.Domain.Entities;
 using backend.Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
@@ -81,7 +82,7 @@ namespace backend.Infrastructure.Services
 
                 // Cập nhật trạng thái Booking và BookingDetail
                 await _bookingRepository.UpdateStatusAsync(response.BookingId, "Đã thanh toán");
-                await _bookingDetailRepository.UpdateStatusByBookingIdAsync(response.BookingId, "Đã thanh toán");
+                await _bookingDetailRepository.UpdateStatusByBookingIdAsync(response.BookingId, BookingDetailStatus.Pending);
             }
             return response;
         }
