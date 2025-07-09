@@ -144,7 +144,7 @@ namespace backend.API.Controllers
         }
 
         //api/booking-details/{id}/confirm
-        [HttpPut("{id}/confirm")]
+        [HttpPut("{id}/confirm")]   
         [Authorize(Roles = "Admin,Staff,Manager")]
         public async Task<IActionResult> ConfirmBookingDetail(Guid id)
         {

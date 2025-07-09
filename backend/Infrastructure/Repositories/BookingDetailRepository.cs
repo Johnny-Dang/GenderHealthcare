@@ -34,6 +34,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.BookingDetail
                 .Include(bd => bd.TestResult)
+                .Include(bd => bd.TestService)
                 .FirstOrDefaultAsync(bd => bd.BookingDetailId == id);
         }
         

@@ -36,4 +36,11 @@
     <Folder Include="Application\DTOs\TestResultDTO\" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
