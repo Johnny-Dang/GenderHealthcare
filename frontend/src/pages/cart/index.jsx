@@ -77,8 +77,18 @@ export default function CartPage() {
     if (!window.confirm('Bạn có chắc muốn xoá dịch vụ này khỏi giỏ hàng?')) return;
     try {
       await axios.delete(`/api/booking-details/${bookingDetailId}`);
-      fetchServices();
-      showToast('success', 'Đã xóa dịch vụ khỏi giỏ hàng!');
+      // Fetch lại dịch vụ sau khi xóa
+      const res = await axios.get(`/api/booking-details/booking/${bookingId}`);
+      setServices(res.data);
+      dispatch(setCartCount(res.data.length));
+      if (res.data.length === 0) {
+        // Nếu không còn dịch vụ nào, xóa luôn bookingId
+        await axios.delete(`/api/bookings/${bookingId}`);
+        dispatch(resetCart());
+        showToast('success', 'Đã xóa dịch vụ và giỏ hàng!');
+      } else {
+        showToast('success', 'Đã xóa dịch vụ khỏi giỏ hàng!');
+      }
     } catch {
       showToast('error', 'Xoá thất bại!');
     }
