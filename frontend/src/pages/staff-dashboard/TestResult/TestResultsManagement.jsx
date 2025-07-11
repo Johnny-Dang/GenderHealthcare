@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Typography, Table, Card, Button, Tag, Space, Select, message, Modal, Upload, Spin, Empty } from 'antd'
+import {
+  Typography,
+  Table,
+  Card,
+  Button,
+  Tag,
+  Space,
+  Select,
+  message,
+  Modal,
+  Upload,
+  Spin,
+  Empty,
+  DatePicker
+} from 'antd'
 import {
   CheckCircle,
   UploadCloud,
@@ -7,12 +21,13 @@ import {
   Clock,
   AlertTriangle,
   RefreshCw,
-  FileText,
   Search,
-  Inbox
+  Inbox,
+  Calendar
 } from 'lucide-react'
 import api from '@/configs/axios'
 import { format } from 'date-fns'
+import { vi } from 'date-fns/locale'
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -21,6 +36,7 @@ const { Dragger } = Upload
 const TestResultsByService = () => {
   const [services, setServices] = useState([])
   const [selectedService, setSelectedService] = useState(null)
+  const [selectedStatus, setSelectedStatus] = useState(null)
   const [testResults, setTestResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [servicesLoading, setServicesLoading] = useState(false)
@@ -28,6 +44,12 @@ const TestResultsByService = () => {
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [uploadLoading, setUploadLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedDateRange, setSelectedDateRange] = useState(null)
+
+  const statusOptions = [
+    { value: 'Đã xét nghiệm', label: 'Đã xét nghiệm' },
+    { value: 'Đã có kết quả', label: 'Đã có kết quả' }
+  ]
 
   // Fetch all test services
   const fetchServices = async () => {
@@ -47,13 +69,22 @@ const TestResultsByService = () => {
     }
   }
 
-  // Fetch booking details by service
-  const fetchBookingDetailsByService = async (serviceId) => {
-    if (!serviceId) return
+  // Fetch booking details by service (remove date filtering from API)
+  const fetchTestResults = async (serviceId = null, status = null) => {
     setLoading(true)
-    setTestResults([])
     try {
-      const response = await api.get(`/api/booking-details/service/${serviceId}`)
+      let endpoint = '/api/booking-details'
+      const params = new URLSearchParams()
+
+      if (status) {
+        params.append('status', status)
+      }
+
+      if (serviceId) {
+        endpoint = `/api/booking-details/service/${serviceId}`
+      }
+
+      const response = await api.get(`${endpoint}?${params.toString()}`)
       const formattedData = response.data.map((item) => ({
         id: item.bookingDetailId,
         bookingId: item.bookingId,
@@ -87,9 +118,19 @@ const TestResultsByService = () => {
     }
   }
 
+  useEffect(() => {
+    fetchServices()
+    fetchTestResults()
+  }, [])
+
   const handleServiceChange = (serviceId) => {
     setSelectedService(serviceId)
-    fetchBookingDetailsByService(serviceId)
+    fetchTestResults(serviceId, selectedStatus)
+  }
+
+  const handleStatusChange = (status) => {
+    setSelectedStatus(status)
+    fetchTestResults(selectedService, status)
   }
 
   const handleUpload = async (options) => {
@@ -108,7 +149,7 @@ const TestResultsByService = () => {
       onSuccess('ok')
       message.success('Tải lên kết quả xét nghiệm thành công')
       setIsUploadModalOpen(false)
-      if (selectedService) fetchBookingDetailsByService(selectedService)
+      fetchTestResults(selectedService, selectedStatus)
     } catch (error) {
       onError(error)
       message.error('Không thể tải lên kết quả xét nghiệm')
@@ -130,13 +171,46 @@ const TestResultsByService = () => {
     }
   }
 
-  // Filter data based on search term (by phone or name)
+  const handleDateRangeChange = (dates) => {
+    setSelectedDateRange(dates)
+  }
+
+  const clearAllFilters = () => {
+    setSelectedService(null)
+    setSelectedStatus(null)
+    setSelectedDateRange(null)
+    setSearchTerm('')
+    fetchTestResults(null, null)
+  }
+
+  // Enhanced client-side filtering function
   const getFilteredData = (data) => {
-    if (!searchTerm) return data
-    const term = searchTerm.toLowerCase()
-    return data.filter(
-      (item) => item.phone.toLowerCase().includes(term) || item.customerName.toLowerCase().includes(term)
-    )
+    let filteredData = data
+
+    // Filter by search term (name or phone)
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filteredData = filteredData.filter(
+        (item) => item.phone.toLowerCase().includes(term) || item.customerName.toLowerCase().includes(term)
+      )
+    }
+
+    // Filter by date range
+    if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+      filteredData = filteredData.filter((item) => {
+        const itemDate = new Date(item.testDate)
+        const startDate = new Date(selectedDateRange[0])
+        const endDate = new Date(selectedDateRange[1])
+
+        // Set time to start/end of day for proper comparison
+        startDate.setHours(0, 0, 0, 0)
+        endDate.setHours(23, 59, 59, 999)
+
+        return itemDate >= startDate && itemDate <= endDate
+      })
+    }
+
+    return filteredData
   }
 
   const columns = [
@@ -179,7 +253,6 @@ const TestResultsByService = () => {
       key: 'status',
       width: 130,
       filters: [
-        { text: 'Đang chờ', value: 'pending' },
         { text: 'Đã xét nghiệm', value: 'tested' },
         { text: 'Đã có kết quả', value: 'completed' }
       ],
@@ -239,12 +312,8 @@ const TestResultsByService = () => {
     }
   ]
 
-  useEffect(() => {
-    fetchServices()
-  }, [])
-
   return (
-    <div className='max-w-6xl mx-auto px-4 py-8'>
+    <div className='max-w-7xl mx-auto px-4 py-8'>
       <Card className='shadow-lg border-0 mb-8'>
         <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
           <div>
@@ -253,30 +322,33 @@ const TestResultsByService = () => {
             </Title>
             <Text type='secondary'>Quản lý kết quả xét nghiệm phân loại theo từng dịch vụ</Text>
           </div>
-          <Button
-            type='primary'
-            icon={<RefreshCw size={20} />}
-            onClick={() => {
-              fetchServices()
-              if (selectedService) fetchBookingDetailsByService(selectedService)
-            }}
-            className='bg-blue-600 hover:bg-blue-700'
-          >
-            Làm mới dữ liệu
-          </Button>
+          <Space>
+            <Button type='default' icon={<RefreshCw size={20} />} onClick={clearAllFilters} className='hover:shadow-sm'>
+              Xóa tất cả bộ lọc
+            </Button>
+            <Button
+              type='primary'
+              icon={<RefreshCw size={20} />}
+              onClick={() => fetchTestResults(selectedService, selectedStatus)}
+              className='bg-blue-600 hover:bg-blue-700'
+            >
+              Làm mới dữ liệu
+            </Button>
+          </Space>
         </div>
-        <div className='mt-6 flex flex-col md:flex-row gap-4'>
-          <div className='flex-1 min-w-[200px]'>
-            <label className='block text-sm font-medium mb-2'>Chọn dịch vụ xét nghiệm:</label>
+
+        <div className='mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+          <div className='min-w-[200px]'>
+            <label className='block text-sm font-medium mb-2'>Lọc theo dịch vụ:</label>
             <Select
-              placeholder='Chọn dịch vụ xét nghiệm'
+              placeholder='Tất cả dịch vụ'
               style={{ width: '100%' }}
               loading={servicesLoading}
               onChange={handleServiceChange}
               allowClear
               onClear={() => {
                 setSelectedService(null)
-                setTestResults([])
+                fetchTestResults(null, selectedStatus)
               }}
               size='large'
               value={selectedService}
@@ -288,13 +360,51 @@ const TestResultsByService = () => {
               ))}
             </Select>
           </div>
-          <div className='flex-1 min-w-[200px] md:order-2'>
-            <label className='block text-sm font-medium mb-2'>Tìm kiếm theo tên hoặc số điện thoại:</label>
+
+          <div className='min-w-[200px]'>
+            <label className='block text-sm font-medium mb-2'>Lọc theo trạng thái:</label>
+            <Select
+              placeholder='Tất cả trạng thái'
+              style={{ width: '100%' }}
+              onChange={handleStatusChange}
+              allowClear
+              onClear={() => {
+                setSelectedStatus(null)
+                fetchTestResults(selectedService, null)
+              }}
+              size='large'
+              value={selectedStatus}
+            >
+              {statusOptions.map((status) => (
+                <Option key={status.value} value={status.value}>
+                  {status.label}
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          <div className='min-w-[200px]'>
+            <label className='block text-sm font-medium mb-2'>Lọc theo khoảng ngày:</label>
+            <DatePicker.RangePicker
+              style={{ width: '100%' }}
+              size='large'
+              placeholder={['Từ ngày', 'Đến ngày']}
+              format='DD/MM/YYYY'
+              locale={vi}
+              value={selectedDateRange}
+              onChange={handleDateRangeChange}
+              allowClear
+              suffixIcon={<Calendar size={16} />}
+            />
+          </div>
+
+          <div className='min-w-[200px]'>
+            <label className='block text-sm font-medium mb-2'>Tìm kiếm:</label>
             <div className='flex gap-2'>
               <input
                 type='text'
-                placeholder='Nhập tên hoặc số điện thoại...'
-                className='w-full p-2 border border-gray-300 rounded'
+                placeholder='Tên hoặc SĐT...'
+                className='w-full p-2 border border-gray-300 rounded text-sm'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -302,6 +412,55 @@ const TestResultsByService = () => {
             </div>
           </div>
         </div>
+
+        {/* Filter summary */}
+        {(selectedService || selectedStatus || selectedDateRange || searchTerm) && (
+          <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
+            <Text className='text-sm font-medium text-blue-800'>Bộ lọc đang áp dụng:</Text>
+            <div className='flex flex-wrap gap-2 mt-2'>
+              {selectedService && (
+                <Tag
+                  color='blue'
+                  closable
+                  onClose={() => {
+                    setSelectedService(null)
+                    fetchTestResults(null, selectedStatus)
+                  }}
+                >
+                  Dịch vụ: {services.find((s) => s.id === selectedService)?.name}
+                </Tag>
+              )}
+              {selectedStatus && (
+                <Tag
+                  color='green'
+                  closable
+                  onClose={() => {
+                    setSelectedStatus(null)
+                    fetchTestResults(selectedService, null)
+                  }}
+                >
+                  Trạng thái: {statusOptions.find((s) => s.value === selectedStatus)?.label}
+                </Tag>
+              )}
+              {selectedDateRange && (
+                <Tag
+                  color='orange'
+                  closable
+                  onClose={() => {
+                    setSelectedDateRange(null)
+                  }}
+                >
+                  Ngày: {format(selectedDateRange[0], 'dd/MM/yyyy')} - {format(selectedDateRange[1], 'dd/MM/yyyy')}
+                </Tag>
+              )}
+              {searchTerm && (
+                <Tag color='red' closable onClose={() => setSearchTerm('')}>
+                  Tìm kiếm: "{searchTerm}"
+                </Tag>
+              )}
+            </div>
+          </div>
+        )}
       </Card>
 
       <Card className='border-0 shadow-md'>
@@ -309,29 +468,24 @@ const TestResultsByService = () => {
           <div className='flex justify-center items-center h-64'>
             <Spin size='large' tip='Đang tải dữ liệu...' />
           </div>
-        ) : !selectedService ? (
-          <div className='text-center py-12'>
-            <FileText size={64} className='mx-auto text-gray-300 mb-4' />
-            <Text type='secondary' className='text-lg'>
-              Vui lòng chọn một dịch vụ xét nghiệm
-            </Text>
-          </div>
         ) : testResults.length > 0 ? (
           <>
             <div className='flex justify-between mb-4 items-center'>
               <Text className='text-base'>
-                Tổng số: <strong>{testResults.length}</strong> kết quả
+                Tổng số: <strong>{getFilteredData(testResults).length}</strong> kết quả
+                {(selectedService || selectedStatus || selectedDateRange || searchTerm) && (
+                  <span className='ml-2 text-gray-500'>(đã lọc từ {testResults.length} kết quả)</span>
+                )}
               </Text>
               <div className='flex flex-wrap gap-2'>
                 <Text strong className='mr-1'>
                   Trạng thái:
                 </Text>
-                <Tag color='default'>Đang chờ: {testResults.filter((item) => item.status === 'pending').length}</Tag>
                 <Tag color='warning'>
-                  Đã xét nghiệm: {testResults.filter((item) => item.status === 'tested').length}
+                  Đã xét nghiệm: {getFilteredData(testResults).filter((item) => item.status === 'tested').length}
                 </Tag>
                 <Tag color='success'>
-                  Đã có kết quả: {testResults.filter((item) => item.status === 'completed').length}
+                  Đã có kết quả: {getFilteredData(testResults).filter((item) => item.status === 'completed').length}
                 </Tag>
               </div>
             </div>
@@ -346,7 +500,11 @@ const TestResultsByService = () => {
           </>
         ) : (
           <Empty
-            description='Không có dữ liệu kết quả xét nghiệm cho dịch vụ này'
+            description={
+              selectedService || selectedStatus || selectedDateRange || searchTerm
+                ? 'Không có dữ liệu kết quả xét nghiệm cho bộ lọc này'
+                : 'Không có dữ liệu kết quả xét nghiệm'
+            }
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         )}
