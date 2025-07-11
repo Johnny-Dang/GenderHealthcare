@@ -373,5 +373,33 @@ namespace backend.Infrastructure.Services
 
             return true;
         }
+
+        public async Task<List<BookingDetailResponse>> GetPaidByAccountIdAsync(Guid accountId)
+        {
+            var details = await _bookingDetailRepository.GetPaidByAccountIdAsync(accountId);
+            var result = new List<BookingDetailResponse>();
+            foreach (var detail in details)
+            {
+                result.Add(new BookingDetailResponse
+                {
+                    BookingDetailId = detail.BookingDetailId,
+                    BookingId = detail.BookingId,
+                    ServiceId = detail.ServiceId,
+                    ServiceName = detail.TestService?.ServiceName ?? string.Empty,
+                    SlotId = detail.SlotId,
+                    SlotDate = detail.TestServiceSlot?.SlotDate ?? default,
+                    SlotShift = detail.TestServiceSlot?.Shift ?? string.Empty,
+                    Status = detail.Status,
+                    Price = detail.TestService?.Price ?? 0,
+                    FirstName = detail.FirstName,
+                    LastName = detail.LastName,
+                    Phone = detail.Phone,
+                    DateOfBirth = detail.DateOfBirth,
+                    Gender = detail.Gender,
+                    ResultFileUrl = detail.TestResult?.Result
+                });
+            }
+            return result;
+        }
     }
 }
