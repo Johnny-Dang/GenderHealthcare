@@ -162,5 +162,13 @@ namespace backend.API.Controllers
             var details = await _bookingDetailService.GetAllAsync(status);
             return Ok(details);
         }
+
+        [HttpGet("paid/account/{accountId}")]
+        [Authorize]
+        public async Task<IActionResult> GetPaidByAccountId(Guid accountId)
+        {
+            var details = await _bookingDetailService.GetPaidByAccountIdAsync(accountId);
+            return Ok(details);
+        }
     }
 }

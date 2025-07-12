@@ -35,5 +35,6 @@ namespace backend.Application.Repositories
 
         Task<List<BookingDetail>> GetByServiceIdAsync(Guid serviceId, string status = null);
         Task<List<BookingDetail>> GetAllAsync(string status = null);
+        Task<List<BookingDetail>> GetPaidByAccountIdAsync(Guid accountId);
     }
 }

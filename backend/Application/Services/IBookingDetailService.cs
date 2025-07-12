@@ -31,5 +31,7 @@ namespace backend.Application.Services
 
         Task<bool> ConfirmBookingDetailAsync(Guid bookingDetailId);
         Task<List<BookingDetailResponse>> GetAllAsync(string status = null);
+
+        Task<List<BookingDetailResponse>> GetPaidByAccountIdAsync(Guid accountId);
     }
 }

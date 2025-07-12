@@ -175,5 +175,16 @@ namespace backend.Infrastructure.Repositories
 
             return await query.ToListAsync();
         }
+
+        public async Task<List<BookingDetail>> GetPaidByAccountIdAsync(Guid accountId)
+        {
+            return await _context.BookingDetail
+                .Include(bd => bd.TestService)
+                .Include(bd => bd.Booking)
+                .Include(bd => bd.TestServiceSlot)
+                .Include(bd => bd.TestResult)
+                .Where(bd => bd.Booking.AccountId == accountId && bd.Booking.Payment != null)
+                .ToListAsync();
+        }
     }
 }
