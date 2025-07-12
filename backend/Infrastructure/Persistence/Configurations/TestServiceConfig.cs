@@ -12,6 +12,7 @@ namespace backend.Infrastructure.Persistence.Configurations
 
             builder.Property(ts => ts.ServiceName).IsRequired().HasMaxLength(255);
             builder.Property(ts => ts.Description).HasMaxLength(1000);
+            builder.Property(ts => ts.Title).IsRequired().HasMaxLength(255);
             builder.Property(ts => ts.Price).IsRequired();
             builder.Property(ts => ts.ImageUrl).HasMaxLength(500);
             builder.Property(ts => ts.CreatedAt).IsRequired();

@@ -18,11 +18,12 @@ namespace backend.Infrastructure.Services
 
         public async Task<TestServiceResponse> CreateAsync(CreateTestServiceRequest request)
         {
-            var service = new Domain.Entities.TestService
+            var service = new TestService
             {
                 ServiceId = Guid.NewGuid(),
                 ServiceName = request.ServiceName,
                 Description = request.Description,
+                Title = request.Title, 
                 Price = request.Price,
                 Category = request.Category,
                 ImageUrl = request.ImageUrl,
@@ -71,6 +72,7 @@ namespace backend.Infrastructure.Services
                 
             existingService.ServiceName = request.ServiceName;
             existingService.Description = request.Description;
+            existingService.Title = request.Title; 
             existingService.Price = request.Price;
             existingService.Category = request.Category;
             existingService.ImageUrl = request.ImageUrl;
@@ -87,12 +89,13 @@ namespace backend.Infrastructure.Services
         }
         
         // Helper method to map Service to TestServiceResponse
-        private TestServiceResponse MapToResponse(Domain.Entities.TestService service)
+        private TestServiceResponse MapToResponse(TestService service)
         {
             return new TestServiceResponse
             {
                 ServiceId = service.ServiceId,
                 ServiceName = service.ServiceName,
+                Title = service.Title,
                 Description = service.Description,
                 Price = service.Price,
                 Category = service.Category,
@@ -102,12 +105,13 @@ namespace backend.Infrastructure.Services
             };
         }
 
-        private TestServiceAdminResponse MapToAdminResponse(Domain.Entities.TestService service)
+        private TestServiceAdminResponse MapToAdminResponse(TestService service)
         {
             return new TestServiceAdminResponse
             {
                 ServiceId = service.ServiceId,
                 ServiceName = service.ServiceName,
+                Title = service.Title,
                 Description = service.Description,
                 Price = service.Price,
                 Category = service.Category,

@@ -70,6 +70,7 @@ const TestServiceManagement = () => {
         const transformedServices = response.data.map((service) => ({
           id: service.serviceId,
           name: service.serviceName,
+          title: service.title || service.serviceName, // Use title if available, fallback to serviceName
           description: service.description,
           price: service.price,
           category: service.category,
@@ -113,6 +114,7 @@ const TestServiceManagement = () => {
     if (service) {
       form.setFieldsValue({
         name: service.name,
+        title: service.title,
         description: service.description,
         price: service.price,
         category: service.category,
@@ -148,6 +150,7 @@ const TestServiceManagement = () => {
         const requestData = {
           Id: editingService.id, // Add Id field to match backend validator requirements
           serviceName: values.name,
+          title: values.title,
           description: values.description,
           price: values.price,
           category: values.category,
@@ -175,6 +178,7 @@ const TestServiceManagement = () => {
         // Add new service
         const requestData = {
           serviceName: values.name,
+          title: values.title,
           description: values.description,
           price: values.price,
           category: values.category,
@@ -329,6 +333,12 @@ const TestServiceManagement = () => {
       dataIndex: 'name',
       key: 'name',
       render: (text) => <a className='transition-all duration-300 hover:text-purple-600 hover:font-medium'>{text}</a>
+    },
+    {
+      title: 'Tiêu đề chi tiết',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text) => <span className='text-gray-600 text-sm'>{text}</span>
     },
     {
       title: 'Danh mục',
@@ -518,6 +528,9 @@ const TestServiceManagement = () => {
           expandedRowRender: (record) => (
             <div className='p-4 bg-purple-50/40 rounded-md transition-all duration-300 hover:bg-purple-100 border border-purple-200'>
               <Paragraph className='transition-all duration-300 hover:text-purple-700'>
+                <strong>Tiêu đề chi tiết:</strong> {record.title}
+              </Paragraph>
+              <Paragraph className='transition-all duration-300 hover:text-purple-700'>
                 <strong>Mô tả:</strong> {record.description}
               </Paragraph>
               <Paragraph className='transition-all duration-300 hover:text-purple-700'>
@@ -529,85 +542,285 @@ const TestServiceManagement = () => {
       />
 
       <Modal
-        title={editingService ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}
+        title={null}
         visible={isModalVisible}
         onCancel={handleCancel}
-        onOk={() => form.submit()}
-        okText={editingService ? 'Cập nhật' : 'Thêm mới'}
-        cancelText='Hủy'
-        className='transition-all duration-500 bg-gradient-to-r from-purple-50 to-indigo-50'
-        bodyStyle={{ backgroundColor: '#f5f0ff', borderRadius: '8px', padding: '20px' }}
+        footer={null}
+        width={1000}
+        className='service-modal-modern'
+        bodyStyle={{ 
+          padding: 0,
+          borderRadius: '16px',
+          overflow: 'hidden'
+        }}
       >
-        <Form form={form} layout='vertical' onFinish={handleSubmit}>
-          <Row gutter={16}>
-            <Col span={16}>
-              <Form.Item
-                name='name'
-                label='Tên dịch vụ'
-                rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ!' }]}
+        <div className='flex h-[80vh]'>
+          {/* Sidebar */}
+          <div className='w-80 bg-gradient-to-b from-purple-600 to-indigo-700 text-white p-6 flex flex-col'>
+            <div className='flex items-center gap-3 mb-8'>
+              <div className='w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center'>
+                <Package size={20} className='text-white' />
+              </div>
+              <div>
+                <h2 className='text-xl font-bold'>
+                  {editingService ? 'Chỉnh sửa' : 'Thêm mới'}
+                </h2>
+                <p className='text-purple-100 text-sm'>Dịch vụ y tế</p>
+              </div>
+            </div>
+
+            {/* Progress Steps */}
+            <div className='flex-1'>
+              <div className='space-y-6'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-medium'>
+                    1
+                  </div>
+                  <div>
+                    <p className='font-medium'>Thông tin cơ bản</p>
+                    <p className='text-purple-200 text-xs'>Tên, danh mục, giá</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-3 opacity-60'>
+                  <div className='w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-sm font-medium'>
+                    2
+                  </div>
+                  <div>
+                    <p className='font-medium'>Mô tả chi tiết</p>
+                    <p className='text-purple-200 text-xs'>Thông tin dịch vụ</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-3 opacity-60'>
+                  <div className='w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-sm font-medium'>
+                    3
+                  </div>
+                  <div>
+                    <p className='font-medium'>Cài đặt & Ảnh</p>
+                    <p className='text-purple-200 text-xs'>Trạng thái, hình ảnh</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className='space-y-3'>
+              <Button
+                type='primary'
+                size='large'
+                onClick={() => form.submit()}
+                className='w-full bg-white text-purple-600 hover:bg-purple-50 border-0 font-semibold h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300'
               >
-                <Input placeholder='Nhập tên dịch vụ' />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name='enabled' label='Trạng thái' valuePropName='checked' initialValue={true}>
-                <Switch checkedChildren='Hoạt động' unCheckedChildren='Tạm dừng' />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name='category'
-                label='Danh mục'
-                rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
+                {editingService ? 'Cập nhật dịch vụ' : 'Tạo dịch vụ mới'}
+              </Button>
+              <Button
+                size='large'
+                onClick={handleCancel}
+                className='w-full bg-white/10 text-white hover:bg-white/20 border-white/20 font-medium h-10 rounded-xl transition-all duration-300'
               >
-                <Select placeholder='Chọn danh mục' allowClear>
-                  {Array.from(new Set([...categories, 'Xét nghiệm', 'Khám tổng quát', 'Tư vấn', 'Điều trị'])).map(
-                    (category) => (
-                      <Option key={category} value={category}>
-                        {category}
-                      </Option>
-                    )
-                  )}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name='price' label='Giá (VND)' rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}>
-                <InputNumber
-                  style={{ width: '100%' }}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                  min={0}
-                  placeholder='Nhập giá dịch vụ'
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+                Hủy bỏ
+              </Button>
+            </div>
+          </div>
 
-          <Form.Item
-            name='description'
-            label='Mô tả'
-            rules={[{ required: true, message: 'Vui lòng nhập mô tả dịch vụ!' }]}
-          >
-            <TextArea rows={4} placeholder='Nhập mô tả chi tiết về dịch vụ' />
-          </Form.Item>
+          {/* Main Content */}
+          <div className='flex-1 bg-gray-50 overflow-y-auto'>
+            <Form form={form} layout='vertical' onFinish={handleSubmit} className='p-8 space-y-8'>
+              {/* Step 1: Basic Information */}
+              <div className='bg-white rounded-2xl p-8 shadow-sm border border-gray-100'>
+                <div className='flex items-center gap-3 mb-6'>
+                  <div className='w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center'>
+                    <span className='text-white font-bold text-lg'>1</span>
+                  </div>
+                  <div>
+                    <h3 className='text-xl font-bold text-gray-800'>Thông tin cơ bản</h3>
+                    <p className='text-gray-500 text-sm'>Nhập thông tin cơ bản của dịch vụ</p>
+                  </div>
+                </div>
 
-          <Form.Item label='Ảnh dịch vụ' name='imageUrl'>
-            <CloudinaryUpload
-              onUploadSuccess={(url) => {
-                setImageUrl(url)
-                form.setFieldsValue({ imageUrl: url })
-              }}
-              currentImageUrl={imageUrl}
-              folder='testservices'
-              label='Chọn ảnh dịch vụ'
-              size={160}
-            />
-          </Form.Item>
-        </Form>
+                <Row gutter={[24, 24]}>
+                  <Col span={12}>
+                    <Form.Item
+                      name='name'
+                      label={
+                        <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                          Tên dịch vụ <span className='text-red-500'>*</span>
+                        </span>
+                      }
+                      rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ!' }]}
+                    >
+                      <Input 
+                        placeholder='Ví dụ: Xét nghiệm máu tổng quát' 
+                        className='h-12 rounded-xl border-gray-200 hover:border-purple-300 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 text-base'
+                        size='large'
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name='title'
+                      label={
+                        <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                          Tiêu đề chi tiết <span className='text-red-500'>*</span>
+                        </span>
+                      }
+                      rules={[{ required: true, message: 'Vui lòng nhập tiêu đề chi tiết!' }]}
+                    >
+                      <Input 
+                        placeholder='Ví dụ: Xét nghiệm máu tổng quát CBC' 
+                        className='h-12 rounded-xl border-gray-200 hover:border-purple-300 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 text-base'
+                        size='large'
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={[24, 24]}>
+                  <Col span={12}>
+                    <Form.Item
+                      name='category'
+                      label={
+                        <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                          Danh mục <span className='text-red-500'>*</span>
+                        </span>
+                      }
+                      rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
+                    >
+                      <Select 
+                        placeholder='Chọn danh mục dịch vụ' 
+                        allowClear
+                        className='h-12 rounded-xl'
+                        size='large'
+                        dropdownClassName='rounded-xl'
+                      >
+                        {Array.from(new Set([...categories, 'Xét nghiệm', 'Khám tổng quát', 'Tư vấn', 'Điều trị', 'Chẩn đoán'])).map(
+                          (category) => (
+                            <Option key={category} value={category}>
+                              {category}
+                            </Option>
+                          )
+                        )}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item 
+                      name='price' 
+                      label={
+                        <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                          Giá dịch vụ (VND) <span className='text-red-500'>*</span>
+                        </span>
+                      } 
+                      rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}
+                    >
+                      <InputNumber
+                        style={{ width: '100%', height: '48px' }}
+                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                        min={0}
+                        placeholder='Ví dụ: 200,000'
+                        className='rounded-xl border-gray-200 hover:border-purple-300 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 text-base'
+                        size='large'
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
+
+              {/* Step 2: Description */}
+              <div className='bg-white rounded-2xl p-8 shadow-sm border border-gray-100'>
+                <div className='flex items-center gap-3 mb-6'>
+                  <div className='w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center'>
+                    <span className='text-white font-bold text-lg'>2</span>
+                  </div>
+                  <div>
+                    <h3 className='text-xl font-bold text-gray-800'>Mô tả chi tiết</h3>
+                    <p className='text-gray-500 text-sm'>Cung cấp thông tin chi tiết về dịch vụ</p>
+                  </div>
+                </div>
+                
+                <Form.Item
+                  name='description'
+                  label={
+                    <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                      Mô tả dịch vụ <span className='text-red-500'>*</span>
+                    </span>
+                  }
+                  rules={[{ required: true, message: 'Vui lòng nhập mô tả dịch vụ!' }]}
+                >
+                  <TextArea 
+                    rows={6} 
+                    placeholder='Mô tả chi tiết về dịch vụ, quy trình thực hiện, thời gian chờ kết quả, và những thông tin cần thiết khác...' 
+                    className='rounded-xl border-gray-200 hover:border-blue-300 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 resize-none text-base'
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Step 3: Settings & Image */}
+              <div className='bg-white rounded-2xl p-8 shadow-sm border border-gray-100'>
+                <div className='flex items-center gap-3 mb-6'>
+                  <div className='w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center'>
+                    <span className='text-white font-bold text-lg'>3</span>
+                  </div>
+                  <div>
+                    <h3 className='text-xl font-bold text-gray-800'>Cài đặt & Hình ảnh</h3>
+                    <p className='text-gray-500 text-sm'>Cấu hình trạng thái và thêm hình ảnh</p>
+                  </div>
+                </div>
+                
+                <Row gutter={[24, 24]}>
+                  <Col span={12}>
+                    <div className='bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100'>
+                      <Form.Item 
+                        name='enabled' 
+                        label={
+                          <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                            Trạng thái dịch vụ
+                          </span>
+                        } 
+                        valuePropName='checked' 
+                        initialValue={true}
+                        className='mb-0'
+                      >
+                        <Switch 
+                          checkedChildren='Hoạt động' 
+                          unCheckedChildren='Tạm dừng'
+                          className='bg-purple-500'
+                          size='default'
+                        />
+                      </Form.Item>
+                      <p className='text-gray-500 text-xs mt-2'>
+                        Dịch vụ sẽ {editingService ? (editingService.isDeleted ? 'được kích hoạt' : 'bị tạm dừng') : 'được kích hoạt'} sau khi lưu
+                      </p>
+                    </div>
+                  </Col>
+                </Row>
+
+                <div className='mt-6'>
+                  <Form.Item 
+                    label={
+                      <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                        Hình ảnh dịch vụ
+                      </span>
+                    } 
+                    name='imageUrl' 
+                    className='mb-0'
+                  >
+                    <CloudinaryUpload
+                      onUploadSuccess={(url) => {
+                        setImageUrl(url)
+                        form.setFieldsValue({ imageUrl: url })
+                      }}
+                      currentImageUrl={imageUrl}
+                      folder='testservices'
+                      label='Chọn ảnh dịch vụ'
+                      size={240}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </Form>
+          </div>
+        </div>
       </Modal>
 
       <ImageModal isOpen={imageModalVisible} imageUrl={selectedImageUrl} onClose={() => setImageModalVisible(false)} />
