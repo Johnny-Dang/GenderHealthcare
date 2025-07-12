@@ -27,7 +27,7 @@ const Services = () => {
   const [openDetailModal, setOpenDetailModal] = useState(false)
   const [selectedServiceDetail, setSelectedServiceDetail] = useState(null)
   const navigate = useNavigate()
-  const accountId = useSelector((state) => state.user.userInfo?.accountId)
+  const accountId = useSelector((state) => state.user?.userInfo?.accountId)
 
   useEffect(() => {
     const fetchServices = async () => {

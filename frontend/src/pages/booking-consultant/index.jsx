@@ -8,7 +8,7 @@ import { Calendar, MessageSquare, AlertCircle, User } from 'lucide-react'
 import { useSelector } from 'react-redux'
 
 const BookingConsultant = () => {
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo)
   const [selectedConsultant, setSelectedConsultant] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 

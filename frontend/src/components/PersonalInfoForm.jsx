@@ -16,8 +16,8 @@ export default function PersonalInfoForm({
   onSlotUpdate
 }) {
   const dispatch = useDispatch()
-  const accountId = useSelector((state) => state.user.userInfo?.accountId)
-  const bookingId = useSelector((state) => state.user.bookingId)
+  const accountId = useSelector((state) => state.user?.userInfo?.accountId)
+  const bookingId = useSelector((state) => state.user?.bookingId)
 
   const [form, setForm] = useState({
     firstName: '',
@@ -93,7 +93,7 @@ export default function PersonalInfoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-md'>
         <DialogHeader>
-          <DialogTitle>Thông tin cá nhân</DialogTitle>
+          <DialogTitle>Thông tin cá nhân</DialogTitle>\{' '}
           <DialogDescription>Vui lòng nhập thông tin cá nhân để hoàn tất đặt lịch</DialogDescription>
         </DialogHeader>
 

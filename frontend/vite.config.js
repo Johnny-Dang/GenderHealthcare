@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     port: 3000
   },
+  base: './', // để tránh lỗi đường dẫn khi deploy
   css: {
     devSourcemap: true
   },

@@ -11,7 +11,7 @@ import { toast } from 'react-toastify'
 import api from '@/configs/axios'
 
 const ProfilePage = () => {
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo)
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -38,7 +38,7 @@ const ProfilePage = () => {
     // Tránh gọi API nhiều lần trong development mode với React.StrictMode
     if (fetchedRef.current) return
 
-    if (!userInfo || !userInfo.accountId) {
+    if (!userInfo || !userInfo?.accountId) {
       setFetching(false)
       return
     }
@@ -57,7 +57,7 @@ const ProfilePage = () => {
           dateOfBirth: res.data.dateOfBirth ? res.data.dateOfBirth.slice(0, 10) : '',
           gender: res.data.gender === true ? 'male' : res.data.gender === false ? 'female' : '',
           avatarUrl: res.data.avatarUrl || '',
-          roleName: res.data.roleName || userInfo.role,
+          roleName: res.data.roleName || userInfo?.role,
           yearOfExperience: res.data.yearOfExperience !== undefined ? res.data.yearOfExperience : '',
           degree: res.data.degree || '',
           department: res.data.department || '',
@@ -87,7 +87,7 @@ const ProfilePage = () => {
   }
 
   const isStaffOrConsultant =
-    ['Staff', 'Consultant', 'Manager'].includes(userInfo.role) ||
+    ['Staff', 'Consultant', 'Manager'].includes(userInfo?.role) ||
     ['Staff', 'Consultant', 'Manager'].includes(form.roleName)
 
   const validateForm = () => {
@@ -151,7 +151,7 @@ const ProfilePage = () => {
         avatarUrl: form.avatarUrl || '',
         dateOfBirth: form.dateOfBirth || '',
         gender: form.gender === 'male',
-        roleName: form.roleName || userInfo.role
+        roleName: form.roleName || userInfo?.role
       }
 
       // Nếu là staff/consultant, thêm thông tin chuyên môn
@@ -165,7 +165,7 @@ const ProfilePage = () => {
         }
       }
 
-      await api.put(`/api/users/${userInfo.accountId}`, payload)
+      await api.put(`/api/users/${userInfo?.accountId}`, payload)
       toast.success('Cập nhật thông tin thành công!')
       setFormErrors({})
       setApiError('')
