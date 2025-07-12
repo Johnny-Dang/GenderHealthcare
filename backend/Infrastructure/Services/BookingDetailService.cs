@@ -325,11 +325,17 @@ namespace backend.Infrastructure.Services
         {
             var bookingDetails = await _bookingDetailRepository.GetByServiceIdAsync(serviceId, status);
             var response = new List<BookingDetailResponse>();
+            var today = DateOnly.FromDateTime(DateTime.Today);
 
             foreach (var detail in bookingDetails)
             {
                 var slotResult = await _testServiceSlotService.GetSlotByIdAsync(detail.SlotId);
                 if (!slotResult.IsSuccess)
+                    continue;
+
+                // Áp dụng lọc ngày cho trạng thái "Chưa xét nghiệm"
+                if ((string.IsNullOrEmpty(status) || status == BookingDetailStatus.Pending)
+                    && slotResult.Data.SlotDate < today)
                     continue;
 
                 response.Add(new BookingDetailResponse
@@ -352,7 +358,8 @@ namespace backend.Infrastructure.Services
                 });
             }
 
-            return response;
+            // Sắp xếp theo ngày gần nhất
+            return response.OrderBy(d => d.SlotDate).ToList();
         }
 
         public async Task<bool> ConfirmBookingDetailAsync(Guid bookingDetailId)
@@ -372,6 +379,46 @@ namespace backend.Infrastructure.Services
             await _notificationDomainService.NotifyBookingDetailConfirmedAsync(bookingDetailId);
 
             return true;
+        }
+
+        public async Task<List<BookingDetailResponse>> GetAllAsync(string status = null)
+        {
+            var bookingDetails = await _bookingDetailRepository.GetAllAsync(status);
+            var response = new List<BookingDetailResponse>();
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            foreach (var detail in bookingDetails)
+            {
+                var slotResult = await _testServiceSlotService.GetSlotByIdAsync(detail.SlotId);
+                if (!slotResult.IsSuccess)
+                    continue;
+
+                // Chỉ lọc ngày với trạng thái "Chưa xét nghiệm"
+                if (status == BookingDetailStatus.Pending && slotResult.Data.SlotDate < today)
+                    continue;
+
+                response.Add(new BookingDetailResponse
+                {
+                    BookingDetailId = detail.BookingDetailId,
+                    BookingId = detail.BookingId,
+                    ServiceId = detail.ServiceId,
+                    ServiceName = detail.TestService?.ServiceName ?? string.Empty,
+                    SlotId = detail.SlotId,
+                    SlotDate = slotResult.Data.SlotDate,
+                    SlotShift = slotResult.Data.Shift,
+                    Price = detail.TestService?.Price ?? 0,
+                    Status = detail.Status,
+                    FirstName = detail.FirstName,
+                    LastName = detail.LastName,
+                    Phone = detail.Phone,
+                    DateOfBirth = detail.DateOfBirth,
+                    Gender = detail.Gender,
+                    ResultFileUrl = detail.TestResult?.Result
+                });
+            }
+
+            // Sắp xếp theo ngày gần nhất
+            return response.OrderBy(d => d.SlotDate).ToList();
         }
 
         public async Task<List<BookingDetailResponse>> GetPaidByAccountIdAsync(Guid accountId)

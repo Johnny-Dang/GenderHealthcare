@@ -19,7 +19,7 @@ import BlogDetailPage from './pages/staff-dashboard/blog/BlogDetailPage'
 import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
 import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
 import TestServicePage from './pages/test-service'
-import BookConsultantPage from './pages/booking-consultant'
+import BookingConsultant from './pages/booking-consultant'
 import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSchedule'
 import TestResultsPage from './pages/consultant/TestResultsPage'
 import CartPage from './pages/cart'
@@ -59,7 +59,7 @@ function App() {
         { path: '/cycle-tracking', element: <CycleTrackingPage /> },
         { path: '/cycle-tracking/result', element: <CycleTrackingResultPage /> },
         { path: '/test-service', element: <TestServicePage /> },
-        { path: '/booking-consultant', element: <BookConsultantPage /> },
+        { path: '/booking-consultant', element: <BookingConsultant /> },
         { path: '/about', element: <AboutPage /> },
         // Authenticated
         {

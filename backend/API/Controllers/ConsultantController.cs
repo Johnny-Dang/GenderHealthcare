@@ -7,6 +7,7 @@ namespace backend.API.Controllers
 {
     [ApiController]
     [Route("api/consultants")]
+    // api lấy thông tin về consultant
     public class ConsultantController : ControllerBase
     {
         private readonly IConsultantService _consultantService;
@@ -33,16 +34,6 @@ namespace backend.API.Controllers
             if (result.IsSuccess)
                 return Ok(result.Data);
 
-            return BadRequest(result.Error);
-        }
-
-        [HttpPut("{id}")]
-        //[Authorize(Roles = "Admin,Consultant,Manager")]
-        public async Task<IActionResult> UpdateConsultantByIdAsync(Guid id, [FromBody]ConsultantUpdateRequest request)
-        {
-            var result = await _consultantService.UpdateConsultantByIdAsync(id, request);
-            if (result.IsSuccess)
-                return Ok(result.Data);
             return BadRequest(result.Error);
         }
     }

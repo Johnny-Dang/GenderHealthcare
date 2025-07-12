@@ -56,13 +56,6 @@ namespace backend.Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        // do trên leader chia ko đúng kiến trúc nên sai chấp nhận
-        public async Task<Account?> GetConsultantEntityByIdAsync(Guid accountId)
-        {
-            return await _context.Account
-                .Include(a => a.StaffInfo)
-                .FirstOrDefaultAsync(a => a.AccountId == accountId);
-        }
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

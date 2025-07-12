@@ -34,6 +34,7 @@ namespace backend.Application.Repositories
         Task UpdateStatusByBookingIdAsync(Guid bookingId, string status);
 
         Task<List<BookingDetail>> GetByServiceIdAsync(Guid serviceId, string status = null);
+        Task<List<BookingDetail>> GetAllAsync(string status = null);
         Task<List<BookingDetail>> GetPaidByAccountIdAsync(Guid accountId);
     }
 }
