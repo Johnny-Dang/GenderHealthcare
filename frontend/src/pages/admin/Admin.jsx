@@ -34,7 +34,7 @@ const AdminPage = () => {
   const dispatch = useDispatch()
 
   // Lấy thông tin user từ Redux store
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo)
 
   // Kiểm tra xác thực và quyền admin
   const isAdmin = userInfo?.role === 'Admin'
