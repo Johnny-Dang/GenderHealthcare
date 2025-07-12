@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import axios from '@/configs/axios'
 import { setBookingId, incrementCart } from '@/redux/features/userSlice'
@@ -7,7 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 
-export default function PersonalInfoForm({ open, onOpenChange, selectedService, selectedSlot, onSuccess, onSlotUpdate }) {
+export default function PersonalInfoForm({
+  open,
+  onOpenChange,
+  selectedService,
+  selectedSlot,
+  onSuccess,
+  onSlotUpdate
+}) {
   const dispatch = useDispatch()
   const accountId = useSelector((state) => state.user.userInfo?.accountId)
   const bookingId = useSelector((state) => state.user.bookingId)
@@ -57,15 +64,15 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
 
       toast.success('Đặt lịch thành công!')
       dispatch(incrementCart())
-      
+
       // Gọi callback để cập nhật thông tin slot
       if (onSlotUpdate) {
         onSlotUpdate()
       }
-      
+
       if (onSuccess) onSuccess()
       onOpenChange(false)
-      
+
       // Reset form
       setForm({
         firstName: '',
@@ -84,21 +91,30 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className='max-w-md'>
         <DialogHeader>
           <DialogTitle>Thông tin cá nhân</DialogTitle>
-          <DialogDescription>
-            Vui lòng nhập thông tin cá nhân để hoàn tất đặt lịch
-          </DialogDescription>
+          <DialogDescription>Vui lòng nhập thông tin cá nhân để hoàn tất đặt lịch</DialogDescription>
         </DialogHeader>
-        
+
         {selectedService && selectedSlot && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold text-sm mb-2">Thông tin đặt lịch:</h4>
-            <div className="text-sm space-y-1">
-              <div><span className="font-medium">Dịch vụ:</span> {selectedService.serviceName}</div>
-              <div><span className="font-medium">Ngày:</span> {selectedSlot.slotDate}</div>
-              <div><span className="font-medium">Ca:</span> {selectedSlot.shift}</div>
+          <div className='mb-4 p-3 bg-gray-50 rounded-lg'>
+            <h4 className='font-semibold text-sm mb-2'>Thông tin đặt lịch:</h4>
+            <div className='text-sm space-y-1'>
+              <div>
+                <span className='font-medium'>Dịch vụ:</span> {selectedService.serviceName}
+              </div>
+              <div>
+                <span className='font-medium'>Ngày:</span> {selectedSlot.slotDate}
+              </div>
+              <div>
+                <span className='font-medium'>Ca:</span>{' '}
+                {selectedSlot.shift === 'AM'
+                  ? 'Sáng (7h30 - 12h)'
+                  : selectedSlot.shift === 'PM'
+                    ? 'Tối (13h30 - 17h30)'
+                    : selectedSlot.shift}
+              </div>
             </div>
           </div>
         )}
@@ -132,7 +148,7 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
               />
             </div>
           </div>
-          
+
           <div>
             <label className='block font-medium mb-1' htmlFor='dateOfBirth'>
               Ngày tháng năm sinh
@@ -146,7 +162,7 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
               required
             />
           </div>
-          
+
           <div>
             <label className='block font-medium mb-1' htmlFor='phone'>
               Số điện thoại
@@ -160,7 +176,7 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
               required
             />
           </div>
-          
+
           <div className='flex items-center gap-4'>
             <label className='font-medium'>Giới tính:</label>
             <label className='flex items-center gap-1'>
@@ -186,7 +202,7 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
               Nữ
             </label>
           </div>
-          
+
           <DialogFooter>
             <Button type='submit' className='w-full' disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Hoàn tất đặt lịch'}
@@ -196,4 +212,4 @@ export default function PersonalInfoForm({ open, onOpenChange, selectedService, 
       </DialogContent>
     </Dialog>
   )
-} 
+}

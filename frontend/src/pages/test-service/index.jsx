@@ -209,12 +209,21 @@ const Services = () => {
                         <span>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : ''}</span>
                       </div>
                       <div className='text-2xl font-bold text-pink-600 mb-4'>{service.price?.toLocaleString()} VNĐ</div>
-                      <Button
-                        className='bg-gradient-to-r from-pink-500 to-fuchsia-500 hover:opacity-90 text-white w-full rounded-full font-semibold shadow-md'
-                        onClick={() => setSelectedServiceId(service.serviceId)}
-                      >
-                        Chọn dịch vụ
-                      </Button>
+                      <div className='flex gap-2 mt-auto'>
+                        <Button
+                          variant='outline'
+                          className='flex-1 border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full font-semibold shadow-sm'
+                          onClick={() => openServiceDetail(service)}
+                        >
+                          Xem chi tiết
+                        </Button>
+                        <Button
+                          className='flex-1 bg-gradient-to-r from-pink-500 to-fuchsia-500 hover:opacity-90 text-white rounded-full font-semibold shadow-md'
+                          onClick={() => setSelectedServiceId(service.serviceId)}
+                        >
+                          Chọn dịch vụ
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))
@@ -262,7 +271,12 @@ const Services = () => {
                                       }}
                                     >
                                       <div>
-                                        <span className='font-semibold'>Ca:</span> {slot.shift}
+                                        <span className='font-semibold'>Ca:</span>{' '}
+                                        {slot.shift === 'AM'
+                                          ? 'Sáng (7h30 - 12h)'
+                                          : slot.shift === 'PM'
+                                            ? 'Tối (13h30 - 17h30)'
+                                            : slot.shift}
                                       </div>
                                       <div>
                                         <span className='font-semibold'>Ngày:</span> {slot.slotDate}
