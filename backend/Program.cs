@@ -122,7 +122,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://gender-healthcare.vercel.app") // domain React và Vite
+        policy.WithOrigins("http://localhost:3000") // domain React và Vite
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -135,7 +135,7 @@ var app = builder.Build();
 // CORS middleware should be called early in the pipeline
 app.UseCors("AllowFrontend");
 
-if (app.Environment.IsProduction())
+if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
