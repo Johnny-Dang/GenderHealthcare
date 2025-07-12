@@ -27,7 +27,7 @@ const Services = () => {
   const [openDetailModal, setOpenDetailModal] = useState(false)
   const [selectedServiceDetail, setSelectedServiceDetail] = useState(null)
   const navigate = useNavigate()
-  const accountId = useSelector((state) => state.user.userInfo?.accountId)
+  const accountId = useSelector((state) => state.user?.userInfo?.accountId)
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -74,7 +74,7 @@ const Services = () => {
   }, [selectedServiceId, bookingDate])
 
   // Lọc dịch vụ theo category chứa chuỗi nhập vào
-  const filteredServices = services.filter(service => {
+  const filteredServices = services.filter((service) => {
     if (categoryInput.trim() !== '') {
       return service.category?.toLowerCase().includes(categoryInput.trim().toLowerCase())
     }
@@ -146,7 +146,12 @@ const Services = () => {
                 if (e.key === 'Enter') setSelectedCategory('')
               }}
             />
-            <Button className='rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white px-5 py-2 shadow-sm hover:opacity-90' onClick={() => setSelectedCategory('')}>Lọc</Button>
+            <Button
+              className='rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white px-5 py-2 shadow-sm hover:opacity-90'
+              onClick={() => setSelectedCategory('')}
+            >
+              Lọc
+            </Button>
           </div>
         </div>
       </section>
@@ -177,9 +182,7 @@ const Services = () => {
                         {service.category}
                       </span>
                       <h3 className='text-xl font-bold text-gray-900 mb-4'>{service.serviceName}</h3>
-                      <div className='text-2xl font-bold text-pink-600 mb-4'>
-                        {service.price?.toLocaleString()} VNĐ
-                      </div>
+                      <div className='text-2xl font-bold text-pink-600 mb-4'>{service.price?.toLocaleString()} VNĐ</div>
                       <div className='flex gap-2 mt-auto'>
                         <Button
                           variant='outline'
@@ -248,7 +251,8 @@ const Services = () => {
                                         <span className='font-semibold'>Ngày:</span> {slot.slotDate}
                                       </div>
                                       <div>
-                                        <span className='font-semibold'>Số lượng còn lại:</span> {slot.availableQuantity}
+                                        <span className='font-semibold'>Số lượng còn lại:</span>{' '}
+                                        {slot.availableQuantity}
                                       </div>
                                       <div>
                                         <span className='font-semibold'>Trạng thái:</span>{' '}
@@ -272,7 +276,7 @@ const Services = () => {
                                   navigate('/login')
                                   return
                                 }
-                                const slot = slots.find(s => s.slotId === selectedSlotId)
+                                const slot = slots.find((s) => s.slotId === selectedSlotId)
                                 setSelectedSlot(slot)
                                 setOpenPersonalInfoForm(true)
                               }}
@@ -300,7 +304,7 @@ const Services = () => {
           <PersonalInfoForm
             open={openPersonalInfoForm}
             onOpenChange={setOpenPersonalInfoForm}
-            selectedService={services.find(s => s.serviceId === selectedServiceId)}
+            selectedService={services.find((s) => s.serviceId === selectedServiceId)}
             selectedSlot={selectedSlot}
             onSuccess={() => {
               setSelectedSlotId(null)
@@ -384,7 +388,7 @@ const Services = () => {
                   <X className='w-5 h-5' />
                 </Button>
               </div>
-              
+
               <div className='space-y-6'>
                 {/* Hình ảnh */}
                 <div className='aspect-video overflow-hidden rounded-xl'>
@@ -402,21 +406,15 @@ const Services = () => {
                       {selectedServiceDetail.category}
                     </span>
                   </div>
-                  
+
                   <div>
-                    <h3 className='text-2xl font-bold text-gray-900 mb-2'>
-                      {selectedServiceDetail.serviceName}
-                    </h3>
-                    <h4 className='text-lg font-semibold text-pink-600 mb-2'>
-                      {selectedServiceDetail.title}
-                    </h4>
+                    <h3 className='text-2xl font-bold text-gray-900 mb-2'>{selectedServiceDetail.serviceName}</h3>
+                    <h4 className='text-lg font-semibold text-pink-600 mb-2'>{selectedServiceDetail.title}</h4>
                   </div>
 
                   <div>
                     <h5 className='font-semibold text-gray-700 mb-2'>Mô tả:</h5>
-                    <p className='text-gray-600 leading-relaxed'>
-                      {selectedServiceDetail.description}
-                    </p>
+                    <p className='text-gray-600 leading-relaxed'>{selectedServiceDetail.description}</p>
                   </div>
 
                   <div className='flex items-center justify-between pt-4 border-t border-gray-200'>

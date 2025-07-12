@@ -7,7 +7,7 @@ import { toast } from 'react-toastify'
 import api from '@/configs/axios'
 
 const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSuccess }) => {
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo)
 
   const [formData, setFormData] = useState({
     guestName: '',
