@@ -9,7 +9,7 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }) => {
   const navigate = useNavigate()
 
   // Lấy thông tin user từ Redux store
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo)
 
   useEffect(() => {
     const verifyAccess = () => {

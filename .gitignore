@@ -60,3 +60,4 @@ backend/appsettings.*.json
 
 # Absolutely ignore user secrets
 **/*.pubxml.user
+.vercel

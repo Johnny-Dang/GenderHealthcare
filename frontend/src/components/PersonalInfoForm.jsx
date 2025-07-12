@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import axios from '@/configs/axios'
 import { setBookingId, incrementCart } from '@/redux/features/userSlice'
@@ -93,7 +93,7 @@ export default function PersonalInfoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-md'>
         <DialogHeader>
-          <DialogTitle>Thông tin cá nhân</DialogTitle>
+          <DialogTitle>Thông tin cá nhân</DialogTitle>\{' '}
           <DialogDescription>Vui lòng nhập thông tin cá nhân để hoàn tất đặt lịch</DialogDescription>
         </DialogHeader>
 
@@ -108,7 +108,12 @@ export default function PersonalInfoForm({
                 <span className='font-medium'>Ngày:</span> {selectedSlot.slotDate}
               </div>
               <div>
-                <span className='font-medium'>Ca:</span> {selectedSlot.shift}
+                <span className='font-medium'>Ca:</span>{' '}
+                {selectedSlot.shift === 'AM'
+                  ? 'Sáng (7h30 - 12h)'
+                  : selectedSlot.shift === 'PM'
+                    ? 'Tối (13h30 - 17h30)'
+                    : selectedSlot.shift}
               </div>
             </div>
           </div>
