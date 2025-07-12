@@ -33,8 +33,6 @@ const Login = () => {
         password
       })
 
-      console.log(response)
-
       dispatch(login(response.data))
       localStorage.setItem('token', response.data.accessToken)
 
