@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   ChevronLeft,
   ChevronRight,
-  Bell,
   UserCircle,
   Heart,
   TrendingUp,
@@ -83,7 +82,7 @@ const StaffLayout = () => {
     if (user?.firstName && user?.lastName) {
       return `${user.lastName} ${user.firstName}`
     }
-    return user?.fullName || user?.displayName || user?.email || 'Staff Member'
+    return user?.fullName || user?.displayName || user?.email || 'Nhân viên'
   }
 
   // Handle logout
@@ -140,16 +139,16 @@ const StaffLayout = () => {
         collapsible
         collapsed={collapsed}
         trigger={null}
-        className='shadow-lg bg-gradient-to-b from-pink-50 to-pink-100'
+        className='shadow-lg bg-gradient-to-b from-primary-50 to-secondary-50'
         width={250}
       >
         <div className={`flex items-center mb-8 ${collapsed ? 'justify-center' : 'justify-start px-6'} h-16`}>
-          <div className='w-10 h-10 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center'>
+          <div className='w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center'>
             <Heart className='h-6 w-6 text-white' />
           </div>
           {!collapsed && (
-            <span className='ml-3 text-2xl font-bold text-pink-700'>
-              <Link to='/' className='hover:text-pink-800'>
+            <span className='ml-3 text-2xl font-bold gradient-text'>
+              <Link to='/' className='hover:text-primary-800'>
                 WellCare
               </Link>
             </span>
@@ -170,33 +169,37 @@ const StaffLayout = () => {
       <Layout>
         <Header
           className='px-5 flex items-center justify-between shadow-md'
-          style={{ padding: '0 24px', height: 64, backgroundColor: 'white', borderBottom: '1px solid #f0f0f0' }}
+          style={{
+            padding: '0 24px',
+            height: 64,
+            backgroundColor: 'white',
+            borderBottom: '1px solid #f0f0f0'
+          }}
         >
           <div className='flex items-center'>
             <Button
               type='text'
               icon={collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               onClick={() => setCollapsed(!collapsed)}
-              className='text-base mr-4 text-pink-500 hover:text-pink-700'
+              className='text-base mr-4 text-primary-500 hover:text-primary-700 hover:bg-primary-50'
             />
             <Breadcrumb className='my-4' items={breadcrumbItems} />
           </div>
 
           <div className='flex items-center gap-4'>
-            <Badge count={2} size='small' color='#eb2f96'>
-              <Bell size={18} className='cursor-pointer text-slate-600 hover:text-pink-500' />
-            </Badge>
             <Dropdown
               menu={{
                 items: profileMenuItems
               }}
               placement='bottomRight'
               trigger={['click']}
+              arrow
             >
-              <div className='flex items-center gap-3 cursor-pointer hover:bg-pink-50 px-3 py-1.5 rounded-full transition-all border border-pink-100'>
+              <div className='flex items-center gap-3 cursor-pointer hover:bg-primary-50 px-3 py-1.5 rounded-full transition-all border border-primary-100'>
                 <Avatar
                   size={38}
-                  className='bg-gradient-to-r from-pink-400 to-pink-600 border-2 border-white shadow-sm'
+                  src={user?.avatarUrl}
+                  className='bg-gradient-to-r from-primary-400 to-secondary-500 border-2 border-white shadow-sm'
                   icon={<UserCircle size={22} />}
                 />
                 <div className='hidden md:block'>
@@ -219,10 +222,10 @@ const StaffLayout = () => {
           </div>
         </Content>
 
-        <Footer className='text-center py-3 px-12 bg-pink-50 border-t border-pink-100'>
+        <Footer className='text-center py-3 px-12 bg-primary-50 border-t border-primary-100'>
           <div className='flex items-center justify-center gap-2'>
-            <Heart size={16} className='text-pink-500' />
-            <Text type='secondary'>WellCare ©{new Date().getFullYear()}</Text>
+            <Heart size={16} className='text-primary-500' />
+            <Text type='secondary'>WellCare ©{new Date().getFullYear()} - Chăm sóc sức khỏe toàn diện</Text>
           </div>
         </Footer>
       </Layout>

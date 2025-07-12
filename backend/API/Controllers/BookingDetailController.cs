@@ -154,5 +154,21 @@ namespace backend.API.Controllers
 
             return Ok("Đã xác nhận lịch hẹn thành công và đã gửi thông báo cho khách hàng.");
         }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin,Staff,Manager")]
+        public async Task<IActionResult> GetAll([FromQuery] string status = null)
+        {
+            var details = await _bookingDetailService.GetAllAsync(status);
+            return Ok(details);
+        }
+
+        [HttpGet("paid/account/{accountId}")]
+        [Authorize]
+        public async Task<IActionResult> GetPaidByAccountId(Guid accountId)
+        {
+            var details = await _bookingDetailService.GetPaidByAccountIdAsync(accountId);
+            return Ok(details);
+        }
     }
 }

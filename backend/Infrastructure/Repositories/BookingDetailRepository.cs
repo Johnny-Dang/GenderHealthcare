@@ -160,5 +160,31 @@ namespace backend.Infrastructure.Repositories
 
             return await query.ToListAsync();
         }
+
+        public async Task<List<BookingDetail>> GetAllAsync(string status = null)
+        {
+            var query = _context.BookingDetail
+                .Include(bd => bd.TestService)
+                .Include(bd => bd.TestResult)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(bd => bd.Status == status);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<BookingDetail>> GetPaidByAccountIdAsync(Guid accountId)
+        {
+            return await _context.BookingDetail
+                .Include(bd => bd.TestService)
+                .Include(bd => bd.Booking)
+                .Include(bd => bd.TestServiceSlot)
+                .Include(bd => bd.TestResult)
+                .Where(bd => bd.Booking.AccountId == accountId && bd.Booking.Payment != null)
+                .ToListAsync();
+        }
     }
 }

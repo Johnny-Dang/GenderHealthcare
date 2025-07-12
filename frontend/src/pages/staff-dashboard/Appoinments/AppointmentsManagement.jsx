@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Typography, Table, Card, Button, Tag, Badge, Space, Select, message, Modal, Spin, Empty } from 'antd'
+import { Typography, Table, Card, Button, Tag, Space, Select, message, Modal, Spin, Empty } from 'antd'
 import { CheckCircle, XCircle, AlertTriangle, Clock, RefreshCw, FileText, Search } from 'lucide-react'
 import api from '@/configs/axios'
 import { format } from 'date-fns'
@@ -17,7 +17,6 @@ const AppointmentsManagement = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [confirmLoading, setConfirmLoading] = useState(false)
 
-  // Fetch all services for filter
   const fetchServices = async () => {
     try {
       const response = await api.get('/api/services')
@@ -32,16 +31,18 @@ const AppointmentsManagement = () => {
     }
   }
 
-  // Fetch appointments by service
-  const fetchAppointments = async (serviceId = selectedService) => {
-    if (!serviceId) {
-      setAppointments([])
-      return
-    }
+  const fetchAppointments = async (serviceId = null) => {
     setLoading(true)
     try {
-      const endpoint = `/api/booking-details/service/${serviceId}`
-      const response = await api.get(endpoint)
+      let endpoint = '/api/booking-details'
+      const params = new URLSearchParams()
+      params.append('status', 'Chưa xét nghiệm')
+
+      if (serviceId) {
+        endpoint = `/api/booking-details/service/${serviceId}`
+      }
+
+      const response = await api.get(`${endpoint}?${params.toString()}`)
       const formattedData = response.data.map((item) => ({
         id: item.bookingDetailId,
         bookingId: item.bookingId,
@@ -65,7 +66,6 @@ const AppointmentsManagement = () => {
     }
   }
 
-  // Map status from API to our internal status values
   const mapStatusToValue = (status) => {
     switch (status?.toLowerCase()) {
       case 'hoàn thành':
@@ -83,15 +83,9 @@ const AppointmentsManagement = () => {
 
   useEffect(() => {
     fetchServices()
+    fetchAppointments()
   }, [])
 
-  useEffect(() => {
-    if (selectedService) fetchAppointments(selectedService)
-    else setAppointments([])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedService])
-
-  // Search filter (by name or phone)
   const getFilteredData = (data) => {
     if (!searchTerm) return data
     const term = searchTerm.toLowerCase()
@@ -100,7 +94,11 @@ const AppointmentsManagement = () => {
     )
   }
 
-  // Confirm appointment
+  const handleServiceChange = (serviceId) => {
+    setSelectedService(serviceId)
+    fetchAppointments(serviceId)
+  }
+
   const handleConfirmAppointment = async () => {
     if (!selectedAppointment) return
     setConfirmLoading(true)
@@ -108,7 +106,7 @@ const AppointmentsManagement = () => {
       await api.put(`/api/booking-details/${selectedAppointment.id}/confirm`)
       message.success('Đã xác nhận xét nghiệm thành công')
       setConfirmModalVisible(false)
-      if (selectedService) fetchAppointments(selectedService)
+      fetchAppointments(selectedService)
     } catch (error) {
       message.error('Không thể xác nhận xét nghiệm')
     } finally {
@@ -230,9 +228,7 @@ const AppointmentsManagement = () => {
           <Button
             type='primary'
             icon={<RefreshCw size={18} />}
-            onClick={() => {
-              if (selectedService) fetchAppointments(selectedService)
-            }}
+            onClick={() => fetchAppointments(selectedService)}
             className='bg-blue-600 hover:bg-blue-700'
           >
             Làm mới dữ liệu
@@ -240,16 +236,16 @@ const AppointmentsManagement = () => {
         </div>
         <div className='mt-6 flex flex-col md:flex-row gap-4'>
           <div className='flex-1 min-w-[200px]'>
-            <label className='block text-sm font-medium mb-2'>Chọn dịch vụ xét nghiệm:</label>
+            <label className='block text-sm font-medium mb-2'>Lọc theo dịch vụ (tùy chọn):</label>
             <Select
-              placeholder='Chọn dịch vụ xét nghiệm'
+              placeholder='Tất cả dịch vụ'
               style={{ width: '100%' }}
               loading={services.length === 0}
-              onChange={setSelectedService}
+              onChange={handleServiceChange}
               allowClear
               onClear={() => {
                 setSelectedService(null)
-                setAppointments([])
+                fetchAppointments()
               }}
               size='large'
               value={selectedService}
@@ -282,18 +278,12 @@ const AppointmentsManagement = () => {
           <div className='flex justify-center items-center h-64'>
             <Spin size='large' tip='Đang tải dữ liệu...' />
           </div>
-        ) : !selectedService ? (
-          <div className='text-center py-12'>
-            <FileText size={64} className='mx-auto text-gray-300 mb-4' />
-            <Text type='secondary' className='text-lg'>
-              Vui lòng chọn một dịch vụ xét nghiệm
-            </Text>
-          </div>
         ) : appointments.length > 0 ? (
           <>
             <div className='flex justify-between mb-4 items-center'>
               <Text className='text-base'>
-                Tổng số: <strong>{appointments.length}</strong> lịch hẹn
+                Tổng số: <strong>{appointments.length}</strong> lịch hẹn chưa xét nghiệm
+                {selectedService && <span className='ml-2 text-gray-500'>(đã lọc theo dịch vụ)</span>}
               </Text>
               <div className='flex flex-wrap gap-2'>
                 <Text strong className='mr-1'>
@@ -318,11 +308,17 @@ const AppointmentsManagement = () => {
             />
           </>
         ) : (
-          <Empty description='Không có dữ liệu lịch hẹn cho dịch vụ này' image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty
+            description={
+              selectedService
+                ? 'Không có lịch hẹn chưa xét nghiệm cho dịch vụ này'
+                : 'Không có lịch hẹn chưa xét nghiệm nào'
+            }
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
         )}
       </Card>
 
-      {/* Confirm Modal */}
       <Modal
         title={
           <span className='font-bold flex items-center gap-2'>
