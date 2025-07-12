@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,11 +32,16 @@ const Services = () => {
       setLoading(true)
       try {
         const response = await axios.get('/api/services')
+        const servicesData = response.data
+        setServices(servicesData)
 
-        setServices(response.data)
+        // Extract unique categories from services
+        const uniqueCategories = [...new Set(servicesData.map((service) => service.category).filter(Boolean))]
+        setCategories(['Tất cả', ...uniqueCategories])
       } catch (error) {
         console.error('Lỗi khi lấy danh mục dịch vụ:', error)
         setServices([])
+        setCategories(['Tất cả'])
       } finally {
         setLoading(false)
       }
@@ -45,7 +50,7 @@ const Services = () => {
   }, [])
 
   // Gọi API lấy slot khi chọn dịch vụ hoặc đổi ngày
-  const fetchSlots = async () => {
+  const fetchSlots = useCallback(async () => {
     if (selectedServiceId && bookingDate) {
       setLoadingSlots(true)
       setSlots(null)
@@ -65,14 +70,14 @@ const Services = () => {
     } else {
       setSlots(null)
     }
-  }
+  }, [selectedServiceId, bookingDate, navigate])
 
   useEffect(() => {
     fetchSlots()
-  }, [selectedServiceId, bookingDate])
+  }, [selectedServiceId, bookingDate, fetchSlots])
 
   // Lọc dịch vụ theo category chứa chuỗi nhập vào
-  const filteredServices = services.filter(service => {
+  const filteredServices = services.filter((service) => {
     if (categoryInput.trim() !== '') {
       return service.category?.toLowerCase().includes(categoryInput.trim().toLowerCase())
     }
@@ -116,16 +121,23 @@ const Services = () => {
       <section className='py-8 border-b border-gray-100 bg-white'>
         <div className='max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4'>
           <div className='flex flex-wrap gap-2'>
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={category === selectedCategory ? 'default' : 'outline'}
-                className={`rounded-full px-5 py-2 shadow-sm transition-all duration-200 ${category === selectedCategory ? 'bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-pink-50'}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Button>
-            ))}
+            {categories.map((category) => {
+              const count =
+                category === 'Tất cả'
+                  ? services.length
+                  : services.filter((service) => service.category === category).length
+
+              return (
+                <Button
+                  key={category}
+                  variant={category === selectedCategory ? 'default' : 'outline'}
+                  className={`rounded-full px-5 py-2 shadow-sm transition-all duration-200 ${category === selectedCategory ? 'bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-pink-50'}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category} ({count})
+                </Button>
+              )
+            })}
           </div>
           <div className='flex gap-2'>
             <input
@@ -135,10 +147,21 @@ const Services = () => {
               value={categoryInput}
               onChange={(e) => setCategoryInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') setSelectedCategory('')
+                if (e.key === 'Enter') {
+                  setSelectedCategory('')
+                  // Optionally trigger search
+                }
               }}
             />
-            <Button className='rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white px-5 py-2 shadow-sm hover:opacity-90' onClick={() => setSelectedCategory('')}>Lọc</Button>
+            <Button
+              className='rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white px-5 py-2 shadow-sm hover:opacity-90'
+              onClick={() => {
+                setSelectedCategory('')
+                setCategoryInput('')
+              }}
+            >
+              Lọc
+            </Button>
           </div>
         </div>
       </section>
@@ -146,9 +169,12 @@ const Services = () => {
       {/* Services */}
       <section className='py-16 bg-gradient-to-b from-pink-50 to-white'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-10 items-start'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-10'>
             {/* Danh sách dịch vụ */}
-            <div className='md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8'>
+            <div
+              className='md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8 pb-20'
+              style={{ minHeight: 'calc(150vh)' }}
+            >
               {loading ? (
                 <div>Đang tải...</div>
               ) : (
@@ -174,9 +200,7 @@ const Services = () => {
                         <Clock className='w-4 h-4' />
                         <span>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : ''}</span>
                       </div>
-                      <div className='text-2xl font-bold text-pink-600 mb-4'>
-                        {service.price?.toLocaleString()} VNĐ
-                      </div>
+                      <div className='text-2xl font-bold text-pink-600 mb-4'>{service.price?.toLocaleString()} VNĐ</div>
                       <Button
                         className='bg-gradient-to-r from-pink-500 to-fuchsia-500 hover:opacity-90 text-white w-full rounded-full font-semibold shadow-md'
                         onClick={() => setSelectedServiceId(service.serviceId)}
@@ -190,7 +214,7 @@ const Services = () => {
             </div>
             {/* Form đặt lịch */}
             <div className='md:col-span-1'>
-              <div className='bg-white rounded-2xl shadow-2xl p-8 sticky top-8 min-h-[350px] max-h-screen overflow-y-auto flex flex-col border border-pink-100'>
+              <div className='sticky top-20 bg-white rounded-2xl shadow-2xl p-8 border border-pink-100 max-h-[calc(100vh-6rem)] overflow-y-auto z-40'>
                 <h2 className='text-2xl font-bold mb-6 text-pink-700 text-center tracking-wide'>Thông tin đặt lịch</h2>
                 {selectedServiceId ? (
                   (() => {
@@ -213,7 +237,7 @@ const Services = () => {
                         {/* Hiển thị thông tin slot nếu có */}
                         {loadingSlots && <div className='text-gray-500'>Đang tải khung giờ...</div>}
                         {slots && (
-                          <div className='mt-6'>
+                          <div className='mt-6 flex-1 overflow-y-auto'>
                             <h3 className='font-bold mb-2 text-pink-700'>Thông tin ca:</h3>
                             {slots.length === 0 ? (
                               <div className='text-red-500'>Không có khung giờ khả dụng cho ngày này.</div>
@@ -236,7 +260,8 @@ const Services = () => {
                                         <span className='font-semibold'>Ngày:</span> {slot.slotDate}
                                       </div>
                                       <div>
-                                        <span className='font-semibold'>Số lượng còn lại:</span> {slot.availableQuantity}
+                                        <span className='font-semibold'>Số lượng còn lại:</span>{' '}
+                                        {slot.availableQuantity}
                                       </div>
                                       <div>
                                         <span className='font-semibold'>Trạng thái:</span>{' '}
@@ -251,7 +276,7 @@ const Services = () => {
                         )}
                         {/* Nút Tiếp Tục ở dưới cùng form */}
                         {selectedSlotId && slots && (
-                          <div className='mt-6'>
+                          <div className='mt-6 pt-4 border-t border-gray-200'>
                             <Button
                               className='w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full font-semibold py-3 shadow-md hover:opacity-90 transition'
                               onClick={() => {
@@ -260,7 +285,7 @@ const Services = () => {
                                   navigate('/login')
                                   return
                                 }
-                                const slot = slots.find(s => s.slotId === selectedSlotId)
+                                const slot = slots.find((s) => s.slotId === selectedSlotId)
                                 setSelectedSlot(slot)
                                 setOpenPersonalInfoForm(true)
                               }}
@@ -288,7 +313,7 @@ const Services = () => {
           <PersonalInfoForm
             open={openPersonalInfoForm}
             onOpenChange={setOpenPersonalInfoForm}
-            selectedService={services.find(s => s.serviceId === selectedServiceId)}
+            selectedService={services.find((s) => s.serviceId === selectedServiceId)}
             selectedSlot={selectedSlot}
             onSuccess={() => {
               setSelectedSlotId(null)
@@ -303,7 +328,7 @@ const Services = () => {
       <section className='py-16 bg-gray-50'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-4'>Tại sao chọn chúng tôi?</h2>
+            <h2 className='text-3xl font-bold text-gray-900 mb-4'>Tại sao nện đặt xét nghiệm với chúng tôi?</h2>
             <p className='text-gray-600 max-w-2xl mx-auto'>
               Chúng tôi cam kết mang đến dịch vụ xét nghiệm chất lượng cao với sự bảo mật tuyệt đối
             </p>
