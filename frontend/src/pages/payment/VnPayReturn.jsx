@@ -46,7 +46,7 @@ const getVnPayMessage = (code) => {
 }
 
 export default function VnPayReturn() {
-  const userInfo = useSelector((state) => state.user.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [result, setResult] = useState(null)
@@ -60,7 +60,7 @@ export default function VnPayReturn() {
   useEffect(() => {
     if (calledRef.current) return
     calledRef.current = true
-    if (!userInfo || userInfo.role !== 'Customer') {
+    if (!userInfo?.accountId || !userInfo?.role || userInfo.role !== 'Customer') {
       navigate('/')
       return
     }

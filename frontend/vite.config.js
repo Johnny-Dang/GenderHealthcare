@@ -11,13 +11,26 @@ export default defineConfig({
   server: {
     port: 3000
   },
-  base: './', // để tránh lỗi đường dẫn khi deploy
+  base: '/', // Sử dụng '/' cho Vercel
   css: {
     devSourcemap: true
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false, // Tắt sourcemap trong production
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          antd: ['antd'],
+          charts: ['recharts']
+        }
+      }
     }
   }
 })

@@ -10,8 +10,19 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
 
+// Preloaded state để đảm bảo cấu trúc đúng ngay từ đầu
+const preloadedState = {
+  user: {
+    userInfo: {},
+    bookingId: '',
+    cartCount: 0,
+    cartShouldReload: false
+  }
+}
+
 export const store = configureStore({
   reducer: persistedReducer,
+  preloadedState,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -21,3 +32,19 @@ export const store = configureStore({
 })
 
 export const persistor = persistStore(store)
+
+// Function để đảm bảo Redux store luôn có cấu trúc đúng
+export const ensureStoreStructure = () => {
+  const state = store.getState()
+  if (!state.user) {
+    store.dispatch({
+      type: 'user/initialize',
+      payload: {
+        userInfo: {},
+        bookingId: '',
+        cartCount: 0,
+        cartShouldReload: false
+      }
+    })
+  }
+}

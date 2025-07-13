@@ -8,7 +8,7 @@ import { Calendar, MessageSquare, AlertCircle, User } from 'lucide-react'
 import { useSelector } from 'react-redux'
 
 const BookingConsultant = () => {
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
   const [selectedConsultant, setSelectedConsultant] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -43,7 +43,7 @@ const BookingConsultant = () => {
           <p className='text-gray-600 max-w-2xl mx-auto text-lg'>
             Đội ngũ chuyên gia với kinh nghiệm và chuyên môn cao sẽ giúp bạn giải đáp mọi thắc mắc
           </p>
-          {!userInfo && (
+          {!userInfo?.accountId || !userInfo?.role && (
             <div className='inline-flex items-center gap-2 text-primary-700 bg-primary-50 border border-primary-200 rounded-lg px-4 py-2 text-sm mt-6'>
               <AlertCircle className='w-4 h-4' />
               <span>Bạn có thể đặt lịch mà không cần đăng nhập</span>

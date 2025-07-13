@@ -2,6 +2,8 @@
 using backend.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Hangfire;
+using backend.Infrastructure.BackgroundJobs;
 
 namespace backend.API.Controllers
 {
@@ -93,6 +95,33 @@ namespace backend.API.Controllers
                 return BadRequest(result.Error);
 
             return Ok(new { isAvailable = result.Data });
+        }
+        
+        // POST: api/TestServiceSlot/trigger-slot-generation
+        [HttpPost("trigger-slot-generation")]
+        [Authorize(Roles = "Admin,Manager")]
+        public IActionResult TriggerSlotGenerationJob()
+        {
+            try
+            {
+                // Enqueue job để chạy ngay lập tức
+                var jobId = BackgroundJob.Enqueue<SlotGenerationJob>(job => job.GenerateSlotsForAllServicesNextWeek());
+                
+                return Ok(new 
+                { 
+                    message = "Job tạo slot đã được đưa vào hàng đợi thành công",
+                    jobId = jobId,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new 
+                { 
+                    message = "Không thể trigger job tạo slot",
+                    error = ex.Message 
+                });
+            }
         }
     }
 }

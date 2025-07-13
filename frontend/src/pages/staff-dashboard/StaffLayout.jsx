@@ -44,9 +44,12 @@ const StaffLayout = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const userState = useSelector((state) => state.user)
+  const userState = useSelector((state) => state.user || { userInfo: {} })
   // Access user info from different possible structures in Redux state
   const user = userState?.userInfo || userState?.user || userState || {}
+  
+  // Kiểm tra user có đăng nhập và có role Staff
+  const isStaff = user?.accountId && user?.role === 'Staff'
 
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -66,6 +69,14 @@ const StaffLayout = () => {
     const breadcrumb = breadcrumbMap[exactPath] || breadcrumbMap['/staff/dashboard']
     setBreadcrumbItems(breadcrumb)
   }, [location])
+
+  // Kiểm tra quyền truy cập Staff
+  useEffect(() => {
+    if (!isStaff) {
+      console.log('Not authorized as Staff, redirecting to home')
+      navigate('/')
+    }
+  }, [isStaff, navigate])
 
   // Determine active menu
   const getActiveMenu = () => {
@@ -88,28 +99,24 @@ const StaffLayout = () => {
   // Handle logout
   const handleLogout = async () => {
     try {
-      // Get token
-      const token = localStorage.getItem('token')
+      const token = user?.accessToken
+
       if (token) {
         await api.post(
           '/Account/logout',
           {},
           {
             headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              Authorization: `Bearer ${token}`
             }
           }
         )
       }
     } catch (error) {
-      console.error('Logout error:', error)
+      console.log('Lỗi logout API:', error)
     } finally {
-      // Clear user data regardless of API response
       dispatch(logout())
-      localStorage.removeItem('token')
       navigate('/')
-      toast.success('Đã đăng xuất thành công')
     }
   }
 

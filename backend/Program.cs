@@ -6,6 +6,7 @@ using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.BackgroundJobs;
 using backend.Infrastructure.Database;
 using backend.Infrastructure.Extensions;
+using backend.Infrastructure.Filters;
 using backend.Infrastructure.Persistence.Configurations;
 using backend.Infrastructure.Services;
 using DeployGenderSystem.Domain.Entity;
@@ -153,7 +154,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Hangfire dashboard (truy cập /hangfire để xem job)
-app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new AdminDashboardAuthorizationFilter() }
+});
 
 // Đăng ký job chạy mỗi thứ 2 lúc 0h
 RecurringJob.AddOrUpdate<SlotGenerationJob>(

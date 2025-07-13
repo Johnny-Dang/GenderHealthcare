@@ -9,12 +9,12 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }) => {
   const navigate = useNavigate()
 
   // Lấy thông tin user từ Redux store
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
 
   useEffect(() => {
     const verifyAccess = () => {
-      // Nếu không có thông tin người dùng
-      if (!userInfo) {
+      // Kiểm tra userInfo có tồn tại và có thông tin cần thiết
+      if (!userInfo || !userInfo.accountId || !userInfo.role) {
         console.log('User not authenticated, redirecting to:', redirectTo)
         navigate(redirectTo)
         return
