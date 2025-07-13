@@ -2,7 +2,20 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, FileText, Eye, Calendar, Loader, AlertCircle, Clock, User, Star, MessageSquare } from 'lucide-react'
+import {
+  ArrowLeft,
+  FileText,
+  Eye,
+  Calendar,
+  Loader,
+  AlertCircle,
+  Clock,
+  User,
+  Star,
+  MessageSquare,
+  CheckCircle,
+  X
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Navigation from '@/components/Navigation'
 import api from '@/configs/axios'
@@ -12,7 +25,8 @@ const TestResultsHistory = () => {
   const [testResults, setTestResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [reviewedServices, setReviewedServices] = useState(new Set()) // Lưu services đã đánh giá
+  const [reviewedServices, setReviewedServices] = useState(new Set())
+  const [toast, setToast] = useState({ show: false, message: '', type: '' }) // Thêm toast state
   const [feedbackModal, setFeedbackModal] = useState({
     open: false,
     serviceId: null,
@@ -25,12 +39,19 @@ const TestResultsHistory = () => {
   const navigate = useNavigate()
   const user = useSelector((state) => state.user?.userInfo)
 
+  // Toast helper function
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' })
+    }, 3000)
+  }
+
   useEffect(() => {
     fetchTestResults()
     loadReviewedServices()
   }, [])
 
-  // Load danh sách services đã đánh giá từ localStorage
   const loadReviewedServices = () => {
     const saved = localStorage.getItem(`reviewed_services_${user?.accountId}`)
     if (saved) {
@@ -38,7 +59,6 @@ const TestResultsHistory = () => {
     }
   }
 
-  // Lưu service đã đánh giá vào localStorage
   const saveReviewedService = (serviceId) => {
     const updated = new Set([...reviewedServices, serviceId])
     setReviewedServices(updated)
@@ -51,7 +71,6 @@ const TestResultsHistory = () => {
       setError(null)
       const response = await api.get(`/api/booking-details/paid/account/${user.accountId}`)
 
-      // Lọc chỉ những booking có status liên quan đến xét nghiệm
       const testResults = response.data.filter(
         (item) => item.status === 'Đã có kết quả' || item.status === 'Đã xét nghiệm'
       )
@@ -75,15 +94,11 @@ const TestResultsHistory = () => {
 
   const handleViewResult = (result) => {
     if (result.resultFileUrl) {
-      // Tạo unique key cho service này (có thể dùng serviceId hoặc bookingDetailId)
       const serviceKey = result.serviceId || result.bookingDetailId
 
-      // Kiểm tra đã đánh giá chưa
       if (reviewedServices.has(serviceKey)) {
-        // Đã đánh giá rồi → Mở kết quả trực tiếp
         window.open(result.resultFileUrl, '_blank')
       } else {
-        // Chưa đánh giá → Hiện modal feedback
         setFeedbackModal({
           open: true,
           serviceId: serviceKey,
@@ -95,7 +110,7 @@ const TestResultsHistory = () => {
         })
       }
     } else {
-      alert('Chưa có kết quả để xem')
+      showToast('Chưa có kết quả để xem', 'error')
     }
   }
 
@@ -112,12 +127,9 @@ const TestResultsHistory = () => {
         rating: feedbackModal.rating
       })
 
-      // Lưu service đã đánh giá
       saveReviewedService(feedbackModal.serviceId)
+      showToast('Gửi đánh giá thành công! Cảm ơn bạn đã góp ý.', 'success')
 
-      alert('Gửi đánh giá thành công! Cảm ơn bạn đã góp ý.')
-
-      // Mở kết quả sau khi gửi feedback thành công
       if (feedbackModal.resultUrl) {
         window.open(feedbackModal.resultUrl, '_blank')
       }
@@ -133,16 +145,14 @@ const TestResultsHistory = () => {
       })
     } catch (error) {
       console.error('Error sending feedback:', error)
-      alert('Gửi đánh giá thất bại! Vui lòng thử lại.')
+      showToast('Gửi đánh giá thất bại! Vui lòng thử lại.', 'error')
       setFeedbackModal((prev) => ({ ...prev, loading: false }))
     }
   }
 
   const handleSkipFeedback = () => {
-    // Lưu service đã "bỏ qua đánh giá" để không hỏi lại
     saveReviewedService(feedbackModal.serviceId)
 
-    // Mở kết quả khi bỏ qua feedback
     if (feedbackModal.resultUrl) {
       window.open(feedbackModal.resultUrl, '_blank')
     }
@@ -169,18 +179,15 @@ const TestResultsHistory = () => {
     }
   }
 
-  // Function để truncate ID
   const truncateId = (id, length = 8) => {
     if (!id) return ''
     return id.toString().length > length ? id.toString().substring(0, length) + '...' : id.toString()
   }
 
-  // Function để hiển thị thời gian ca
   const getShiftTime = (shift) => {
     return shift === 'AM' ? 'Sáng (7:30 - 12:00)' : 'Chiều (13:30 - 17:30)'
   }
 
-  // Kiểm tra service đã được đánh giá chưa
   const isServiceReviewed = (result) => {
     const serviceKey = result.serviceId || result.bookingDetailId
     return reviewedServices.has(serviceKey)
@@ -189,6 +196,35 @@ const TestResultsHistory = () => {
   return (
     <div className='min-h-screen bg-gradient-to-b from-pink-50 to-pink-100'>
       <Navigation />
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className='fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300'>
+          <div
+            className={`flex items-center gap-3 p-4 rounded-lg shadow-lg ${
+              toast.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <CheckCircle className='h-5 w-5 text-green-600' />
+            ) : (
+              <AlertCircle className='h-5 w-5 text-red-600' />
+            )}
+            <span className={`font-medium ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+              {toast.message}
+            </span>
+            <button
+              onClick={() => setToast({ show: false, message: '', type: '' })}
+              className={`ml-2 ${
+                toast.type === 'success' ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'
+              }`}
+            >
+              <X className='h-4 w-4' />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className='max-w-4xl mx-auto px-4 py-8'>
         {/* Header */}
         <div className='mb-6 flex items-center justify-between'>
@@ -261,7 +297,6 @@ const TestResultsHistory = () => {
                     </div>
                     <div className='flex items-center gap-2'>
                       {getStatusBadge(result.status)}
-                      {/* Hiển thị badge đã đánh giá */}
                       {isServiceReviewed(result) && (
                         <Badge className='bg-blue-100 text-blue-800'>
                           <Star className='h-3 w-3 mr-1' />
