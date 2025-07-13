@@ -12,10 +12,10 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef(null)
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
 
   const fetchNotifications = async () => {
-    if (!userInfo) return
+    if (!userInfo?.accountId || !userInfo?.role) return
 
     try {
       setLoading(true)
@@ -81,7 +81,7 @@ const NotificationBell = () => {
 
   // Mark all as read
   const markAllAsRead = async () => {
-    if (!userInfo || unreadCount === 0) return
+    if (!userInfo?.accountId || !userInfo?.role || unreadCount === 0) return
 
     try {
       console.log('Marking all notifications as read')
@@ -109,7 +109,7 @@ const NotificationBell = () => {
   }, [])
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo?.accountId && userInfo?.role) {
       fetchNotifications()
 
       // // Set up polling for new notifications (every 30 seconds)
@@ -124,7 +124,7 @@ const NotificationBell = () => {
     return addHours(utcDate, 7)
   }
 
-  if (!userInfo) return null
+  if (!userInfo?.accountId || !userInfo?.role) return null
 
   return (
     <div className='relative' ref={dropdownRef}>

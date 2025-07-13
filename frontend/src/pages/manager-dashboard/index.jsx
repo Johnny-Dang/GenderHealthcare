@@ -68,8 +68,11 @@ const ManagerDashboard = () => {
   const [breadcrumbItems, setBreadcrumbItems] = useState([])
   const location = useLocation()
   const navigate = useNavigate()
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
   const dispatch = useDispatch()
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  
+  // Kiểm tra user có đăng nhập và có role Manager
+  const isManager = userInfo?.accountId && userInfo?.role === 'Manager'
 
   // États pour les données du dashboard
   const [dashboardStats, setDashboardStats] = useState({
@@ -120,6 +123,14 @@ const ManagerDashboard = () => {
     const breadcrumb = breadcrumbMap[exactPath] || breadcrumbMap['/manager-dashboard']
     setBreadcrumbItems(breadcrumb)
   }, [location])
+
+  // Kiểm tra quyền truy cập Manager
+  useEffect(() => {
+    if (!isManager) {
+      console.log('Not authorized as Manager, redirecting to home')
+      navigate('/')
+    }
+  }, [isManager, navigate])
 
   const fetchDashboardData = async () => {
     // Récupérer les données de feedback
@@ -660,28 +671,24 @@ const ManagerDashboard = () => {
   // Handle logout
   const handleLogout = async () => {
     try {
-      // Get token
-      const token = localStorage.getItem('token')
+      const token = userInfo?.accessToken
+
       if (token) {
         await api.post(
           '/Account/logout',
           {},
           {
             headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              Authorization: `Bearer ${token}`
             }
           }
         )
       }
     } catch (error) {
-      console.error('Logout error:', error)
+      console.log('Lỗi logout API:', error)
     } finally {
-      // Clear user data regardless of API response
       dispatch(logout())
-      localStorage.removeItem('token')
       navigate('/')
-      toast.success('Đã đăng xuất thành công')
     }
   }
 

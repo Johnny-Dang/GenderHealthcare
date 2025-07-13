@@ -11,7 +11,9 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    // Lấy token từ Redux store thay vì localStorage
+    const userInfo = store.getState().user?.userInfo || {}
+    const token = userInfo?.accessToken
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -59,8 +61,6 @@ api.interceptors.response.use(
       try {
         const res = await api.post('/Account/refresh-token', {}, { withCredentials: true })
         const newAccessToken = res.data.accessToken
-        localStorage.setItem('token', newAccessToken)
-        api.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken
 
         // Cập nhật user mới vào Redux nếu response trả về thông tin user
         if (res.data && res.data.accountId) {
@@ -72,7 +72,6 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (err) {
         processQueue(err, null)
-        localStorage.removeItem('token')
         store.dispatch(logout())
         window.location.href = '/login'
         return Promise.reject(err)

@@ -34,10 +34,10 @@ const AdminPage = () => {
   const dispatch = useDispatch()
 
   // Lấy thông tin user từ Redux store
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
 
   // Kiểm tra xác thực và quyền admin
-  const isAdmin = userInfo?.role === 'Admin'
+  const isAdmin = userInfo?.accountId && userInfo?.role === 'Admin'
 
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -80,7 +80,7 @@ const AdminPage = () => {
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = userInfo?.accessToken
 
       if (token) {
         await api.post(
@@ -97,7 +97,6 @@ const AdminPage = () => {
       console.log('Lỗi logout API:', error)
     } finally {
       dispatch(logout())
-      localStorage.removeItem('token')
       navigate('/')
     }
   }
@@ -108,7 +107,7 @@ const AdminPage = () => {
       setLoading(true)
 
       // Nếu không có thông tin user hoặc không phải admin
-      if (!userInfo || userInfo.role !== 'Admin') {
+      if (!userInfo?.accountId || !userInfo?.role || userInfo.role !== 'Admin') {
         console.log('Not authorized as Admin, redirecting to home')
         navigate('/')
         return

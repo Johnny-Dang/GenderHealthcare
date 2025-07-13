@@ -34,10 +34,8 @@ export default function GoogleLoginButton() {
       })
 
       if (apiResponse?.data.accessToken) {
-        // Store user data and token in localStorage
+        // Store user data and token in Redux store (persisted via Redux Persist)
         dispatch(login(apiResponse.data))
-        localStorage.setItem('token', apiResponse.data.accessToken)
-
         toast.success('Đăng nhập thành công!', {
           position: 'top-right',
           autoClose: 3000

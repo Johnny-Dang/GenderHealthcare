@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-  userInfo: null,
+  userInfo: {},
   bookingId: '',
   cartCount: 0,
   cartShouldReload: false
@@ -11,19 +11,22 @@ export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
+    initialize: (state, action) => {
+      // Khởi tạo state nếu chưa có
+      return {
+        ...initialState,
+        ...action.payload
+      }
+    },
     login: (state, action) => {
       // Lưu toàn bộ thông tin từ response API vào userInfo
       state.userInfo = action.payload
-      localStorage.setItem('token', action.payload.accessToken)
     },
     logout: (state) => {
-      state.userInfo = null
+      state.userInfo = {}
       state.bookingId = ''
       state.cartCount = 0
       state.cartShouldReload = false
-
-      // Đảm bảo xóa token
-      localStorage.removeItem('token')
     },
     setBookingId: (state, action) => {
       state.bookingId = action.payload
@@ -46,7 +49,7 @@ export const userSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { login, logout, setBookingId, incrementCart, setCartCount, setCartShouldReload, resetCart } =
+export const { initialize, login, logout, setBookingId, incrementCart, setCartCount, setCartShouldReload, resetCart } =
   userSlice.actions
 
 export default userSlice.reducer

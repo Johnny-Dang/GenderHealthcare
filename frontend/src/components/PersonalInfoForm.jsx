@@ -17,7 +17,13 @@ export default function PersonalInfoForm({
 }) {
   const dispatch = useDispatch()
   const accountId = useSelector((state) => state.user?.userInfo?.accountId)
-  const bookingId = useSelector((state) => state.user?.bookingId)
+  const bookingId = useSelector((state) => state.user?.bookingId || '')
+
+  // Kiểm tra user đã đăng nhập
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
+  if (!userInfo?.accountId || !userInfo?.role) {
+    return null
+  }
 
   const [form, setForm] = useState({
     firstName: '',

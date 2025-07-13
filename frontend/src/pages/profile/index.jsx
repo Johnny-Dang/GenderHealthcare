@@ -11,7 +11,7 @@ import { toast } from 'react-toastify'
 import api from '@/configs/axios'
 
 const ProfilePage = () => {
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -38,7 +38,7 @@ const ProfilePage = () => {
     // Tránh gọi API nhiều lần trong development mode với React.StrictMode
     if (fetchedRef.current) return
 
-    if (!userInfo || !userInfo?.accountId) {
+    if (!userInfo?.accountId || !userInfo?.role) {
       setFetching(false)
       return
     }
@@ -202,7 +202,7 @@ const ProfilePage = () => {
     setForm(prev => ({ ...prev, avatarUrl: uploadedUrl }))
   }
 
-  if (!userInfo) {
+  if (!userInfo?.accountId || !userInfo?.role) {
     return (
       <div className='min-h-screen flex flex-col'>
         <Navigation />

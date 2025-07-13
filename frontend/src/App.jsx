@@ -1,8 +1,16 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
-import { store, persistor } from './redux/store'
+import { store, persistor, ensureStoreStructure } from './redux/store'
+import { Spin } from 'antd'
+
+// Loading component cho PersistGate
+const PersistLoading = () => (
+  <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+    <Spin size='large' tip='Đang tải ứng dụng...' />
+  </div>
+)
 
 // Guard and Layouts
 import AuthGuard from './components/AuthGuard'
@@ -46,6 +54,10 @@ import ScrollToTop from './components/ScrollToTop'
  * Application root with routing and Redux persistence
  */
 function App() {
+  useEffect(() => {
+    ensureStoreStructure();
+  }, []);
+
   const router = createBrowserRouter([
     {
       element: <ScrollToTop />,
@@ -159,7 +171,7 @@ function App() {
 
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate loading={<PersistLoading />} persistor={persistor}>
         <RouterProvider router={router} />
       </PersistGate>
     </Provider>
