@@ -24,8 +24,6 @@ import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSched
 import TestResultsPage from './pages/consultant/TestResultsPage'
 import CartPage from './pages/cart'
 import VnPayReturn from './pages/payment/VnPayReturn'
-import CustomerDashboard from './pages/customer-dashboard/CustomerDashboard'
-import BookingDetailPage from './pages/customer-dashboard/BookingDetailPage'
 import StaffDashboard from './pages/staff-dashboard/dashboard/StaffDashboard'
 import BlogManagement from './pages/staff-dashboard/blog/BlogManagement'
 import AppointmentsManagement from './pages/staff-dashboard/Appoinments/AppointmentsManagement'
@@ -41,6 +39,9 @@ import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
 import AboutPage from './pages/about'
 import ScrollToTop from './components/ScrollToTop'
+import PaymentHistory from './pages/customer-dashboard/PaymentHistory'
+import TestResultsHistory from './pages/customer-dashboard/TestResultsHistory'
+import ConsultationHistory from './pages/customer-dashboard/ConsultationHistory'
 
 /**
  * Application root with routing and Redux persistence
@@ -146,8 +147,9 @@ function App() {
             </AuthGuard>
           ),
           children: [
-            { path: 'dashboard', element: <CustomerDashboard /> },
-            { path: 'booking/:bookingId', element: <BookingDetailPage /> }
+            { path: 'payment-history', element: <PaymentHistory /> },
+            { path: 'test-results', element: <TestResultsHistory /> },
+            { path: 'consultation-history', element: <ConsultationHistory /> }
           ]
         }
       ]

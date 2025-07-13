@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Bell } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import api from '@/configs/axios'
@@ -12,91 +12,94 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef(null)
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const lastFetchRef = useRef(0)
 
-  const fetchNotifications = async () => {
-    if (!userInfo) return
+  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userId = useMemo(() => userInfo?.accountId, [userInfo])
+
+  const fetchNotifications = useCallback(async () => {
+    if (!userId || loading) return
+
+    const now = Date.now()
+    if (now - lastFetchRef.current < 30000) return
 
     try {
       setLoading(true)
-      const response = await api.get('/api/Notification')
-      console.log('Notification API response:', response)
+      const [notificationRes, countRes] = await Promise.all([
+        api.get('/api/Notification'),
+        api.get('/api/Notification/count')
+      ])
 
-      if (response && response.data) {
-        console.log('Notifications received:', response.data)
-        setNotifications(response.data)
+      // Đảm bảo notifications luôn là array
+      const notificationsData = notificationRes?.data
+      if (Array.isArray(notificationsData)) {
+        setNotifications(notificationsData)
       } else {
-        console.warn('No notifications data in response', response)
+        console.warn('Notifications data is not an array:', notificationsData)
         setNotifications([])
       }
 
-      // Lấy số lượng thông báo chưa đọc
-      const countResponse = await api.get('/api/Notification/count')
-      console.log('Unread count response:', countResponse)
+      // Đảm bảo unreadCount là number
+      const countData = countRes?.data
+      setUnreadCount(typeof countData === 'number' ? countData : 0)
 
-      if (countResponse && countResponse.data !== undefined) {
-        setUnreadCount(countResponse.data)
-      } else {
-        console.warn('Invalid unread count response', countResponse)
-        setUnreadCount(0)
-      }
+      lastFetchRef.current = now
     } catch (error) {
       console.error('Error fetching notifications:', error)
-      if (error.response) {
-        console.error('Error response:', error.response.data)
-        console.error('Status code:', error.response.status)
-      }
       setNotifications([])
       setUnreadCount(0)
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId, loading])
 
-  // Mark notification as read
-  const markAsRead = async (notificationId) => {
-    if (!userInfo) return
+  const markAsRead = useCallback(
+    async (notificationId) => {
+      if (!userId) return
 
-    const originalNotifications = [...notifications]
-    const originalUnreadCount = unreadCount
-
-    // Optimistic update
-    setNotifications(
-      notifications.map((notif) => (notif.notificationId === notificationId ? { ...notif, isRead: true } : notif))
-    )
-    setUnreadCount((prev) => Math.max(0, prev - 1))
-
-    try {
-      console.log('Marking notification as read:', notificationId)
-      const response = await api.put(`/api/Notification/${notificationId}/read`)
-      console.log('Mark as read response:', response)
-
+      setNotifications((prev) =>
+        Array.isArray(prev)
+          ? prev.map((notif) => (notif.notificationId === notificationId ? { ...notif, isRead: true } : notif))
+          : []
+      )
       setUnreadCount((prev) => Math.max(0, prev - 1))
-    } catch (error) {
-      console.error('Error marking notification as read:', error)
-      setNotifications(originalNotifications)
-      setUnreadCount(originalUnreadCount)
-    }
-  }
 
-  // Mark all as read
-  const markAllAsRead = async () => {
-    if (!userInfo || unreadCount === 0) return
+      try {
+        await api.put(`/api/Notification/${notificationId}/read`)
+      } catch (error) {
+        console.error('Error marking as read:', error)
+      }
+    },
+    [userId]
+  )
+
+  const markAllAsRead = useCallback(async () => {
+    if (!userId || unreadCount === 0) return
+
+    setNotifications((prev) => (Array.isArray(prev) ? prev.map((notif) => ({ ...notif, isRead: true })) : []))
+    setUnreadCount(0)
 
     try {
-      console.log('Marking all notifications as read')
-      const response = await api.put('/api/Notification/mark-all-read')
-      console.log('Mark all as read response:', response)
-
-      // Cập nhật state
-      setNotifications(notifications.map((notif) => ({ ...notif, isRead: true })))
-      setUnreadCount(0)
+      await api.put('/api/Notification/mark-all-read')
     } catch (error) {
-      console.error('Error marking all notifications as read:', error)
+      console.error('Error marking all as read:', error)
     }
-  }
+  }, [userId, unreadCount])
 
-  // Close dropdown when clicking outside
+  const handleToggleDropdown = useCallback(() => {
+    setIsOpen((prev) => !prev)
+  }, [])
+
+  const convertToVietnamTime = useCallback((dateString) => {
+    return addHours(new Date(dateString), 7)
+  }, [])
+
+  useEffect(() => {
+    if (userId) {
+      fetchNotifications()
+    }
+  }, [userId, fetchNotifications])
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -104,25 +107,54 @@ const NotificationBell = () => {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  useEffect(() => {
-    if (userInfo) {
-      fetchNotifications()
-
-      // // Set up polling for new notifications (every 30 seconds)
-      // const interval = setInterval(fetchNotifications, 30000)
-      // return () => clearInterval(interval)
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [userInfo])
+  }, [isOpen])
 
-  // Helper function to convert UTC to Vietnam time (UTC+7)
-  const convertToVietnamTime = (dateString) => {
-    const utcDate = new Date(dateString)
-    return addHours(utcDate, 7)
-  }
+  const renderedNotifications = useMemo(() => {
+    if (loading) {
+      return <div className='p-4 text-center text-gray-500'>Đang tải...</div>
+    }
+
+    // Đảm bảo notifications là array trước khi dùng
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+      return <div className='p-4 text-center text-gray-500'>Bạn chưa có thông báo nào</div>
+    }
+
+    return notifications.map((notification) => (
+      <div
+        key={notification.notificationId}
+        className={`p-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${
+          !notification.isRead ? 'bg-primary-50' : ''
+        }`}
+        onClick={() => markAsRead(notification.notificationId)}
+      >
+        <div className='flex items-start'>
+          <div
+            className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
+              !notification.isRead ? 'bg-primary-500' : 'bg-transparent'
+            }`}
+          />
+          <div className='flex-1'>
+            <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-800' : 'text-gray-700'}`}>
+              {notification.title}
+            </p>
+            <p className={`text-sm ${!notification.isRead ? 'font-medium' : 'text-gray-700'}`}>
+              {notification.content}
+            </p>
+            <p className='text-xs text-gray-500 mt-1'>
+              {formatDistanceToNow(convertToVietnamTime(notification.createdAt), {
+                addSuffix: true,
+                locale: vi
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
+    ))
+  }, [notifications, loading, markAsRead, convertToVietnamTime])
 
   if (!userInfo) return null
 
@@ -130,7 +162,7 @@ const NotificationBell = () => {
     <div className='relative' ref={dropdownRef}>
       <button
         className='flex items-center justify-center w-10 h-10 rounded-full hover:bg-primary-50 transition-colors relative'
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleDropdown}
         aria-label='Thông báo'
       >
         <Bell className='w-5 h-5 text-gray-700' />
@@ -152,45 +184,7 @@ const NotificationBell = () => {
             )}
           </div>
 
-          <div className='max-h-[350px] overflow-y-auto'>
-            {loading ? (
-              <div className='p-4 text-center text-gray-500'>Đang tải...</div>
-            ) : notifications.length === 0 ? (
-              <div className='p-4 text-center text-gray-500'>Bạn chưa có thông báo nào</div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.notificationId}
-                  className={`p-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${
-                    !notification.isRead ? 'bg-primary-50' : ''
-                  }`}
-                  onClick={() => markAsRead(notification.notificationId)}
-                >
-                  <div className='flex items-start'>
-                    <div
-                      className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                        !notification.isRead ? 'bg-primary-500' : 'bg-transparent'
-                      }`}
-                    ></div>
-                    <div className='flex-1'>
-                      <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-800' : 'text-gray-700'}`}>
-                        {notification.title}
-                      </p>
-                      <p className={`text-sm ${!notification.isRead ? 'font-medium' : 'text-gray-700'}`}>
-                        {notification.content}
-                      </p>
-                      <p className='text-xs text-gray-500 mt-1'>
-                        {formatDistanceToNow(convertToVietnamTime(notification.createdAt), {
-                          addSuffix: true,
-                          locale: vi
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <div className='max-h-[350px] overflow-y-auto'>{renderedNotifications}</div>
 
           <div className='p-2 text-center border-t border-gray-100'>
             <button className='text-xs text-primary-600 hover:underline' onClick={() => setIsOpen(false)}>

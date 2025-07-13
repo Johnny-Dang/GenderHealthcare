@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar, Dropdown } from 'antd'
-import { Heart, Menu, X, User, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { Heart, Menu, X, User, LogOut, Settings, ChevronDown, CreditCard, FileText, MessageCircle } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '@/redux/features/userSlice'
 import api from '@/configs/axios'
@@ -26,7 +26,7 @@ const Navigation = () => {
       return [
         ...baseItems,
         { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
-        { path: '/booking-consultant', label: 'Đặt tư vấn' }, // Thêm đường dẫn tư vấn cho khách
+        { path: '/booking-consultant', label: 'Đặt tư vấn' },
         { path: '/blog', label: 'Blog' },
         { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
       ]
@@ -52,14 +52,13 @@ const Navigation = () => {
 
       case 'Consultant':
         return [
-          // { path: '/consultant-dashboard', label: 'Dashboard' },
           { path: '/consultant/schedule', label: 'Lịch tư vấn' },
           { path: '/consultant/test-results', label: 'Tra cứu kết quả' }
         ]
 
       case 'Customer':
         return [
-          { path: '/customer/dashboard', label: 'Bảng điều khiển' },
+          // Xóa dashboard, chỉ giữ các trang chính
           { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
           { path: '/booking-consultant', label: 'Đặt tư vấn' },
           { path: '/blog', label: 'Blog' },
@@ -160,26 +159,63 @@ const Navigation = () => {
     { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
   ]
 
-  // Menu items for user dropdown
-  const userMenuItems = [
-    {
-      key: 'profile',
-      label: 'Cập nhật hồ sơ',
-      icon: <Settings size={14} className='mr-2' />,
-      onClick: () => navigate('/profile')
-    },
-    {
-      key: 'divider',
-      type: 'divider'
-    },
-    {
-      key: 'logout',
-      label: 'Đăng xuất',
-      icon: <LogOut size={14} className='mr-2' />,
-      onClick: handleLogout,
-      danger: true
+  // Tạo userMenuItems dựa trên role
+  const getUserMenuItems = () => {
+    const baseItems = [
+      {
+        key: 'profile',
+        label: 'Cập nhật hồ sơ',
+        icon: <Settings size={14} className='mr-2' />,
+        onClick: () => navigate('/profile')
+      },
+      {
+        key: 'divider-profile', // Đổi key này
+        type: 'divider'
+      },
+      {
+        key: 'logout',
+        label: 'Đăng xuất',
+        icon: <LogOut size={14} className='mr-2' />,
+        onClick: handleLogout,
+        danger: true
+      }
+    ]
+
+    // Chỉ Customer mới có menu lịch sử
+    if (userInfo?.role === 'Customer') {
+      return [
+        {
+          key: 'payment-history',
+          label: 'Lịch sử thanh toán',
+          icon: <CreditCard size={14} className='mr-2' />,
+          onClick: () => navigate('/customer/payment-history')
+        },
+        {
+          key: 'test-results',
+          label: 'Lịch sử xét nghiệm',
+          icon: <FileText size={14} className='mr-2' />,
+          onClick: () => navigate('/customer/test-results')
+        },
+        {
+          key: 'consultation-history',
+          label: 'Lịch sử tư vấn',
+          icon: <MessageCircle size={14} className='mr-2' />,
+          onClick: () => navigate('/customer/consultation-history')
+        },
+        {
+          key: 'divider-customer', // Đổi key này để khác với baseItems
+          type: 'divider'
+        },
+        ...baseItems
+      ]
     }
-  ]
+
+    // Các role khác chỉ có menu cơ bản
+    return baseItems
+  }
+
+  // Sử dụng function thay vì array cố định
+  const userMenuItems = getUserMenuItems()
 
   // Get avatar URL or use first letter of name
   const getAvatarContent = () => {
@@ -318,7 +354,51 @@ const Navigation = () => {
                     </div>
                   </div>
 
-                  <div className='space-y-2'>
+                  {/* Chỉ hiển thị menu lịch sử cho Customer */}
+                  {userInfo.role === 'Customer' && (
+                    <div className='space-y-2 mb-3'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => {
+                          navigate('/customer/payment-history')
+                          setIsMenuOpen(false)
+                        }}
+                        className='w-full justify-start'
+                      >
+                        <CreditCard className='h-4 w-4 mr-2' />
+                        Lịch sử thanh toán
+                      </Button>
+
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => {
+                          navigate('/customer/test-results')
+                          setIsMenuOpen(false)
+                        }}
+                        className='w-full justify-start'
+                      >
+                        <FileText className='h-4 w-4 mr-2' />
+                        Lịch sử xét nghiệm
+                      </Button>
+
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => {
+                          navigate('/customer/consultation-history')
+                          setIsMenuOpen(false)
+                        }}
+                        className='w-full justify-start'
+                      >
+                        <MessageCircle className='h-4 w-4 mr-2' />
+                        Lịch sử tư vấn
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className='space-y-2 border-t border-gray-100 pt-2'>
                     <Button
                       variant='outline'
                       size='sm'

@@ -4,9 +4,9 @@ import { login, logout } from '@/redux/features/userSlice'
 
 // Set config defaults when creating the instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL, //'https://localhost:7195',
   withCredentials: true, // Để gửi cookie refreshToken lên backend
-  timeout: 10000
+  timeout: 30000
 })
 
 api.interceptors.request.use(

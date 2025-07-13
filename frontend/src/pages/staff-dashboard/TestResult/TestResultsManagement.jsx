@@ -45,6 +45,7 @@ const TestResultsByService = () => {
   const [uploadLoading, setUploadLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDateRange, setSelectedDateRange] = useState(null)
+  const [uploadStates, setUploadStates] = useState({}) // Track upload state
 
   const statusOptions = [
     { value: 'Đã xét nghiệm', label: 'Đã xét nghiệm' },
@@ -133,84 +134,153 @@ const TestResultsByService = () => {
     fetchTestResults(selectedService, status)
   }
 
-  const handleUpload = async (options) => {
-    const { file, onSuccess, onError } = options
-    if (!selectedRecord) {
-      onError('No record selected')
+  const handleUpload = async ({ file, onSuccess, onError }) => {
+    const bookingDetailId = selectedRecord?.id // Dùng id thay vì bookingId
+
+    if (!bookingDetailId) {
+      onError('Không tìm thấy thông tin booking detail')
       return
     }
-    const formData = new FormData()
-    formData.append('file', file)
-    setUploadLoading(true)
+
+    // Set loading state
+    setUploadStates((prev) => ({
+      ...prev,
+      [bookingDetailId]: { loading: true, error: null, success: false, progress: 0 }
+    }))
+
     try {
-      await api.post(`/api/booking-details/${selectedRecord.id}/upload-result`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // API endpoint theo đúng spec: /api/booking-details/{id}/upload-result
+      const response = await api.post(`/api/booking-details/${bookingDetailId}/upload-result`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 180000, // 3 phút timeout cho upload
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+
+          // Update progress
+          setUploadStates((prev) => ({
+            ...prev,
+            [bookingDetailId]: { ...prev[bookingDetailId], progress: percentCompleted }
+          }))
+        }
       })
-      onSuccess('ok')
-      message.success('Tải lên kết quả xét nghiệm thành công')
+
+      // Success
+      setUploadStates((prev) => ({
+        ...prev,
+        [bookingDetailId]: {
+          loading: false,
+          error: null,
+          success: true,
+          progress: 100
+        }
+      }))
+
+      message.success('Upload kết quả thành công!')
+      onSuccess(response.data)
+
+      // Close modal và refresh data
       setIsUploadModalOpen(false)
-      fetchTestResults(selectedService, selectedStatus)
+      setTimeout(() => {
+        fetchTestResults(selectedService, selectedStatus) // Refresh lại danh sách
+      }, 1000)
     } catch (error) {
-      onError(error)
-      message.error('Không thể tải lên kết quả xét nghiệm')
-    } finally {
-      setUploadLoading(false)
+      console.error('Upload error:', error)
+
+      let errorMessage = 'Upload thất bại'
+
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Upload mất quá nhiều thời gian. Vui lòng kiểm tra lại sau vài phút.'
+        message.warning(errorMessage)
+
+        // Polling để check status sau khi timeout
+        setTimeout(() => {
+          checkUploadStatus(bookingDetailId)
+        }, 30000) // Check sau 30s
+      } else if (error.response?.status === 413) {
+        errorMessage = 'File quá lớn. Vui lòng chọn file nhỏ hơn 10MB.'
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+
+      setUploadStates((prev) => ({
+        ...prev,
+        [bookingDetailId]: {
+          loading: false,
+          error: errorMessage,
+          success: false,
+          progress: 0
+        }
+      }))
+
+      message.error(errorMessage)
+      onError(errorMessage)
     }
   }
 
-  const showUploadModal = (record) => {
-    setSelectedRecord(record)
-    setIsUploadModalOpen(true)
-  }
+  // Cập nhật function checkUploadStatus
+  const checkUploadStatus = async (bookingDetailId) => {
+    try {
+      // Fetch lại data để check có result chưa
+      const response = await api.get(`/api/booking-details/${bookingDetailId}`)
 
-  const downloadResult = (record) => {
-    if (record.resultUrl) {
-      window.open(record.resultUrl, '_blank')
-    } else {
-      message.warning('Không có kết quả để tải xuống')
+      if (response.data.resultFileUrl) {
+        setUploadStates((prev) => ({
+          ...prev,
+          [bookingDetailId]: {
+            loading: false,
+            error: null,
+            success: true,
+            progress: 100
+          }
+        }))
+
+        message.success('File đã được upload thành công!')
+        fetchTestResults(selectedService, selectedStatus) // Refresh data
+      }
+    } catch (error) {
+      console.error('Error checking upload status:', error)
     }
   }
 
-  const handleDateRangeChange = (dates) => {
-    setSelectedDateRange(dates)
-  }
+  // Cập nhật UploadStatusIndicator để dùng bookingDetailId
+  const UploadStatusIndicator = ({ bookingDetailId }) => {
+    const status = uploadStates[bookingDetailId]
 
-  const clearAllFilters = () => {
-    setSelectedService(null)
-    setSelectedStatus(null)
-    setSelectedDateRange(null)
-    setSearchTerm('')
-    fetchTestResults(null, null)
-  }
+    if (!status) return null
 
-  // Enhanced client-side filtering function
-  const getFilteredData = (data) => {
-    let filteredData = data
-
-    // Filter by search term (name or phone)
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      filteredData = filteredData.filter(
-        (item) => item.phone.toLowerCase().includes(term) || item.customerName.toLowerCase().includes(term)
+    if (status.loading) {
+      return (
+        <div className='flex items-center gap-2 text-blue-600 mt-2'>
+          <Spin size='small' />
+          <span className='text-sm'>Đang upload... {status.progress}%</span>
+        </div>
       )
     }
 
-    // Filter by date range
-    if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
-      filteredData = filteredData.filter((item) => {
-        const itemDate = new Date(item.testDate)
-        const startDate = new Date(selectedDateRange[0])
-        const endDate = new Date(selectedDateRange[1])
-
-        // Set time to start/end of day for proper comparison
-        startDate.setHours(0, 0, 0, 0)
-        endDate.setHours(23, 59, 59, 999)
-
-        return itemDate >= startDate && itemDate <= endDate
-      })
+    if (status.success) {
+      return (
+        <div className='flex items-center gap-2 text-green-600 mt-2'>
+          <CheckCircle className='h-4 w-4' />
+          <span className='text-sm'>Upload thành công!</span>
+        </div>
+      )
     }
 
-    return filteredData
+    if (status.error) {
+      return (
+        <div className='flex items-center gap-2 text-red-600 mt-2'>
+          <AlertTriangle className='h-4 w-4' />
+          <span className='text-xs'>{status.error}</span>
+        </div>
+      )
+    }
+
+    return null
   }
 
   const columns = [
@@ -311,6 +381,55 @@ const TestResultsByService = () => {
       )
     }
   ]
+
+  // Thêm các function bị thiếu
+  const clearAllFilters = () => {
+    setSelectedService(null)
+    setSelectedStatus(null)
+    setSelectedDateRange(null)
+    setSearchTerm('')
+    fetchTestResults(null, null)
+  }
+
+  const handleDateRangeChange = (dates) => {
+    setSelectedDateRange(dates)
+    // Có thể thêm logic filter theo date nếu cần
+  }
+
+  const getFilteredData = (data) => {
+    let filtered = data
+
+    // Filter by search term (name or phone)
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (item) => item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || item.phone.includes(searchTerm)
+      )
+    }
+
+    // Filter by date range
+    if (selectedDateRange && selectedDateRange.length === 2) {
+      const [startDate, endDate] = selectedDateRange
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.testDate)
+        return itemDate >= startDate && itemDate <= endDate
+      })
+    }
+
+    return filtered
+  }
+
+  const showUploadModal = (record) => {
+    setSelectedRecord(record)
+    setIsUploadModalOpen(true)
+  }
+
+  const downloadResult = (record) => {
+    if (record.resultUrl) {
+      window.open(record.resultUrl, '_blank')
+    } else {
+      message.error('Không tìm thấy file kết quả')
+    }
+  }
 
   return (
     <div className='max-w-7xl mx-auto px-4 py-8'>
@@ -568,6 +687,9 @@ const TestResultsByService = () => {
             <p className='ant-upload-text font-medium'>Nhấp hoặc kéo file vào khu vực này để tải lên</p>
             <p className='ant-upload-hint text-gray-500'>Chỉ hỗ trợ tải lên file PDF duy nhất</p>
           </Dragger>
+
+          {/* Thêm status indicator */}
+          <UploadStatusIndicator bookingDetailId={selectedRecord?.bookingId} />
 
           <div className='mt-6 text-center'>
             <Button loading={uploadLoading} type='primary' size='large' icon={<UploadCloud size={18} />}>
