@@ -3,12 +3,12 @@ import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 
 export default function CartIcon() {
-  const cartCount = useSelector((state) => state.user?.cartCount)
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const cartCount = useSelector((state) => state.user?.cartCount || 0)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
   const navigate = useNavigate()
 
   // Chỉ hiển thị khi user đã đăng nhập và có role là Customer
-  if (!userInfo || userInfo?.role !== 'Customer') {
+  if (!userInfo?.accountId || !userInfo?.role || userInfo?.role !== 'Customer') {
     return null
   }
 

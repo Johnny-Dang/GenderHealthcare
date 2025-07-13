@@ -7,7 +7,7 @@ import { toast } from 'react-toastify'
 import api from '@/configs/axios'
 
 const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSuccess }) => {
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
 
   const [formData, setFormData] = useState({
     guestName: '',
@@ -24,7 +24,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
   // Cập nhật formData khi component mount và khi userInfo thay đổi
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo?.accountId && userInfo?.role) {
       setFormData((prevData) => ({
         ...prevData,
         guestName: userInfo.fullName || '',
@@ -129,10 +129,10 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
     try {
       const payload = {
-        customerId: userInfo ? userInfo.accountId : null,
-        guestName: !userInfo ? formData.guestName : null,
-        guestEmail: !userInfo ? formData.guestEmail : null,
-        guestPhone: !userInfo ? formData.guestPhone : null,
+        customerId: userInfo?.accountId && userInfo?.role ? userInfo.accountId : null,
+        guestName: !userInfo?.accountId || !userInfo?.role ? formData.guestName : null,
+        guestEmail: !userInfo?.accountId || !userInfo?.role ? formData.guestEmail : null,
+        guestPhone: !userInfo?.accountId || !userInfo?.role ? formData.guestPhone : null,
         staffId: consultant.id,
         scheduledAt: scheduledDateTime.toISOString(),
         message: formData.message
@@ -234,7 +234,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
           </div>
 
           {/* Guest info section - only shown when not logged in */}
-          {!userInfo ? (
+          {!userInfo?.accountId || !userInfo?.role ? (
             <div className='space-y-3 border border-gray-200 rounded-lg p-4'>
               <h4 className='font-medium text-sm text-gray-700'>Thông tin cá nhân</h4>
               <div className='grid grid-cols-1 gap-3'>

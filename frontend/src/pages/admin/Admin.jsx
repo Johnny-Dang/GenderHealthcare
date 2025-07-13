@@ -3,7 +3,18 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import { Layout, Menu, theme, Avatar, Typography, Breadcrumb, Dropdown, Spin } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
-import { PieChart, Users, Package, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
+import {
+  PieChart,
+  Users,
+  Package,
+  Calendar,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  UserCircle,
+  Heart,
+  LogOut
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import api from '../../configs/axios'
 
@@ -22,7 +33,8 @@ function getItem(label, key, icon, children) {
 const items = [
   getItem('Dashboard', 'dashboard', <PieChart size={18} />),
   getItem('Quản lý người dùng', 'users', <Users size={18} />),
-  getItem('Quản lý dịch vụ xét nghiệm', 'services', <Package size={18} />)
+  getItem('Quản lý dịch vụ xét nghiệm', 'services', <Package size={18} />),
+  getItem('Quản lý job', 'jobs', <Settings size={18} />)
 ]
 
 const AdminPage = () => {
@@ -34,10 +46,10 @@ const AdminPage = () => {
   const dispatch = useDispatch()
 
   // Lấy thông tin user từ Redux store
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
 
   // Kiểm tra xác thực và quyền admin
-  const isAdmin = userInfo?.role === 'Admin'
+  const isAdmin = userInfo?.accountId && userInfo?.role === 'Admin'
 
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -46,6 +58,7 @@ const AdminPage = () => {
   const breadcrumbMap = {
     '/admin/users': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý người dùng' }],
     '/admin/services': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý dịch vụ xét nghiệm' }],
+    '/admin/jobs': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý job' }],
     '/admin/dashboard': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }]
   }
 
@@ -75,12 +88,13 @@ const AdminPage = () => {
     const path = location.pathname
     if (path.includes('/users')) return 'users'
     if (path.includes('/services')) return 'services'
+    if (path.includes('/jobs')) return 'jobs'
     return 'dashboard'
   }
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = userInfo?.accessToken
 
       if (token) {
         await api.post(
@@ -97,7 +111,6 @@ const AdminPage = () => {
       console.log('Lỗi logout API:', error)
     } finally {
       dispatch(logout())
-      localStorage.removeItem('token')
       navigate('/')
     }
   }
@@ -108,7 +121,7 @@ const AdminPage = () => {
       setLoading(true)
 
       // Nếu không có thông tin user hoặc không phải admin
-      if (!userInfo || userInfo.role !== 'Admin') {
+      if (!userInfo?.accountId || !userInfo?.role || userInfo.role !== 'Admin') {
         console.log('Not authorized as Admin, redirecting to home')
         navigate('/')
         return

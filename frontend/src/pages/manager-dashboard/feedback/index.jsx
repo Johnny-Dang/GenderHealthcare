@@ -17,6 +17,7 @@ import {
 import { Search, Trash2, Eye, MessageSquare, Star } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import api from '../../../configs/axios'
+import { useSelector } from 'react-redux'
 
 const { Title } = Typography
 const { Search: SearchInput } = Input
@@ -33,6 +34,7 @@ const ManagerFeedbackManagement = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null)
   const [stats, setStats] = useState({ total: 0, fiveStars: 0, average: 0 })
   const [monthlyRatingData, setMonthlyRatingData] = useState([])
+  const userInfo = useSelector((state) => state.user?.userInfo)
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -133,8 +135,7 @@ const ManagerFeedbackManagement = () => {
   const handleServiceChange = (value) => setSelectedService(value || null)
 
   const handleDelete = async (id) => {
-    const token = localStorage.getItem('token')
-    if (!token) {
+    if (!userInfo?.accessToken) {
       message.error('Bạn cần đăng nhập để thực hiện chức năng này')
       return
     }

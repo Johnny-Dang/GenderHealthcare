@@ -14,9 +14,9 @@ const Navigation = () => {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const userInfo = useSelector((state) => state.user?.userInfo)
+  const userInfo = useSelector((state) => state.user?.userInfo || {})
   const dispatch = useDispatch()
-  const isGuest = !userInfo
+  const isGuest = !userInfo?.role || !userInfo?.accountId
 
   // Define navigation items based on user role
   const getNavItems = () => {
@@ -78,8 +78,8 @@ const Navigation = () => {
   const handleLogout = async () => {
     try {
       // Thay đổi thứ tự: Phải gọi API TRƯỚC khi xóa token
-      // Lấy token từ cả hai nguồn để đảm bảo có token
-      const token = localStorage.getItem('token') || userInfo?.accessToken
+      // Lấy token từ Redux store thay vì localStorage
+      const token = userInfo?.accessToken
 
       console.log('Token used for logout:', token?.substring(0, 20) + '...') // Debug token
 
@@ -107,9 +107,8 @@ const Navigation = () => {
         data: error.response?.data
       })
     } finally {
-      // CHỈ sau khi gọi API xong mới xóa state và localStorage
+      // CHỈ sau khi gọi API xong mới xóa state
       dispatch(logout())
-      localStorage.removeItem('token')
 
       // Xóa cookies
       document.cookie.split(';').forEach(function (c) {
@@ -124,7 +123,7 @@ const Navigation = () => {
 
   // Helper function to display user name correctly
   const getUserDisplayName = () => {
-    if (!userInfo) return ''
+    if (!userInfo?.accountId || !userInfo?.role) return ''
 
     // Check different possible name properties based on API response structure
     if (userInfo.fullName) return userInfo.fullName
@@ -219,7 +218,7 @@ const Navigation = () => {
 
   // Get avatar URL or use first letter of name
   const getAvatarContent = () => {
-    if (!userInfo) return null
+    if (!userInfo?.accountId || !userInfo?.role) return null
 
     if (userInfo.avatarUrl) {
       return <img src={userInfo.avatarUrl} alt='Avatar' />
@@ -271,10 +270,10 @@ const Navigation = () => {
             {/* Cart Icon */}
             <CartIcon />
 
-            {userInfo && <NotificationBell />}
+            {userInfo?.accountId && userInfo?.role && <NotificationBell />}
 
             {/* User avatar and dropdown */}
-            {userInfo ? (
+            {userInfo?.accountId && userInfo?.role ? (
               <Dropdown menu={{ items: userMenuItems }} placement='bottomRight' arrow trigger={['click']}>
                 <div className='flex items-center space-x-2 cursor-pointer'>
                   <Avatar
@@ -337,7 +336,7 @@ const Navigation = () => {
                 </Link>
               ))}
 
-              {userInfo ? (
+              {userInfo?.accountId && userInfo?.role ? (
                 <div className='px-3 py-2 border-t border-gray-100 mt-2'>
                   <div className='flex items-center space-x-3 mb-3'>
                     <Avatar

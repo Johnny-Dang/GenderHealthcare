@@ -30,22 +30,18 @@ const NotificationBell = () => {
         api.get('/api/Notification/count')
       ])
 
-      // Đảm bảo notifications luôn là array
       const notificationsData = notificationRes?.data
       if (Array.isArray(notificationsData)) {
         setNotifications(notificationsData)
       } else {
-        console.warn('Notifications data is not an array:', notificationsData)
         setNotifications([])
       }
 
-      // Đảm bảo unreadCount là number
       const countData = countRes?.data
       setUnreadCount(typeof countData === 'number' ? countData : 0)
 
       lastFetchRef.current = now
     } catch (error) {
-      console.error('Error fetching notifications:', error)
       setNotifications([])
       setUnreadCount(0)
     } finally {
@@ -67,7 +63,7 @@ const NotificationBell = () => {
       try {
         await api.put(`/api/Notification/${notificationId}/read`)
       } catch (error) {
-        console.error('Error marking as read:', error)
+        // Silent fail - UI đã update optimistically
       }
     },
     [userId]
@@ -82,7 +78,7 @@ const NotificationBell = () => {
     try {
       await api.put('/api/Notification/mark-all-read')
     } catch (error) {
-      console.error('Error marking all as read:', error)
+      // Silent fail - UI đã update optimistically
     }
   }, [userId, unreadCount])
 
@@ -118,7 +114,6 @@ const NotificationBell = () => {
       return <div className='p-4 text-center text-gray-500'>Đang tải...</div>
     }
 
-    // Đảm bảo notifications là array trước khi dùng
     if (!Array.isArray(notifications) || notifications.length === 0) {
       return <div className='p-4 text-center text-gray-500'>Bạn chưa có thông báo nào</div>
     }

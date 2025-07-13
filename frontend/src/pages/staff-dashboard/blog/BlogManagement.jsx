@@ -18,7 +18,7 @@ const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1500673922987-e212871fe
 const BlogManagement = () => {
   const { toast } = useToast()
   const navigate = useNavigate()
-  const user = useSelector((state) => state.user)
+  const user = useSelector((state) => state.user || { userInfo: {} })
   const [blogPosts, setBlogPosts] = useState([])
   const [isFetchingBlogs, setIsFetchingBlogs] = useState(true)
 
@@ -250,7 +250,7 @@ const BlogManagement = () => {
     if (!validateForm()) return
 
     // Kiểm tra user ID
-    if (!user || !user.userInfo || !user.userInfo.accountId) {
+    if (!user?.userInfo?.accountId || !user?.userInfo?.role) {
       toast({
         title: 'Lỗi',
         description: 'Không thể xác định người tạo bài viết. Vui lòng đăng nhập lại.',

@@ -34,8 +34,6 @@ const Login = () => {
       })
 
       dispatch(login(response.data))
-      localStorage.setItem('token', response.data.accessToken)
-
       if (response?.data?.accessToken && response?.data?.role) {
         toast.success('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
 
