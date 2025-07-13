@@ -47,6 +47,7 @@ import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
 import ManagerPaymentManagement from './pages/manager-dashboard/payment'
 import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
+import JobManagement from './pages/admin/JobManagement'
 import AboutPage from './pages/about'
 import ScrollToTop from './components/ScrollToTop'
 
@@ -55,8 +56,8 @@ import ScrollToTop from './components/ScrollToTop'
  */
 function App() {
   useEffect(() => {
-    ensureStoreStructure();
-  }, []);
+    ensureStoreStructure()
+  }, [])
 
   const router = createBrowserRouter([
     {
@@ -114,7 +115,8 @@ function App() {
             { index: true, element: <Navigate to='dashboard' replace /> },
             { path: 'dashboard', element: <DashboardHome /> },
             { path: 'users', element: <UserManagement /> },
-            { path: 'services', element: <TestServiceManagement /> }
+            { path: 'services', element: <TestServiceManagement /> },
+            { path: 'jobs', element: <JobManagement /> }
           ]
         },
 
