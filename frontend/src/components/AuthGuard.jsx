@@ -8,26 +8,22 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }) => {
   const [isAllowed, setIsAllowed] = useState(false)
   const navigate = useNavigate()
 
-  // Lấy thông tin user từ Redux store
   const userInfo = useSelector((state) => state.user?.userInfo || {})
 
   useEffect(() => {
     const verifyAccess = () => {
-      // Kiểm tra userInfo có tồn tại và có thông tin cần thiết
       if (!userInfo || !userInfo.accountId || !userInfo.role) {
-        console.log('User not authenticated, redirecting to:', redirectTo)
+        // console.log('User not authenticated, redirecting to:', redirectTo)
         navigate(redirectTo)
         return
       }
 
       // Kiểm tra quyền truy cập nếu có yêu cầu
       if (allowedRoles) {
-        // Chuyển đổi allowedRoles thành mảng nếu là string
         const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
 
-        // Kiểm tra nếu role của user có trong danh sách cho phép
         if (!roles.includes(userInfo.role)) {
-          console.log(`Access denied. User role: ${userInfo.role}, Required roles: ${roles.join(', ')}`)
+          // console.log(`Access denied. User role: ${userInfo.role}, Required roles: ${roles.join(', ')}`)
           navigate(redirectTo)
           return
         }
@@ -44,7 +40,6 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }) => {
     return () => clearTimeout(timeoutId)
   }, [userInfo, allowedRoles, navigate, redirectTo])
 
-  // Hiển thị loading trong khi xác thực
   if (isVerifying) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
@@ -53,7 +48,6 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }) => {
     )
   }
 
-  // Chỉ render component con nếu có quyền truy cập
   return isAllowed ? children : null
 }
 

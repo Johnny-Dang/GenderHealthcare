@@ -1,6 +1,7 @@
 using AutoMapper;
 using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
+using backend.Application.DTOs.AdminDashboardDTO;
 using backend.Application.Interfaces;
 using backend.Application.Repositories;
 using backend.Domain.Entities;
@@ -342,5 +343,14 @@ namespace backend.Infrastructure.Services
             await _tokenService.DeleteOldRefreshToken(accountId);
             return Result<bool>.Success(true);
         }
+
+        public async Task<List<UsersByRoleDto>> GetUsersCountByRoleAsync()
+            => await _accountRepository.GetUsersCountByRoleAsync();
+
+        public async Task<List<RecentUserDto>> GetRecentUsersAsync(int count = 5)
+            => await _accountRepository.GetRecentUsersAsync(count);
+
+        public async Task<UserStatsDto> GetUserStatsAsync()
+            => await _accountRepository.GetUserStatsAsync();
     }
 }

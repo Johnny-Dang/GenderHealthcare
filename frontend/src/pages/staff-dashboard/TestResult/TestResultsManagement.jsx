@@ -295,13 +295,21 @@ const TestResultsByService = () => {
       title: 'Khách hàng',
       dataIndex: 'customerName',
       key: 'customerName',
-      width: 180,
+      width: 160,
       render: (text, record) => (
         <div>
           <span className='font-medium'>{text}</span>
           <div className='text-xs text-gray-500'>{record.phone}</div>
         </div>
       )
+    },
+    // Thêm cột Dịch vụ xét nghiệm
+    {
+      title: 'Dịch vụ xét nghiệm',
+      dataIndex: 'testName',
+      key: 'testName',
+      width: 180,
+      render: (testName) => <span className='font-medium text-gray-500'>{testName}</span>
     },
     {
       title: 'Ngày xét nghiệm',

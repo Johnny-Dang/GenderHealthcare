@@ -1,5 +1,6 @@
 using backend.Application.DTOs.AccountDTO;
 using backend.Application.DTOs.Accounts;
+using backend.Application.DTOs.AdminDashboardDTO;
 using DeployGenderSystem.Domain.Entity;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -21,5 +22,8 @@ namespace backend.Application.Interfaces
         public Task<Result<bool>> ResetPasswordAsync(ResetPasswordRequest request);
         public Task<Result<bool>> SendVerificationCodeAsync(SendVerificationCodeRequest request);
         public Task<Result<AccountDto>> RegisterWithVerificationCodeAsync(RegisterWithVerificationCodeRequest request);
+        public Task<List<UsersByRoleDto>> GetUsersCountByRoleAsync();
+        public Task<List<RecentUserDto>> GetRecentUsersAsync(int count = 5);
+        public Task<UserStatsDto> GetUserStatsAsync();
     }
 }
