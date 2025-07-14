@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Row, Col, Card, Statistic, Typography, Divider, Table, Tag, Spin, Progress, Space, DatePicker } from 'antd'
-import { Users, UserCheck, UserX, UserPlus, Shield, Briefcase, HeartHandshake, User } from 'lucide-react'
+import { Row, Col, Card, Statistic, Typography, Divider, Table, Tag, Spin, Progress, Space } from 'antd'
+import { Users, UserCheck, UserX, Shield, Briefcase, HeartHandshake, User, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import api from '../../configs/axios'
-// Import các thành phần biểu đồ
 import {
   PieChart,
   Pie,
@@ -14,143 +14,76 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line
+  ResponsiveContainer
 } from 'recharts'
 
 const { Title, Text } = Typography
-const { RangePicker } = DatePicker
 
 const DashboardHome = () => {
   const [loading, setLoading] = useState(true)
   const [userStats, setUserStats] = useState({
     total: 0,
     active: 0,
-    inactive: 0,
-    newUsers: 0
+    inactive: 0
   })
   const [recentUsers, setRecentUsers] = useState([])
   const [usersByRole, setUsersByRole] = useState([])
-  const [userTrend, setUserTrend] = useState([])
 
   useEffect(() => {
-    // TODO: Replace with actual API calls
-    fetchUserStatistics()
-    fetchRecentUsers()
-    fetchUsersByRole()
-    fetchUserTrend()
+    fetchAllData()
   }, [])
 
-  const fetchUserStatistics = () => {
-    // TODO: Call API to get user statistics
-    // api.get('/admin/user-statistics')
-    setTimeout(() => {
-      setUserStats({
-        total: 1254,
-        active: 1100,
-        inactive: 154,
-        newUsers: 45
-      })
+  const fetchAllData = async () => {
+    setLoading(true)
+    try {
+      await Promise.all([fetchUserStatistics(), fetchRecentUsers(), fetchUsersByRole()])
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
       setLoading(false)
-    }, 800)
+    }
   }
 
-  const fetchRecentUsers = () => {
-    // TODO: Call API to get recent users
-    // api.get('/admin/recent-users')
-    setTimeout(() => {
-      setRecentUsers([
-        {
-          id: 'USR001',
-          name: 'Nguyễn Thị Anh',
-          email: 'anh.nguyen@example.com',
-          role: 'Customer',
-          status: 'active',
-          registeredDate: '2023-05-15'
-        },
-        {
-          id: 'USR002',
-          name: 'Trần Văn Bình',
-          email: 'binh.tran@example.com',
-          role: 'Customer',
-          status: 'active',
-          registeredDate: '2023-05-14'
-        },
-        {
-          id: 'USR003',
-          name: 'Lê Minh Châu',
-          email: 'chau.le@example.com',
-          role: 'Consultant',
-          status: 'active',
-          registeredDate: '2023-05-12'
-        },
-        {
-          id: 'USR004',
-          name: 'Phạm Thanh Dung',
-          email: 'dung.pham@example.com',
-          role: 'Staff',
-          status: 'inactive',
-          registeredDate: '2023-05-10'
-        },
-        {
-          id: 'USR005',
-          name: 'Hoàng Văn Em',
-          email: 'em.hoang@example.com',
-          role: 'Customer',
-          status: 'active',
-          registeredDate: '2023-05-05'
-        }
-      ])
-    }, 1000)
+  const fetchUserStatistics = async () => {
+    try {
+      const response = await api.get('/api/accounts/user-stats')
+      setUserStats(response.data)
+    } catch (error) {
+      console.error('Error fetching user statistics:', error)
+    }
   }
 
-  const fetchUsersByRole = () => {
-    // TODO: Call API to get users by role
-    // api.get('/admin/users-by-role')
-    setTimeout(() => {
-      setUsersByRole([
-        { role: 'Customer', count: 980 },
-        { role: 'Consultant', count: 45 },
-        { role: 'Manager', count: 12 },
-        { role: 'Staff', count: 28 },
-        { role: 'Admin', count: 5 }
-      ])
-    }, 1200)
+  const fetchRecentUsers = async () => {
+    try {
+      const response = await api.get('/api/accounts/recent-users')
+      setRecentUsers(response.data)
+    } catch (error) {
+      console.error('Error fetching recent users:', error)
+    }
   }
 
-  const fetchUserTrend = () => {
-    // TODO: Call API to get user trend data
-    setTimeout(() => {
-      setUserTrend([
-        { name: 'T1', users: 120, newUsers: 120 },
-        { name: 'T2', users: 240, newUsers: 120 },
-        { name: 'T3', users: 380, newUsers: 140 },
-        { name: 'T4', users: 470, newUsers: 90 },
-        { name: 'T5', users: 580, newUsers: 110 },
-        { name: 'T6', users: 690, newUsers: 110 },
-        { name: 'T7', users: 780, newUsers: 90 },
-        { name: 'T8', users: 890, newUsers: 110 },
-        { name: 'T9', users: 980, newUsers: 90 },
-        { name: 'T10', users: 1080, newUsers: 100 },
-        { name: 'T11', users: 1180, newUsers: 100 },
-        { name: 'T12', users: 1254, newUsers: 74 }
-      ])
-    }, 1200)
+  const fetchUsersByRole = async () => {
+    try {
+      const response = await api.get('/api/accounts/users-by-role')
+      setUsersByRole(response.data)
+    } catch (error) {
+      console.error('Error fetching users by role:', error)
+    }
   }
 
   // Columns for recent users table
   const userColumns = [
     {
       title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: '10%'
+      dataIndex: 'accountId',
+      key: 'accountId',
+      width: '15%',
+      render: (id) => <span className='font-mono text-sm'>{id.toString().substring(0, 8)}...</span>
     },
     {
       title: 'Tên người dùng',
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: 'fullName',
+      key: 'fullName',
       width: '25%',
       render: (text) => <Text strong>{text}</Text>
     },
@@ -158,79 +91,54 @@ const DashboardHome = () => {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-      width: '25%'
-    },
-    {
-      title: 'Vai trò',
-      dataIndex: 'role',
-      key: 'role',
-      width: '15%',
-      render: (role) => {
-        let color = 'default'
-        let icon = null
-
-        switch (role) {
-          case 'Admin':
-            color = 'purple'
-            icon = <Shield size={14} className='mr-1' />
-            break
-          case 'Manager':
-            color = 'magenta'
-            icon = <Briefcase size={14} className='mr-1' />
-            break
-          case 'Staff':
-            color = 'blue'
-            icon = <HeartHandshake size={14} className='mr-1' />
-            break
-          case 'Consultant':
-            color = 'green'
-            icon = <UserCheck size={14} className='mr-1' />
-            break
-          case 'Customer':
-            color = 'cyan'
-            icon = <User size={14} className='mr-1' />
-            break
-          default:
-            color = 'default'
-        }
-
-        return (
-          <Tag color={color}>
-            <span className='flex items-center'>
-              {icon}
-              {role}
-            </span>
-          </Tag>
-        )
-      }
+      width: '30%'
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: '15%',
-      render: (status) => {
-        let color = status === 'active' ? 'success' : 'error'
-        let text = status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động'
+      render: (isActive) => {
+        let color = isActive ? 'success' : 'error'
+        let text = isActive ? 'Hoạt động' : 'Ngưng hoạt động'
         return <Tag color={color}>{text}</Tag>
       }
     },
     {
       title: 'Ngày đăng ký',
-      dataIndex: 'registeredDate',
-      key: 'registeredDate',
-      width: '15%'
+      dataIndex: 'createAt',
+      key: 'createAt',
+      width: '15%',
+      render: (date) => new Date(date).toLocaleDateString('vi-VN')
     }
   ]
 
-  // Màu sắc cho biểu đồ tròn
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8']
+  // Màu sắc cho biểu đồ
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']
 
   // Dữ liệu cho biểu đồ tròn
   const pieChartData = usersByRole.map((item) => ({
-    name: item.role,
+    name: item.roleName,
     value: item.count
   }))
+
+  // Icon cho role
+  const getRoleIcon = (roleName) => {
+    switch (roleName?.toLowerCase()) {
+      case 'admin':
+        return <Shield size={14} className='mr-1' />
+      case 'manager':
+        return <Briefcase size={14} className='mr-1' />
+      case 'staff':
+        return <HeartHandshake size={14} className='mr-1' />
+      case 'consultant':
+        return <UserCheck size={14} className='mr-1' />
+      case 'customer':
+        return <User size={14} className='mr-1' />
+      default:
+        return <User size={14} className='mr-1' />
+    }
+  }
 
   return (
     <div className='dashboard-home'>
@@ -241,20 +149,22 @@ const DashboardHome = () => {
           </Title>
           <Text type='secondary'>Chi tiết về người dùng hệ thống</Text>
         </div>
-        <Space>
-          <RangePicker
-            placeholder={['Từ ngày', 'Đến ngày']}
-            format='DD/MM/YYYY'
-            // TODO: Add onChange handler for date filtering
-            // onChange={onDateRangeChange}
-          />
-        </Space>
+        <Button
+          onClick={fetchAllData}
+          variant='outline'
+          size='sm'
+          disabled={loading}
+          className='border-primary-500 text-primary-500 hover:bg-primary-50'
+        >
+          {loading ? <Spin size='small' className='mr-2' /> : <RefreshCw size={16} className='mr-2' />}
+          Làm mới
+        </Button>
       </div>
       <Divider className='mt-4 mb-6' />
 
       {/* User Statistics Cards */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card bordered={false} className='dashboard-card' loading={loading}>
             <Statistic
               title='Tổng người dùng'
@@ -262,12 +172,9 @@ const DashboardHome = () => {
               prefix={<Users className='text-pink-500 mr-2' size={20} />}
               valueStyle={{ color: '#ff4d94' }}
             />
-            <div className='mt-2'>
-              <Text type='secondary'>{userStats.newUsers} người dùng mới trong tháng</Text>
-            </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card bordered={false} className='dashboard-card' loading={loading}>
             <Statistic
               title='Đang hoạt động'
@@ -277,7 +184,7 @@ const DashboardHome = () => {
             />
             <div className='mt-2'>
               <Progress
-                percent={Math.round((userStats.active / userStats.total) * 100)}
+                percent={userStats.total > 0 ? Math.round((userStats.active / userStats.total) * 100) : 0}
                 size='small'
                 strokeColor='#52c41a'
                 showInfo={false}
@@ -285,7 +192,7 @@ const DashboardHome = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card bordered={false} className='dashboard-card' loading={loading}>
             <Statistic
               title='Không hoạt động'
@@ -295,7 +202,7 @@ const DashboardHome = () => {
             />
             <div className='mt-2'>
               <Progress
-                percent={Math.round((userStats.inactive / userStats.total) * 100)}
+                percent={userStats.total > 0 ? Math.round((userStats.inactive / userStats.total) * 100) : 0}
                 size='small'
                 strokeColor='#faad14'
                 showInfo={false}
@@ -303,67 +210,17 @@ const DashboardHome = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className='dashboard-card' loading={loading}>
-            <Statistic
-              title='Người dùng mới'
-              value={userStats.newUsers}
-              prefix={<UserPlus className='text-blue-500 mr-2' size={20} />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-            <div className='mt-2'>
-              <Text type='secondary'>Trong 30 ngày qua</Text>
-            </div>
-          </Card>
-        </Col>
       </Row>
 
-      {/* Thêm biểu đồ phát triển người dùng */}
-      <Row gutter={16} className='mt-6'>
-        <Col span={24}>
-          <Card title='Phát triển người dùng theo thời gian' bordered={false}>
-            {loading ? (
-              <div className='py-10 flex justify-center'>
-                <Spin />
-              </div>
-            ) : (
-              <div style={{ height: 300 }}>
-                <ResponsiveContainer width='100%' height='100%'>
-                  <LineChart data={userTrend} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray='3 3' />
-                    <XAxis dataKey='name' />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value) => [`${value} người dùng`, '']}
-                      labelFormatter={(label) => `Tháng ${label.substring(1)}`}
-                    />
-                    <Legend />
-                    <Line
-                      type='monotone'
-                      dataKey='users'
-                      name='Tổng người dùng'
-                      stroke='#8884d8'
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line type='monotone' dataKey='newUsers' name='Người dùng mới' stroke='#82ca9d' strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Thay thế cách hiển thị phân bố vai trò bằng biểu đồ */}
+      {/* Charts Row */}
       <Row gutter={16} className='mt-6'>
         <Col xs={24} md={12}>
           <Card title='Phân bố người dùng theo vai trò' bordered={false}>
             {loading ? (
               <div className='py-10 flex justify-center'>
-                <Spin />
+                <Spin size='large' />
               </div>
-            ) : (
+            ) : pieChartData.length > 0 ? (
               <div style={{ height: 300 }}>
                 <ResponsiveContainer width='100%' height='100%'>
                   <PieChart>
@@ -386,22 +243,24 @@ const DashboardHome = () => {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+            ) : (
+              <div className='py-10 text-center text-gray-500'>Không có dữ liệu</div>
             )}
           </Card>
         </Col>
 
         <Col xs={24} md={12}>
-          <Card title='Người dùng theo vai trò' bordered={false}>
+          <Card title='Thống kê theo vai trò' bordered={false}>
             {loading ? (
               <div className='py-10 flex justify-center'>
-                <Spin />
+                <Spin size='large' />
               </div>
-            ) : (
+            ) : usersByRole.length > 0 ? (
               <div style={{ height: 300 }}>
                 <ResponsiveContainer width='100%' height='100%'>
                   <BarChart data={usersByRole} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray='3 3' />
-                    <XAxis dataKey='role' />
+                    <XAxis dataKey='roleName' />
                     <YAxis />
                     <Tooltip formatter={(value) => [`${value} người dùng`, '']} />
                     <Bar dataKey='count' name='Số lượng' fill='#8884d8' barSize={50}>
@@ -412,6 +271,8 @@ const DashboardHome = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            ) : (
+              <div className='py-10 text-center text-gray-500'>Không có dữ liệu</div>
             )}
           </Card>
         </Col>
@@ -422,19 +283,21 @@ const DashboardHome = () => {
         <Card
           title='Người dùng đăng ký gần đây'
           bordered={false}
-          extra={
-            <a href='#/admin/users' className='text-blue-500'>
-              Xem tất cả
-            </a>
-          }
+          extra={<Text className='text-blue-500'>{recentUsers.length} người dùng</Text>}
         >
           <Table
             columns={userColumns}
             dataSource={recentUsers}
-            pagination={false}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: false,
+              showQuickJumper: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} người dùng`
+            }}
             rowClassName='hover:bg-pink-50'
             size='middle'
             loading={loading}
+            rowKey='accountId'
           />
         </Card>
       </div>

@@ -1,4 +1,5 @@
-﻿using backend.Application.Interfaces;
+﻿using backend.Application.DTOs.AdminDashboardDTO;
+using backend.Application.Interfaces;
 using backend.Application.Repositories;
 using backend.Domain.Entities;
 using backend.Infrastructure.Database;
@@ -92,6 +93,48 @@ namespace backend.Infrastructure.Repositories
                 .Include(a => a.Role)
                 .Include(a => a.StaffInfo)
                 .FirstOrDefaultAsync(a => a.AccountId == id);
+        }
+
+        public async Task<List<UsersByRoleDto>> GetUsersCountByRoleAsync()
+        {
+            return await _context.Account
+                .Where(a => !a.IsDeleted)
+                .GroupBy(a => a.Role.Name)
+                .Select(g => new UsersByRoleDto
+                {
+                    RoleName = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<RecentUserDto>> GetRecentUsersAsync(int count = 5)
+        {
+            return await _context.Account
+                .OrderByDescending(a => a.CreateAt)
+                .Take(count)
+                .Select(a => new RecentUserDto
+                {
+                    AccountId = a.AccountId,
+                    Email = a.Email,
+                    FullName = $"{a.FirstName} {a.LastName}",
+                    CreateAt = a.CreateAt,
+                    IsActive = !a.IsDeleted
+                })
+                .ToListAsync();
+        }
+
+        public async Task<UserStatsDto> GetUserStatsAsync()
+        {
+            var total = await _context.Account.IgnoreQueryFilters().CountAsync();
+            var active = await _context.Account.IgnoreQueryFilters().CountAsync(a => !a.IsDeleted);
+            var inactive = await _context.Account.IgnoreQueryFilters().CountAsync(a => a.IsDeleted);
+            return new UserStatsDto
+            {
+                Total = total,
+                Active = active,
+                Inactive = inactive
+            };
         }
     }
 }

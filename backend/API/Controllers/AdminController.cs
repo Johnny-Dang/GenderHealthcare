@@ -52,6 +52,31 @@ namespace backend.API.Controllers
             var result = await _accountService.DeleteAsync(id);
             return result.IsSuccess ? Ok(result.Data) : NotFound(result.Error);
         }
+
+        // api/accounts/users-by-role
+        // api/accounts/recent-users
+        // api/accounts/user-stats
+
+        [HttpGet("users-by-role")]
+        public async Task<IActionResult> GetUsersByRole()
+        {
+            var result = await _accountService.GetUsersCountByRoleAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("recent-users")]
+        public async Task<IActionResult> GetRecentUsers()
+        {
+            var result = await _accountService.GetRecentUsersAsync(5);
+            return Ok(result);
+        }
+
+        [HttpGet("user-stats")]
+        public async Task<IActionResult> GetUserStats()
+        {
+            var result = await _accountService.GetUserStatsAsync();
+            return Ok(result);
+        }
     }
 }
 
