@@ -70,7 +70,7 @@ const ManagerDashboard = () => {
   const navigate = useNavigate()
   const userInfo = useSelector((state) => state.user?.userInfo || {})
   const dispatch = useDispatch()
-  
+
   // Kiểm tra user có đăng nhập và có role Manager
   const isManager = userInfo?.accountId && userInfo?.role === 'Manager'
 
@@ -761,12 +761,6 @@ const ManagerDashboard = () => {
           </div>
 
           <div className='flex items-center gap-4'>
-            <Badge count={3} size='small' color='#eb2f96' className='transition-all duration-300 hover:scale-110'>
-              <Bell
-                size={18}
-                className='cursor-pointer text-slate-600 hover:text-pink-500 transition-all duration-300 hover:rotate-12'
-              />
-            </Badge>
             <Dropdown
               menu={{
                 items: profileMenuItems

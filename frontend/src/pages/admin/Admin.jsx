@@ -3,18 +3,7 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import { Layout, Menu, theme, Avatar, Typography, Breadcrumb, Dropdown, Spin } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
-import {
-  PieChart,
-  Users,
-  Package,
-  Calendar,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  UserCircle,
-  Heart,
-  LogOut
-} from 'lucide-react'
+import { PieChart, Users, Calendar, Settings, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import api from '../../configs/axios'
 
@@ -33,7 +22,6 @@ function getItem(label, key, icon, children) {
 const items = [
   getItem('Dashboard', 'dashboard', <PieChart size={18} />),
   getItem('Quản lý người dùng', 'users', <Users size={18} />),
-  getItem('Quản lý dịch vụ xét nghiệm', 'services', <Package size={18} />),
   getItem('Quản lý job', 'jobs', <Settings size={18} />)
 ]
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Typography, Card, Row, Col, Statistic, Spin } from 'antd'
-import { Calendar, ClipboardCheck, FileText } from 'lucide-react'
+import { Typography, Card, Row, Col, Statistic, Spin, Tag } from 'antd'
+import { Calendar, ClipboardCheck, FileText, Clock, CheckCircle } from 'lucide-react'
 import api from '../../../configs/axios'
 import { useSelector } from 'react-redux'
 
@@ -10,7 +10,7 @@ const { Meta } = Card
 
 const StaffDashboard = () => {
   const location = useLocation()
-  const user = useSelector((state) => state.user.user)
+  const user = useSelector((state) => state.user.userInfo)
 
   // Dashboard statistics
   const [dashboardStats, setDashboardStats] = useState({
@@ -36,7 +36,7 @@ const StaffDashboard = () => {
 
   const fetchBlogStats = async () => {
     try {
-      const response = await api.get('/api/Blog')
+      const response = await api.get('/api/Blog/published')
       if (response.data && Array.isArray(response.data)) {
         const blogs = response.data
         const total = blogs.length
@@ -58,12 +58,18 @@ const StaffDashboard = () => {
 
   const fetchAppointmentStats = async () => {
     try {
-      const response = await api.get('/api/ConsultationBooking')
+      // Sử dụng endpoint đúng để lấy booking details
+      const response = await api.get('/api/booking-details')
       if (response.data && Array.isArray(response.data)) {
         const appointments = response.data
         const total = appointments.length
+
+        // Lọc các lịch hẹn sắp tới dựa trên slotDate thay vì consultationTime
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
         const upcoming = appointments.filter(
-          (a) => new Date(a.consultationTime) > new Date() && a.status !== 'Cancelled'
+          (a) => new Date(a.slotDate) >= today && a.status !== 'Đã có kết quả' && a.status !== 'Đã xét nghiệm'
         ).length
 
         setDashboardStats((prev) => ({
@@ -82,15 +88,27 @@ const StaffDashboard = () => {
 
   const fetchTestResultStats = async () => {
     try {
-      const response = await api.get('/api/TestResult')
+      // Sử dụng booking-details endpoint để lấy tất cả booking details
+      const response = await api.get('/api/booking-details')
+
       if (response.data && Array.isArray(response.data)) {
         const results = response.data
         const total = results.length
-        const pending = results.filter((r) => r.status === 'Pending').length
+
+        // Đếm các trạng thái khác nhau
+        const tested = results.filter((r) => r.status === 'Đã xét nghiệm').length
+        const completed = results.filter((r) => r.status === 'Đã có kết quả').length
+        const pending = tested // Số kết quả đang chờ chính là số đã xét nghiệm nhưng chưa upload kết quả
 
         setDashboardStats((prev) => ({
           ...prev,
-          testResults: { total, pending, loading: false }
+          testResults: {
+            total,
+            tested,
+            completed,
+            pending,
+            loading: false
+          }
         }))
       }
     } catch (error) {
@@ -106,11 +124,11 @@ const StaffDashboard = () => {
     setLoadingRecent(true)
     try {
       // Fetch recent blogs
-      const blogResponse = await api.get('/api/Blog')
+      const blogResponse = await api.get('/api/Blog/published')
       if (blogResponse.data && Array.isArray(blogResponse.data)) {
         const sortedBlogs = blogResponse.data
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5)
+          .slice(0, 3) // Chỉ lấy 3 blog gần đây nhất
           .map((blog) => ({
             id: blog.blogId,
             title: blog.title,
@@ -118,20 +136,30 @@ const StaffDashboard = () => {
             date: new Date(blog.createdAt)
           }))
         setRecentBlogs(sortedBlogs)
+        console.log('Recent blogs loaded:', sortedBlogs) // Debug log
+      } else {
+        console.log('Blog response format unexpected:', blogResponse.data) // Debug log
       }
 
-      // Fetch recent appointments
-      const appointmentResponse = await api.get('/api/ConsultationBooking')
+      // Fetch recent appointments with the correct endpoint
+      const appointmentResponse = await api.get('/api/booking-details')
       if (appointmentResponse.data && Array.isArray(appointmentResponse.data)) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
         const sortedAppointments = appointmentResponse.data
-          .sort((a, b) => new Date(a.consultationTime) - new Date(b.consultationTime))
-          .filter((a) => new Date(a.consultationTime) > new Date())
+          // Chỉ lấy những lịch hẹn trong tương lai
+          .filter((a) => new Date(a.slotDate) >= today)
+          // Sắp xếp theo ngày gần nhất
+          .sort((a, b) => new Date(a.slotDate) - new Date(b.slotDate))
           .slice(0, 5)
           .map((appointment) => ({
-            id: appointment.consultationBookingId,
-            patientName: appointment.customerName,
-            date: new Date(appointment.consultationTime),
-            status: appointment.status
+            id: appointment.bookingDetailId,
+            patientName: `${appointment.firstName} ${appointment.lastName}`,
+            date: new Date(appointment.slotDate),
+            status: appointment.status,
+            shift: appointment.slotShift,
+            serviceName: appointment.serviceName || 'Không xác định'
           }))
         setRecentAppointments(sortedAppointments)
       }
@@ -220,7 +248,7 @@ const StaffDashboard = () => {
             ) : (
               <Statistic
                 title='Kết quả đang chờ'
-                value={dashboardStats.testResults.pending}
+                value={dashboardStats.testResults.total}
                 valueStyle={{ color: '#fa8c16' }}
                 prefix={<ClipboardCheck size={18} className='mr-2' />}
               />
@@ -306,23 +334,26 @@ const StaffDashboard = () => {
                   <div key={index} className='flex items-center justify-between'>
                     <div>
                       <Text strong>{appointment.patientName}</Text>
-                      <Text
-                        type={
-                          appointment.status === 'Confirmed'
-                            ? 'success'
-                            : appointment.status === 'Pending'
-                              ? 'warning'
-                              : 'danger'
-                        }
-                        className='block'
-                      >
-                        {appointment.status}
-                      </Text>
+                      <div className='flex flex-col'>
+                        <Text
+                          type={
+                            appointment.status === 'Confirmed' || appointment.status === 'Đã xét nghiệm'
+                              ? 'success'
+                              : appointment.status === 'Pending' || appointment.status === 'Chưa xét nghiệm'
+                                ? 'warning'
+                                : 'danger'
+                          }
+                          className='text-xs'
+                        >
+                          {appointment.status} {appointment.shift === 'AM' ? '(Sáng)' : '(Chiều)'}
+                        </Text>
+                        <Text type='secondary' className='text-xs italic'>
+                          {appointment.serviceName}
+                        </Text>
+                      </div>
                     </div>
                     <Text>
                       {appointment.date.toLocaleDateString('vi-VN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
                         day: '2-digit',
                         month: '2-digit'
                       })}
