@@ -23,7 +23,8 @@ import {
   RefreshCw,
   Search,
   Inbox,
-  Calendar
+  Calendar,
+  FileText
 } from 'lucide-react'
 import api from '@/configs/axios'
 import { format } from 'date-fns'
@@ -440,272 +441,308 @@ const TestResultsByService = () => {
   }
 
   return (
-    <div className='max-w-7xl mx-auto px-4 py-8'>
-      <Card className='shadow-lg border-0 mb-8'>
-        <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-          <div>
-            <Title level={2} className='!mb-1 gradient-text'>
-              Kết quả xét nghiệm theo dịch vụ
-            </Title>
-            <Text type='secondary'>Quản lý kết quả xét nghiệm phân loại theo từng dịch vụ</Text>
-          </div>
-          <Space>
-            <Button type='default' icon={<RefreshCw size={20} />} onClick={clearAllFilters} className='hover:shadow-sm'>
-              Xóa tất cả bộ lọc
-            </Button>
-            <Button
-              type='primary'
-              icon={<RefreshCw size={20} />}
-              onClick={() => fetchTestResults(selectedService, selectedStatus)}
-              className='bg-blue-600 hover:bg-blue-700'
-            >
-              Làm mới dữ liệu
-            </Button>
-          </Space>
-        </div>
-
-        <div className='mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-          <div className='min-w-[200px]'>
-            <label className='block text-sm font-medium mb-2'>Lọc theo dịch vụ:</label>
-            <Select
-              placeholder='Tất cả dịch vụ'
-              style={{ width: '100%' }}
-              loading={servicesLoading}
-              onChange={handleServiceChange}
-              allowClear
-              onClear={() => {
-                setSelectedService(null)
-                fetchTestResults(null, selectedStatus)
-              }}
-              size='large'
-              value={selectedService}
-            >
-              {services.map((service) => (
-                <Option key={service.id} value={service.id}>
-                  {service.name}
-                </Option>
-              ))}
-            </Select>
+    <div className='min-h-screen bg-orange-50'>
+      <div className='max-w-7xl mx-auto px-4 py-8'>
+        <Card className='shadow-lg border-0 mb-8 hover:shadow-xl transition-all duration-300'>
+          <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
+            <div>
+              <Title level={2} className='!mb-1 gradient-text text-orange-600 flex items-center gap-2'>
+                <FileText size={28} className='text-orange-500 animate-pulse' />
+                Kết quả xét nghiệm theo dịch vụ
+              </Title>
+              <Text type='secondary'>Quản lý kết quả xét nghiệm phân loại theo từng dịch vụ</Text>
+            </div>
+            <Space>
+              <Button
+                type='default'
+                icon={<RefreshCw size={18} />}
+                onClick={clearAllFilters}
+                className='hover:shadow-sm hover:text-orange-500 hover:border-orange-500 transition-all duration-300'
+              >
+                Xóa tất cả bộ lọc
+              </Button>
+              <Button
+                type='primary'
+                icon={<RefreshCw size={18} />}
+                onClick={() => fetchTestResults(selectedService, selectedStatus)}
+                className='bg-orange-600 hover:bg-orange-700 transition-all duration-300 hover:shadow-md hover:scale-105'
+              >
+                Làm mới dữ liệu
+              </Button>
+            </Space>
           </div>
 
-          <div className='min-w-[200px]'>
-            <label className='block text-sm font-medium mb-2'>Lọc theo trạng thái:</label>
-            <Select
-              placeholder='Tất cả trạng thái'
-              style={{ width: '100%' }}
-              onChange={handleStatusChange}
-              allowClear
-              onClear={() => {
-                setSelectedStatus(null)
-                fetchTestResults(selectedService, null)
-              }}
-              size='large'
-              value={selectedStatus}
-            >
-              {statusOptions.map((status) => (
-                <Option key={status.value} value={status.value}>
-                  {status.label}
-                </Option>
-              ))}
-            </Select>
-          </div>
+          <div className='mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+            <div className='min-w-[200px]'>
+              <label className='block text-sm font-medium mb-2 text-gray-600'>Lọc theo dịch vụ:</label>
+              <Select
+                placeholder='Tất cả dịch vụ'
+                style={{ width: '100%' }}
+                loading={servicesLoading}
+                onChange={handleServiceChange}
+                allowClear
+                onClear={() => {
+                  setSelectedService(null)
+                  fetchTestResults(null, selectedStatus)
+                }}
+                size='large'
+                value={selectedService}
+                className='hover:border-orange-400 transition-all duration-300'
+              >
+                {services.map((service) => (
+                  <Option key={service.id} value={service.id}>
+                    {service.name}
+                  </Option>
+                ))}
+              </Select>
+            </div>
 
-          <div className='min-w-[200px]'>
-            <label className='block text-sm font-medium mb-2'>Lọc theo khoảng ngày:</label>
-            <DatePicker.RangePicker
-              style={{ width: '100%' }}
-              size='large'
-              placeholder={['Từ ngày', 'Đến ngày']}
-              format='DD/MM/YYYY'
-              locale={vi}
-              value={selectedDateRange}
-              onChange={handleDateRangeChange}
-              allowClear
-              suffixIcon={<Calendar size={16} />}
-            />
-          </div>
+            <div className='min-w-[200px]'>
+              <label className='block text-sm font-medium mb-2 text-gray-600'>Lọc theo trạng thái:</label>
+              <Select
+                placeholder='Tất cả trạng thái'
+                style={{ width: '100%' }}
+                onChange={handleStatusChange}
+                allowClear
+                onClear={() => {
+                  setSelectedStatus(null)
+                  fetchTestResults(selectedService, null)
+                }}
+                size='large'
+                value={selectedStatus}
+                className='hover:border-orange-400 transition-all duration-300'
+              >
+                {statusOptions.map((status) => (
+                  <Option key={status.value} value={status.value}>
+                    {status.label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
 
-          <div className='min-w-[200px]'>
-            <label className='block text-sm font-medium mb-2'>Tìm kiếm:</label>
-            <div className='flex gap-2'>
-              <input
-                type='text'
-                placeholder='Tên hoặc SĐT...'
-                className='w-full p-2 border border-gray-300 rounded text-sm'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+            <div className='min-w-[200px]'>
+              <label className='block text-sm font-medium mb-2 text-gray-600'>Lọc theo khoảng ngày:</label>
+              <DatePicker.RangePicker
+                style={{ width: '100%' }}
+                size='large'
+                placeholder={['Từ ngày', 'Đến ngày']}
+                format='DD/MM/YYYY'
+                locale={vi}
+                value={selectedDateRange}
+                onChange={handleDateRangeChange}
+                allowClear
+                suffixIcon={<Calendar size={16} />}
+                className='hover:border-orange-400 transition-all duration-300'
               />
-              <Button icon={<Search size={18} />} />
             </div>
-          </div>
-        </div>
 
-        {/* Filter summary */}
-        {(selectedService || selectedStatus || selectedDateRange || searchTerm) && (
-          <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-            <Text className='text-sm font-medium text-blue-800'>Bộ lọc đang áp dụng:</Text>
-            <div className='flex flex-wrap gap-2 mt-2'>
-              {selectedService && (
-                <Tag
-                  color='blue'
-                  closable
-                  onClose={() => {
-                    setSelectedService(null)
-                    fetchTestResults(null, selectedStatus)
-                  }}
-                >
-                  Dịch vụ: {services.find((s) => s.id === selectedService)?.name}
-                </Tag>
-              )}
-              {selectedStatus && (
-                <Tag
-                  color='green'
-                  closable
-                  onClose={() => {
-                    setSelectedStatus(null)
-                    fetchTestResults(selectedService, null)
-                  }}
-                >
-                  Trạng thái: {statusOptions.find((s) => s.value === selectedStatus)?.label}
-                </Tag>
-              )}
-              {selectedDateRange && (
-                <Tag
-                  color='orange'
-                  closable
-                  onClose={() => {
-                    setSelectedDateRange(null)
-                  }}
-                >
-                  Ngày: {format(selectedDateRange[0], 'dd/MM/yyyy')} - {format(selectedDateRange[1], 'dd/MM/yyyy')}
-                </Tag>
-              )}
-              {searchTerm && (
-                <Tag color='red' closable onClose={() => setSearchTerm('')}>
-                  Tìm kiếm: "{searchTerm}"
-                </Tag>
-              )}
-            </div>
-          </div>
-        )}
-      </Card>
-
-      <Card className='border-0 shadow-md'>
-        {loading ? (
-          <div className='flex justify-center items-center h-64'>
-            <Spin size='large' tip='Đang tải dữ liệu...' />
-          </div>
-        ) : testResults.length > 0 ? (
-          <>
-            <div className='flex justify-between mb-4 items-center'>
-              <Text className='text-base'>
-                Tổng số: <strong>{getFilteredData(testResults).length}</strong> kết quả
-                {(selectedService || selectedStatus || selectedDateRange || searchTerm) && (
-                  <span className='ml-2 text-gray-500'>(đã lọc từ {testResults.length} kết quả)</span>
-                )}
-              </Text>
-              <div className='flex flex-wrap gap-2'>
-                <Text strong className='mr-1'>
-                  Trạng thái:
-                </Text>
-                <Tag color='warning'>
-                  Đã xét nghiệm: {getFilteredData(testResults).filter((item) => item.status === 'tested').length}
-                </Tag>
-                <Tag color='success'>
-                  Đã có kết quả: {getFilteredData(testResults).filter((item) => item.status === 'completed').length}
-                </Tag>
+            <div className='min-w-[200px]'>
+              <label className='block text-sm font-medium mb-2 text-gray-600'>Tìm kiếm:</label>
+              <div className='flex gap-2'>
+                <input
+                  type='text'
+                  placeholder='Tên hoặc SĐT...'
+                  className='w-full p-2 border border-gray-300 rounded text-sm hover:border-orange-400 focus:border-orange-500 focus:outline-none transition-all duration-300'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Button
+                  icon={<Search size={16} />}
+                  className='hover:text-orange-500 hover:border-orange-500 transition-all duration-300'
+                />
               </div>
             </div>
-            <Table
-              columns={columns}
-              dataSource={getFilteredData(testResults)}
-              rowKey='id'
-              pagination={{ pageSize: 10 }}
-              bordered
-              className='rounded-lg shadow'
-            />
-          </>
-        ) : (
-          <Empty
-            description={
-              selectedService || selectedStatus || selectedDateRange || searchTerm
-                ? 'Không có dữ liệu kết quả xét nghiệm cho bộ lọc này'
-                : 'Không có dữ liệu kết quả xét nghiệm'
-            }
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        )}
-      </Card>
+          </div>
 
-      {/* Upload Result Modal */}
-      <Modal
-        title={
-          <span className='font-bold flex items-center gap-2'>
-            <UploadCloud size={20} /> Tải lên kết quả xét nghiệm
-          </span>
-        }
-        open={isUploadModalOpen}
-        footer={null}
-        onCancel={() => setIsUploadModalOpen(false)}
-        maskClosable={false}
-        width={600}
-        centered
-      >
-        <div className='py-4'>
-          {selectedRecord && (
-            <div className='mb-6 p-5 bg-gray-50 rounded-lg border'>
-              <p className='mb-2'>
-                <strong>Tên khách hàng:</strong> {selectedRecord.customerName}
-              </p>
-              <p className='mb-2'>
-                <strong>Loại xét nghiệm:</strong> {selectedRecord.testName}
-              </p>
-              <p className='mb-0'>
-                <strong>Ngày xét nghiệm:</strong> {format(new Date(selectedRecord.testDate), 'dd/MM/yyyy')}
-              </p>
+          {/* Filter summary */}
+          {(selectedService || selectedStatus || selectedDateRange || searchTerm) && (
+            <div className='mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg transition-all duration-300 hover:shadow-md'>
+              <Text className='text-sm font-medium text-orange-800'>Bộ lọc đang áp dụng:</Text>
+              <div className='flex flex-wrap gap-2 mt-2'>
+                {selectedService && (
+                  <Tag
+                    color='orange'
+                    closable
+                    onClose={() => {
+                      setSelectedService(null)
+                      fetchTestResults(null, selectedStatus)
+                    }}
+                    className='transition-all duration-300 hover:shadow-sm'
+                  >
+                    Dịch vụ: {services.find((s) => s.id === selectedService)?.name}
+                  </Tag>
+                )}
+                {selectedStatus && (
+                  <Tag
+                    color='green'
+                    closable
+                    onClose={() => {
+                      setSelectedStatus(null)
+                      fetchTestResults(selectedService, null)
+                    }}
+                    className='transition-all duration-300 hover:shadow-sm'
+                  >
+                    Trạng thái: {statusOptions.find((s) => s.value === selectedStatus)?.label}
+                  </Tag>
+                )}
+                {selectedDateRange && (
+                  <Tag
+                    color='blue'
+                    closable
+                    onClose={() => {
+                      setSelectedDateRange(null)
+                    }}
+                    className='transition-all duration-300 hover:shadow-sm'
+                  >
+                    Ngày: {format(selectedDateRange[0], 'dd/MM/yyyy')} - {format(selectedDateRange[1], 'dd/MM/yyyy')}
+                  </Tag>
+                )}
+                {searchTerm && (
+                  <Tag
+                    color='red'
+                    closable
+                    onClose={() => setSearchTerm('')}
+                    className='transition-all duration-300 hover:shadow-sm'
+                  >
+                    Tìm kiếm: "{searchTerm}"
+                  </Tag>
+                )}
+              </div>
             </div>
           )}
+        </Card>
 
-          <div className='mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-blue-700'>
-            <div className='flex items-start'>
-              <AlertTriangle size={20} className='mr-2 mt-0.5 flex-shrink-0' />
-              <div>
-                <p className='font-medium'>Lưu ý quan trọng</p>
-                <p className='text-sm'>
-                  Sau khi tải lên kết quả xét nghiệm, trạng thái sẽ được cập nhật thành <b>"Đã có kết quả"</b> và khách
-                  hàng sẽ nhận được thông báo.
+        <Card className='border-0 shadow-md hover:shadow-lg transition-all duration-300'>
+          {loading ? (
+            <div className='flex justify-center items-center h-64'>
+              <Spin size='large' tip='Đang tải dữ liệu...' className='text-orange-500' />
+            </div>
+          ) : testResults.length > 0 ? (
+            <>
+              <div className='flex justify-between mb-4 items-center'>
+                <div className='bg-orange-50 px-3 py-2 rounded-lg border border-orange-100'>
+                  <Text className='text-base'>
+                    Tổng số: <strong className='text-orange-600'>{getFilteredData(testResults).length}</strong> kết quả
+                    {(selectedService || selectedStatus || selectedDateRange || searchTerm) && (
+                      <span className='ml-2 text-gray-500'>(đã lọc từ {testResults.length} kết quả)</span>
+                    )}
+                  </Text>
+                </div>
+                <div className='flex flex-wrap gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100'>
+                  <Text strong className='mr-1 text-gray-700'>
+                    Trạng thái:
+                  </Text>
+                  <Tag color='warning' className='flex items-center gap-1'>
+                    <AlertTriangle size={12} /> Đã xét nghiệm:{' '}
+                    {getFilteredData(testResults).filter((item) => item.status === 'tested').length}
+                  </Tag>
+                  <Tag color='success' className='flex items-center gap-1'>
+                    <CheckCircle size={12} /> Đã có kết quả:{' '}
+                    {getFilteredData(testResults).filter((item) => item.status === 'completed').length}
+                  </Tag>
+                </div>
+              </div>
+              <Table
+                columns={columns}
+                dataSource={getFilteredData(testResults)}
+                rowKey='id'
+                pagination={{ pageSize: 10 }}
+                bordered
+                className='rounded-lg shadow hover:shadow-md transition-all duration-300'
+                rowClassName='hover:bg-orange-50 transition-all duration-300'
+              />
+            </>
+          ) : (
+            <Empty
+              description={
+                <span className='text-gray-500'>
+                  {selectedService || selectedStatus || selectedDateRange || searchTerm
+                    ? 'Không có dữ liệu kết quả xét nghiệm cho bộ lọc này'
+                    : 'Không có dữ liệu kết quả xét nghiệm'}
+                </span>
+              }
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              className='my-12'
+            />
+          )}
+        </Card>
+
+        {/* Upload Result Modal */}
+        <Modal
+          title={
+            <span className='font-bold flex items-center gap-2'>
+              <UploadCloud size={20} className='text-orange-500' /> Tải lên kết quả xét nghiệm
+            </span>
+          }
+          open={isUploadModalOpen}
+          footer={null}
+          onCancel={() => setIsUploadModalOpen(false)}
+          maskClosable={false}
+          width={600}
+          centered
+          className='rounded-lg'
+        >
+          <div className='py-4'>
+            {selectedRecord && (
+              <div className='mb-6 p-5 bg-orange-50 rounded-lg border border-orange-100 transition-all duration-300 hover:shadow-md'>
+                <p className='mb-2'>
+                  <strong>Tên khách hàng:</strong> {selectedRecord.customerName}
+                </p>
+                <p className='mb-2'>
+                  <strong>Loại xét nghiệm:</strong> {selectedRecord.testName}
+                </p>
+                <p className='mb-0'>
+                  <strong>Ngày xét nghiệm:</strong> {format(new Date(selectedRecord.testDate), 'dd/MM/yyyy')}
                 </p>
               </div>
+            )}
+
+            <div className='mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-blue-700 transition-all duration-300 hover:shadow-md'>
+              <div className='flex items-start'>
+                <AlertTriangle size={20} className='mr-2 mt-0.5 flex-shrink-0 animate-pulse' />
+                <div>
+                  <p className='font-medium'>Lưu ý quan trọng</p>
+                  <p className='text-sm'>
+                    Sau khi tải lên kết quả xét nghiệm, trạng thái sẽ được cập nhật thành <b>"Đã có kết quả"</b> và
+                    khách hàng sẽ nhận được thông báo.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Dragger
+              name='file'
+              customRequest={handleUpload}
+              accept='.pdf'
+              showUploadList={true}
+              maxCount={1}
+              disabled={uploadLoading}
+              className='p-8 border border-dashed border-gray-300 bg-gray-50 rounded-lg hover:border-orange-300 transition-all duration-300'
+            >
+              <p className='ant-upload-drag-icon'>
+                <Inbox size={48} className='text-orange-500 mx-auto' />
+              </p>
+              <p className='ant-upload-text font-medium'>Nhấp hoặc kéo file vào khu vực này để tải lên</p>
+              <p className='ant-upload-hint text-gray-500'>Chỉ hỗ trợ tải lên file PDF duy nhất</p>
+            </Dragger>
+
+            {/* Thêm status indicator */}
+            <UploadStatusIndicator bookingDetailId={selectedRecord?.bookingId} />
+
+            <div className='mt-6 text-center'>
+              <Button
+                loading={uploadLoading}
+                type='primary'
+                size='large'
+                icon={<UploadCloud size={18} />}
+                className='bg-orange-600 hover:bg-orange-700 transition-all duration-300 border-orange-600 hover:border-orange-700 hover:shadow-md'
+              >
+                Tải lên kết quả xét nghiệm
+              </Button>
             </div>
           </div>
-
-          <Dragger
-            name='file'
-            customRequest={handleUpload}
-            accept='.pdf'
-            showUploadList={true}
-            maxCount={1}
-            disabled={uploadLoading}
-            className='p-8 border border-dashed border-gray-300 bg-gray-50 rounded-lg'
-          >
-            <p className='ant-upload-drag-icon'>
-              {/* Use lucide-react Inbox icon instead of InboxOutlined */}
-              <Inbox size={48} />
-            </p>
-            <p className='ant-upload-text font-medium'>Nhấp hoặc kéo file vào khu vực này để tải lên</p>
-            <p className='ant-upload-hint text-gray-500'>Chỉ hỗ trợ tải lên file PDF duy nhất</p>
-          </Dragger>
-
-          {/* Thêm status indicator */}
-          <UploadStatusIndicator bookingDetailId={selectedRecord?.bookingId} />
-
-          <div className='mt-6 text-center'>
-            <Button loading={uploadLoading} type='primary' size='large' icon={<UploadCloud size={18} />}>
-              Tải lên kết quả xét nghiệm
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        </Modal>
+      </div>
     </div>
   )
 }

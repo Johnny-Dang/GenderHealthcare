@@ -39,7 +39,6 @@ import TestResultsManagement from './pages/staff-dashboard/TestResult/TestResult
 import AdminPage from './pages/admin/Admin'
 import DashboardHome from './pages/admin/DashboardHome'
 import UserManagement from './pages/admin/UserManagement'
-import TestServiceManagement from './pages/admin/TestServiceManagement'
 import ManagerDashboard from './pages/manager-dashboard'
 import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
 import ManagerPaymentManagement from './pages/manager-dashboard/payment'
@@ -116,7 +115,6 @@ function App() {
             { index: true, element: <Navigate to='dashboard' replace /> },
             { path: 'dashboard', element: <DashboardHome /> },
             { path: 'users', element: <UserManagement /> },
-            { path: 'services', element: <TestServiceManagement /> },
             { path: 'jobs', element: <JobManagement /> }
           ]
         },

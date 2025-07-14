@@ -573,7 +573,7 @@ const BlogManagement = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-soft'>
+    <div className='min-h-screen bg-blue-50'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in'>
         <div className='mb-8'>
           <h1 className='text-3xl font-bold text-gray-900'>Quản lý Blog</h1>
@@ -676,8 +676,8 @@ const BlogManagement = () => {
                 <CloudinaryUpload
                   onUploadSuccess={(url) => setFormData((prev) => ({ ...prev, image: url }))}
                   currentImageUrl={formData.image}
-                  folder="blog"
-                  label="Tải lên ảnh minh họa"
+                  folder='blog'
+                  label='Tải lên ảnh minh họa'
                   size={160}
                 />
               </div>
@@ -1077,8 +1077,8 @@ const BlogManagement = () => {
                     <CloudinaryUpload
                       onUploadSuccess={(url) => setFormData((prev) => ({ ...prev, image: url }))}
                       currentImageUrl={formData.image}
-                      folder="blog"
-                      label="Tải lên ảnh minh họa"
+                      folder='blog'
+                      label='Tải lên ảnh minh họa'
                       size={160}
                     />
                   </div>

@@ -47,7 +47,7 @@ const StaffLayout = () => {
   const userState = useSelector((state) => state.user || { userInfo: {} })
   // Access user info from different possible structures in Redux state
   const user = userState?.userInfo || userState?.user || userState || {}
-  
+
   // Kiểm tra user có đăng nhập và có role Staff
   const isStaff = user?.accountId && user?.role === 'Staff'
 
