@@ -136,9 +136,6 @@ const StaffDashboard = () => {
             date: new Date(blog.createdAt)
           }))
         setRecentBlogs(sortedBlogs)
-        console.log('Recent blogs loaded:', sortedBlogs) // Debug log
-      } else {
-        console.log('Blog response format unexpected:', blogResponse.data) // Debug log
       }
 
       // Fetch recent appointments with the correct endpoint
@@ -208,50 +205,64 @@ const StaffDashboard = () => {
       {/* Stats */}
       <Row gutter={16} className='mb-6'>
         <Col span={8}>
-          <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+          <Card
+            bordered={false}
+            className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-blue-400'
+          >
             {dashboardStats.blogs.loading ? (
               <div className='flex justify-center items-center p-4'>
                 <Spin />
               </div>
             ) : (
               <Statistic
-                title='Tổng số Blog'
+                title={<span className='text-base font-medium'>Tổng số Blog</span>}
                 value={dashboardStats.blogs.total}
                 valueStyle={{ color: '#1677ff' }}
-                prefix={<FileText size={18} className='mr-2' />}
+                prefix={<FileText size={18} className='mr-2 animate-pulse text-blue-500' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             )}
           </Card>
         </Col>
         <Col span={8}>
-          <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+          <Card
+            bordered={false}
+            className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-green-400'
+          >
             {dashboardStats.appointments.loading ? (
               <div className='flex justify-center items-center p-4'>
                 <Spin />
               </div>
             ) : (
               <Statistic
-                title='Lịch hẹn sắp tới'
+                title={<span className='text-base font-medium'>Lịch hẹn sắp tới</span>}
                 value={dashboardStats.appointments.upcoming}
                 valueStyle={{ color: '#52c41a' }}
-                prefix={<Calendar size={18} className='mr-2' />}
+                prefix={<Calendar size={18} className='mr-2 animate-pulse text-green-500' />}
+                className='transition-all duration-300 hover:scale-105'
               />
             )}
           </Card>
         </Col>
         <Col span={8}>
-          <Card bordered={false} className='shadow-sm hover:shadow-md transition-all'>
+          <Card
+            bordered={false}
+            className='shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 border-l-4 border-orange-400'
+          >
             {dashboardStats.testResults.loading ? (
               <div className='flex justify-center items-center p-4'>
                 <Spin />
               </div>
             ) : (
-              <Statistic
-                title='Kết quả đang chờ'
-                value={dashboardStats.testResults.total}
-                valueStyle={{ color: '#fa8c16' }}
-                prefix={<ClipboardCheck size={18} className='mr-2' />}
-              />
+              <div>
+                <Statistic
+                  title={<span className='text-base font-medium'>Kết quả đang chờ</span>}
+                  value={dashboardStats.testResults.total}
+                  valueStyle={{ color: '#fa8c16' }}
+                  prefix={<ClipboardCheck size={18} className='mr-2 animate-pulse text-orange-500' />}
+                  className='transition-all duration-300 hover:scale-105'
+                />
+              </div>
             )}
           </Card>
         </Col>
@@ -264,25 +275,46 @@ const StaffDashboard = () => {
       <Row gutter={[16, 16]}>
         <Col span={8}>
           <Link to='/staff/blog'>
-            <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-              <FileText size={36} className='text-blue-500 mb-4' />
-              <Meta title='Quản lý Blog' description='Tạo và quản lý bài viết cho bệnh nhân' />
+            <Card
+              hoverable
+              className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-blue-400 border-2 border-transparent group'
+            >
+              <FileText size={36} className='text-blue-500 mb-4 transition-all duration-300 group-hover:scale-125' />
+              <Meta
+                title={<span className='transition-all duration-300 group-hover:text-blue-500'>Quản lý Blog</span>}
+                description='Tạo và quản lý bài viết cho bệnh nhân'
+              />
             </Card>
           </Link>
         </Col>
         <Col span={8}>
           <Link to='/staff/appointments'>
-            <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-              <Calendar size={36} className='text-green-500 mb-4' />
-              <Meta title='Quản lý Lịch hẹn' description='Xem và quản lý lịch hẹn với bệnh nhân' />
+            <Card
+              hoverable
+              className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-green-400 border-2 border-transparent group'
+            >
+              <Calendar size={36} className='text-green-500 mb-4 transition-all duration-300 group-hover:scale-125' />
+              <Meta
+                title={<span className='transition-all duration-300 group-hover:text-green-500'>Quản lý Lịch hẹn</span>}
+                description='Xem và quản lý lịch hẹn với bệnh nhân'
+              />
             </Card>
           </Link>
         </Col>
         <Col span={8}>
           <Link to='/staff/test-results'>
-            <Card hoverable className='text-center h-52 flex flex-col justify-center items-center'>
-              <ClipboardCheck size={36} className='text-orange-500 mb-4' />
-              <Meta title='Quản lý Kết quả' description='Quản lý và tải lên kết quả xét nghiệm' />
+            <Card
+              hoverable
+              className='text-center h-52 flex flex-col justify-center items-center transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-orange-400 border-2 border-transparent group'
+            >
+              <ClipboardCheck
+                size={36}
+                className='text-orange-500 mb-4 transition-all duration-300 group-hover:scale-125'
+              />
+              <Meta
+                title={<span className='transition-all duration-300 group-hover:text-orange-500'>Quản lý Kết quả</span>}
+                description='Quản lý và tải lên kết quả xét nghiệm'
+              />
             </Card>
           </Link>
         </Col>
@@ -295,22 +327,31 @@ const StaffDashboard = () => {
       <Row gutter={[16, 16]}>
         <Col span={12}>
           <Card
-            title='Blog gần đây'
-            extra={<Link to='/staff/blog'>Xem tất cả</Link>}
-            className='h-64'
+            title={<span className='text-blue-600 font-medium'>Blog gần đây</span>}
+            extra={
+              <Link
+                to='/staff/blog'
+                className='text-blue-500 hover:text-blue-700 hover:underline transition-all duration-300'
+              >
+                Xem tất cả
+              </Link>
+            }
+            className='h-64 transition-all duration-300 hover:shadow-md border-blue-200 hover:border-blue-400'
             loading={loadingRecent}
           >
             {recentBlogs.length > 0 ? (
               <div className='space-y-3'>
                 {recentBlogs.map((blog, index) => (
-                  <div key={index} className='flex items-center justify-between'>
+                  <div key={index} className='flex items-center justify-between mb-3 pb-2 border-b'>
                     <div>
                       <Text strong>{blog.title}</Text>
-                      <Text type='secondary' className='block'>
+                      <Text type='secondary' className='block text-xs'>
                         {blog.category}
                       </Text>
                     </div>
-                    <Text type='secondary'>{formatDate(blog.date)}</Text>
+                    <Text type='secondary' className='text-xs'>
+                      {formatDate(blog.date)}
+                    </Text>
                   </div>
                 ))}
               </div>
@@ -323,15 +364,22 @@ const StaffDashboard = () => {
         </Col>
         <Col span={12}>
           <Card
-            title='Lịch hẹn sắp tới'
-            extra={<Link to='/staff/appointments'>Xem tất cả</Link>}
-            className='h-64'
+            title={<span className='text-green-600 font-medium'>Lịch hẹn sắp tới</span>}
+            extra={
+              <Link
+                to='/staff/appointments'
+                className='text-green-500 hover:text-green-700 hover:underline transition-all duration-300'
+              >
+                Xem tất cả
+              </Link>
+            }
+            className='h-64 transition-all duration-300 hover:shadow-md border-green-200 hover:border-green-400'
             loading={loadingRecent}
           >
             {recentAppointments.length > 0 ? (
               <div className='space-y-3'>
                 {recentAppointments.map((appointment, index) => (
-                  <div key={index} className='flex items-center justify-between'>
+                  <div key={index} className='flex items-center justify-between mb-2 pb-2 border-b'>
                     <div>
                       <Text strong>{appointment.patientName}</Text>
                       <div className='flex flex-col'>
@@ -352,7 +400,7 @@ const StaffDashboard = () => {
                         </Text>
                       </div>
                     </div>
-                    <Text>
+                    <Text className='text-xs bg-green-50 px-2 py-1 rounded-lg'>
                       {appointment.date.toLocaleDateString('vi-VN', {
                         day: '2-digit',
                         month: '2-digit'
