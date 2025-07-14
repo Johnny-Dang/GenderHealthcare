@@ -34,19 +34,6 @@ const { Title, Text } = Typography
 const { Option } = Select
 const { Dragger } = Upload
 
-// Add CSS style for full page background
-const pageStyle = {
-  backgroundColor: '#fff8f0', // Light orange background
-  minHeight: '100vh',
-  width: '100%',
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: -1
-}
-
 const TestResultsByService = () => {
   const [services, setServices] = useState([])
   const [selectedService, setSelectedService] = useState(null)
@@ -454,8 +441,7 @@ const TestResultsByService = () => {
   }
 
   return (
-    <div className='min-h-screen bg-orange-50 p-6'>
-      <div style={pageStyle}></div>
+    <div className='min-h-screen bg-orange-50'>
       <div className='max-w-7xl mx-auto px-4 py-8'>
         <Card className='shadow-lg border-0 mb-8 hover:shadow-xl transition-all duration-300'>
           <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
