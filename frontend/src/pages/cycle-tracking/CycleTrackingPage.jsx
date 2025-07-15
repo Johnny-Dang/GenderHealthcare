@@ -12,15 +12,63 @@ export default function CycleTrackingPage() {
   const [lastPeriodDate, setLastPeriodDate] = useState('')
   const [cycleLength, setCycleLength] = useState(28) // Default cycle length
   const [periodDuration, setPeriodDuration] = useState(5) // Default period duration
+  const [dateError, setDateError] = useState('')
 
   const navigate = useNavigate()
+
+  // Calculate date limits
+  const today = new Date()
+  const oneYearAgo = new Date()
+  oneYearAgo.setFullYear(today.getFullYear() - 1)
+
+  const maxDate = today.toISOString().split('T')[0] // Today
+  const minDate = oneYearAgo.toISOString().split('T')[0] // One year ago
+
+  // Validate date selection
+  const validatePeriodDate = (date) => {
+    if (!date) {
+      return 'Vui lòng chọn ngày bắt đầu kỳ kinh gần nhất'
+    }
+
+    const selectedDate = new Date(date)
+    const todayDate = new Date()
+    const oneYearAgoDate = new Date()
+    oneYearAgoDate.setFullYear(todayDate.getFullYear() - 1)
+
+    // Set time to start of day for accurate comparison
+    selectedDate.setHours(0, 0, 0, 0)
+    todayDate.setHours(0, 0, 0, 0)
+    oneYearAgoDate.setHours(0, 0, 0, 0)
+
+    if (selectedDate > todayDate) {
+      return 'Không thể chọn ngày trong tương lai'
+    }
+
+    if (selectedDate < oneYearAgoDate) {
+      return 'Chỉ có thể chọn ngày trong vòng 1 năm gần đây'
+    }
+
+    return ''
+  }
+
+  // Handle date change
+  const handleDateChange = (e) => {
+    const newDate = e.target.value
+    setLastPeriodDate(newDate)
+
+    // Validate immediately
+    const error = validatePeriodDate(newDate)
+    setDateError(error)
+  }
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    if (!lastPeriodDate) {
-      alert('Vui lòng nhập ngày bắt đầu kỳ kinh gần nhất')
+    // Validate date before submission
+    const dateValidationError = validatePeriodDate(lastPeriodDate)
+    if (dateValidationError) {
+      setDateError(dateValidationError)
       return
     }
 
@@ -110,16 +158,26 @@ export default function CycleTrackingPage() {
                   <div>
                     <label className='block text-sm font-medium text-pink-700 mb-2 flex items-center'>
                       <Calendar className='h-4 w-4 mr-1 text-pink-500' />
-                      Ngày bắt đầu kỳ kinh gần nhất
+                      Ngày bắt đầu kỳ kinh gần nhất <span className='text-red-500 ml-1'>*</span>
                     </label>
                     <div className='transition-transform hover:-translate-y-1'>
                       <input
                         type='date'
                         value={lastPeriodDate}
-                        onChange={(e) => setLastPeriodDate(e.target.value)}
-                        className='w-full p-3 border border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all bg-white shadow-sm hover:shadow'
+                        onChange={handleDateChange}
+                        min={minDate}
+                        max={maxDate}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-white shadow-sm hover:shadow ${
+                          dateError ? 'border-red-500 focus:ring-red-400' : 'border-pink-200 focus:ring-pink-400'
+                        }`}
                         required
                       />
+                      {dateError && (
+                        <p className='text-red-500 text-xs mt-1 flex items-center'>
+                          <span className='mr-1'>⚠️</span>
+                          {dateError}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -168,6 +226,7 @@ export default function CycleTrackingPage() {
                         setCycleLength(28)
                         setPeriodDuration(5)
                         setCycleType('regular')
+                        setDateError('')
                       }}
                       variant='outline'
                       className='border-pink-200 text-pink-700 hover:bg-pink-50'
