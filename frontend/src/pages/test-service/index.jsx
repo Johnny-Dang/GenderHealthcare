@@ -219,7 +219,7 @@ const Services = () => {
       {/* Services */}
       <section className='py-16 bg-gradient-to-b from-pink-50 to-white min-h-screen'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-10 items-start'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-10'>
             {/* Danh sách dịch vụ */}
             <div className='md:col-span-2'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8'>
@@ -278,7 +278,14 @@ const Services = () => {
             </div>
             {/* Form đặt lịch */}
             <div className='md:col-span-1'>
-              <div className='sticky top-20 bg-white rounded-2xl shadow-2xl p-8 border border-pink-100 max-h-[calc(100vh-6rem)] overflow-y-auto z-40'>
+              <div
+                className='bg-white rounded-2xl shadow-2xl p-8 border border-pink-100 max-h-[calc(100vh-4rem)] overflow-y-auto z-30'
+                style={{
+                  position: 'sticky',
+                  top: '64px',
+                  alignSelf: 'flex-start'
+                }}
+              >
                 <h2 className='text-2xl font-bold mb-6 text-pink-700 text-center tracking-wide'>Thông tin đặt lịch</h2>
                 {selectedServiceId ? (
                   (() => {

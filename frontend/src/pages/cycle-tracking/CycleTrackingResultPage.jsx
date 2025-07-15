@@ -821,30 +821,6 @@ export default function CycleTrackingPageResult() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Export Card */}
-              <Card className='mt-6 shadow-md border border-pink-100 overflow-hidden rounded-xl animate-on-load opacity-0 transform hover:shadow-lg hover:border-pink-200 transition-all duration-500'>
-                <CardHeader className='bg-gradient-to-r from-pink-50 to-purple-50 py-4 animate-gradient-slow'>
-                  <CardTitle className='text-xl text-pink-700 flex items-center'>
-                    <Download className='w-5 h-5 mr-2' />
-                    Xuất dữ liệu chu kỳ
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='pt-4 pb-6'>
-                  <div className='space-y-3'>
-                    <p className='text-gray-600 text-sm'>
-                      Xuất dữ liệu chu kỳ của bạn để lưu trữ hoặc chia sẻ với bác sĩ
-                    </p>
-                    <Button
-                      onClick={() => setShowExportModal(true)}
-                      className='bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white w-full flex items-center justify-center gap-2 mt-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[1px]'
-                    >
-                      <Download className='h-4 w-4 animate-bounce-once' />
-                      <span>Xuất PDF</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
