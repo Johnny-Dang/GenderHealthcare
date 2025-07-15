@@ -18,7 +18,9 @@ const Services = () => {
   const [categoryInput, setCategoryInput] = useState('')
   const [openForm, setOpenForm] = useState(false)
   const [selectedServiceId, setSelectedServiceId] = useState(null)
-  const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0])
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const [bookingDate, setBookingDate] = useState(tomorrow.toISOString().split('T')[0])
   const [slots, setSlots] = useState(null)
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [selectedSlotId, setSelectedSlotId] = useState(null)
@@ -26,8 +28,41 @@ const Services = () => {
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [openDetailModal, setOpenDetailModal] = useState(false)
   const [selectedServiceDetail, setSelectedServiceDetail] = useState(null)
+  const [dateError, setDateError] = useState('')
   const navigate = useNavigate()
   const accountId = useSelector((state) => state.user?.userInfo?.accountId)
+
+  // Validation cho ngày đặt lịch
+  const validateBookingDate = (date) => {
+    if (!date) {
+      return 'Vui lòng chọn ngày đặt lịch'
+    }
+
+    const selectedDate = new Date(date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    selectedDate.setHours(0, 0, 0, 0)
+
+    if (selectedDate <= today) {
+      return 'Ngày đặt lịch phải sau ngày hiện tại ít nhất 1 ngày'
+    }
+
+    return ''
+  }
+
+  // Handle thay đổi ngày đặt lịch
+  const handleBookingDateChange = (e) => {
+    const newDate = e.target.value
+    setBookingDate(newDate)
+
+    // Validate ngay khi thay đổi
+    const error = validateBookingDate(newDate)
+    setDateError(error)
+
+    // Reset selected slot khi đổi ngày
+    setSelectedSlotId(null)
+    setSelectedSlot(null)
+  }
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -54,6 +89,13 @@ const Services = () => {
   // Gọi API lấy slot khi chọn dịch vụ hoặc đổi ngày
   const fetchSlots = useCallback(async () => {
     if (selectedServiceId && bookingDate) {
+      // Kiểm tra validation ngày trước khi gọi API
+      const dateValidationError = validateBookingDate(bookingDate)
+      if (dateValidationError) {
+        setSlots(null)
+        return
+      }
+
       setLoadingSlots(true)
       setSlots(null)
       try {
@@ -175,59 +217,64 @@ const Services = () => {
       </section>
 
       {/* Services */}
-      <section className='py-16 bg-gradient-to-b from-pink-50 to-white'>
+      <section className='py-16 bg-gradient-to-b from-pink-50 to-white min-h-screen'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-10'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-10 items-start'>
             {/* Danh sách dịch vụ */}
-            <div
-              className='md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8 pb-20'
-              style={{ minHeight: 'calc(150vh)' }}
-            >
-              {loading ? (
-                <div>Đang tải...</div>
-              ) : (
-                filteredServices.map((service) => (
-                  <Card
-                    key={service.serviceId}
-                    className='flex flex-col h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl bg-white'
-                  >
-                    <div className='aspect-video overflow-hidden rounded-t-2xl'>
-                      <img
-                        src={service.imageUrl || 'https://placehold.co/400x250?text=No+Image'}
-                        alt={service.serviceName}
-                        className='w-full h-full object-cover transition-transform duration-300 hover:scale-105'
-                      />
-                    </div>
-                    <CardContent className='flex-1 flex flex-col p-6'>
-                      <span className='text-xs bg-pink-100 text-pink-600 px-3 py-1 rounded-full self-start mb-2 font-medium shadow-sm'>
-                        {service.category}
-                      </span>
-                      <h3 className='text-xl font-bold text-gray-900 mb-2'>{service.serviceName}</h3>
-                      <p className='text-gray-600 mb-2 flex-1'>{service.title}</p>
-                      <div className='flex items-center gap-2 text-sm text-gray-500 mb-2'>
-                        <Clock className='w-4 h-4' />
-                        <span>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : ''}</span>
+            <div className='md:col-span-2'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8'>
+                {loading ? (
+                  <div className='col-span-full text-center py-10'>Đang tải...</div>
+                ) : filteredServices.length === 0 ? (
+                  <div className='col-span-full text-center py-10 text-gray-500'>
+                    Không tìm thấy dịch vụ nào phù hợp
+                  </div>
+                ) : (
+                  filteredServices.map((service) => (
+                    <Card
+                      key={service.serviceId}
+                      className='flex flex-col border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl bg-white'
+                    >
+                      <div className='aspect-video overflow-hidden rounded-t-2xl'>
+                        <img
+                          src={service.imageUrl || 'https://placehold.co/400x250?text=No+Image'}
+                          alt={service.serviceName}
+                          className='w-full h-full object-cover transition-transform duration-300 hover:scale-105'
+                        />
                       </div>
-                      <div className='text-2xl font-bold text-pink-600 mb-4'>{service.price?.toLocaleString()} VNĐ</div>
-                      <div className='flex gap-2 mt-auto'>
-                        <Button
-                          variant='outline'
-                          className='flex-1 border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full font-semibold shadow-sm'
-                          onClick={() => openServiceDetail(service)}
-                        >
-                          Xem chi tiết
-                        </Button>
-                        <Button
-                          className='flex-1 bg-gradient-to-r from-pink-500 to-fuchsia-500 hover:opacity-90 text-white rounded-full font-semibold shadow-md'
-                          onClick={() => setSelectedServiceId(service.serviceId)}
-                        >
-                          Chọn dịch vụ
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+                      <CardContent className='flex-1 flex flex-col p-6'>
+                        <span className='text-xs bg-pink-100 text-pink-600 px-3 py-1 rounded-full self-start mb-2 font-medium shadow-sm'>
+                          {service.category}
+                        </span>
+                        <h3 className='text-xl font-bold text-gray-900 mb-2'>{service.serviceName}</h3>
+                        <p className='text-gray-600 mb-2 flex-1'>{service.title}</p>
+                        <div className='flex items-center gap-2 text-sm text-gray-500 mb-2'>
+                          <Clock className='w-4 h-4' />
+                          <span>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : ''}</span>
+                        </div>
+                        <div className='text-2xl font-bold text-pink-600 mb-4'>
+                          {service.price?.toLocaleString()} VNĐ
+                        </div>
+                        <div className='flex gap-2 mt-auto'>
+                          <Button
+                            variant='outline'
+                            className='flex-1 border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full font-semibold shadow-sm'
+                            onClick={() => openServiceDetail(service)}
+                          >
+                            Xem chi tiết
+                          </Button>
+                          <Button
+                            className='flex-1 bg-gradient-to-r from-pink-500 to-fuchsia-500 hover:opacity-90 text-white rounded-full font-semibold shadow-md'
+                            onClick={() => setSelectedServiceId(service.serviceId)}
+                          >
+                            Chọn dịch vụ
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
             </div>
             {/* Form đặt lịch */}
             <div className='md:col-span-1'>
@@ -243,14 +290,24 @@ const Services = () => {
                           <div className='font-semibold text-pink-600'>{selectedService.serviceName}</div>
                         </div>
                         <div className='mb-4'>
-                          <label className='block text-gray-700 mb-1 font-medium'>Ngày đặt lịch</label>
+                          <label className='block text-gray-700 mb-1 font-medium'>
+                            Ngày đặt lịch <span className='text-red-500'>*</span>
+                          </label>
                           <input
                             type='date'
-                            className='border border-gray-200 rounded-full px-4 py-2 w-full focus:ring-2 focus:ring-pink-400 outline-none shadow-sm mb-2'
+                            className={`border rounded-full px-4 py-2 w-full focus:ring-2 focus:ring-pink-400 outline-none shadow-sm mb-1 ${
+                              dateError ? 'border-red-500' : 'border-gray-200'
+                            }`}
                             value={bookingDate}
-                            onChange={(e) => setBookingDate(e.target.value)}
+                            onChange={handleBookingDateChange}
+                            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]} // Ngày mai
                           />
+                          {dateError && <p className='text-red-500 text-xs mt-1'>{dateError}</p>}
                         </div>
+                        {/* Hiển thị lỗi validation ngày */}
+                        {dateError && !slots && !loadingSlots && (
+                          <div className='text-red-500 text-center py-4 bg-red-50 rounded-lg mb-4'>{dateError}</div>
+                        )}
                         {/* Hiển thị thông tin slot nếu có */}
                         {loadingSlots && <div className='text-gray-500'>Đang tải khung giờ...</div>}
                         {slots && (
@@ -302,11 +359,19 @@ const Services = () => {
                             <Button
                               className='w-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-full font-semibold py-3 shadow-md hover:opacity-90 transition'
                               onClick={() => {
+                                // Kiểm tra validation ngày trước
+                                const dateValidationError = validateBookingDate(bookingDate)
+                                if (dateValidationError) {
+                                  setDateError(dateValidationError)
+                                  return
+                                }
+
                                 if (!accountId) {
                                   alert('Đăng nhập trước khi chọn dịch vụ')
                                   navigate('/login')
                                   return
                                 }
+
                                 const slot = slots.find((s) => s.slotId === selectedSlotId)
                                 setSelectedSlot(slot)
                                 setOpenPersonalInfoForm(true)

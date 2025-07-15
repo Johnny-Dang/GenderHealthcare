@@ -3,6 +3,7 @@ import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ChatBot from '@/components/ChatBot'
 import { Card, CardContent } from '@/components/ui/card'
+import axios from '@/configs/axios'
 import {
   Heart,
   Calendar,
@@ -96,26 +97,71 @@ const AboutPage = () => {
   ])
 
   // Đội ngũ chuyên gia
-  const [team, setTeam] = useState([
-    {
-      name: 'TS.BS Nguyễn Thị Minh Hương',
-      position: 'Trưởng khoa Phụ sản',
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300',
-      experience: '20 năm kinh nghiệm'
-    },
-    {
-      name: 'PGS.TS Trần Văn Nam',
-      position: 'Chuyên gia Nội tiết',
-      image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=300',
-      experience: '15 năm kinh nghiệm'
-    },
-    {
-      name: 'ThS.BS Lê Thị Thanh',
-      position: 'Tư vấn Sức khỏe Sinh sản',
-      image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=300',
-      experience: '12 năm kinh nghiệm'
+  const [team, setTeam] = useState([])
+  const [loadingTeam, setLoadingTeam] = useState(true)
+  const [teamError, setTeamError] = useState('')
+
+  // Fetch đội ngũ bác sĩ từ API
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        setLoadingTeam(true)
+        setTeamError('')
+        const response = await axios.get('/api/consultants')
+        // Map dữ liệu từ API để có cấu trúc nhất quán
+        const mappedTeam = response.data.map((consultant) => ({
+          consultantId: consultant.consultantId,
+          fullName: consultant.fullName,
+          specialization: consultant.specialization,
+          profilePicture: consultant.profilePicture,
+          degree: consultant.degree,
+          yearOfExperience: consultant.yearOfExperience,
+          biography: consultant.biography
+        }))
+        setTeam(mappedTeam)
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách bác sĩ:', error)
+        setTeamError('Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.')
+        // Fallback to mock data if API fails
+        setTeam([
+          {
+            consultantId: 1,
+            fullName: 'TS.BS Nguyễn Thị Minh Hương',
+            specialization: 'Trưởng khoa Phụ sản',
+            profilePicture: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300',
+            degree: 'Tiến sĩ, Bác sĩ',
+            yearOfExperience: 20,
+            biography:
+              'Bác sĩ có hơn 20 năm kinh nghiệm trong lĩnh vực phụ sản, chuyên về điều trị vô sinh hiếm muộn và chăm sóc sức khỏe sinh sản.'
+          },
+          {
+            consultantId: 2,
+            fullName: 'PGS.TS Trần Văn Nam',
+            specialization: 'Chuyên gia Nội tiết',
+            profilePicture: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=300',
+            degree: 'Phó Giáo sư, Tiến sĩ',
+            yearOfExperience: 15,
+            biography:
+              'Chuyên gia hàng đầu về nội tiết sinh sản, có nhiều nghiên cứu về rối loạn hormone và điều trị PCOS.'
+          },
+          {
+            consultantId: 3,
+            fullName: 'ThS.BS Lê Thị Thanh',
+            specialization: 'Tư vấn Sức khỏe Sinh sản',
+            profilePicture: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=300',
+            degree: 'Thạc sĩ, Bác sĩ',
+            yearOfExperience: 12,
+            biography:
+              'Bác sĩ chuyên về tư vấn sức khỏe sinh sản và giáo dục giới tính, có kinh nghiệm làm việc với nhiều đối tượng khách hàng khác nhau.'
+          }
+        ])
+      } finally {
+        setLoadingTeam(false)
+      }
     }
-  ])
+
+    fetchTeam()
+  }, [])
 
   // Chứng nhận và giải thưởng
   const [certifications, setCertifications] = useState([
@@ -393,31 +439,74 @@ const AboutPage = () => {
           </div>
 
           <div className='grid md:grid-cols-3 gap-8'>
-            {team.map((member, index) => (
-              <div
-                key={index}
-                className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-500 hover:-translate-y-2 ${isVisible.team ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                style={{ transitionDelay: `${index * 150}ms` }}
-              >
-                <div className='relative overflow-hidden'>
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className='w-full h-64 object-cover transition-transform duration-700 hover:scale-110'
-                  />
-                  <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300'>
-                    <div className='absolute bottom-0 left-0 right-0 p-4 text-white'>
-                      <p className='font-medium'>"{member.experience} trong lĩnh vực chuyên môn"</p>
-                    </div>
+            {loadingTeam ? (
+              // Loading skeleton
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className='bg-white rounded-xl shadow-md overflow-hidden animate-pulse'>
+                  <div className='w-full h-64 bg-gray-300'></div>
+                  <div className='p-6 text-center'>
+                    <div className='h-6 bg-gray-300 rounded mb-2'></div>
+                    <div className='h-4 bg-gray-300 rounded mb-2 w-2/3 mx-auto'></div>
+                    <div className='h-4 bg-gray-300 rounded w-1/2 mx-auto'></div>
                   </div>
                 </div>
-                <div className='p-6 text-center'>
-                  <h4 className='text-xl font-semibold text-gray-900 mb-1'>{member.name}</h4>
-                  <p className='text-primary-600 font-medium mb-2'>{member.position}</p>
-                  <p className='text-gray-500'>{member.experience}</p>
-                </div>
+              ))
+            ) : teamError ? (
+              // Error state
+              <div className='col-span-full text-center py-12'>
+                <div className='text-red-500 mb-4'>{teamError}</div>
+                <Button onClick={() => window.location.reload()} className='bg-primary-600 hover:bg-primary-700'>
+                  Thử lại
+                </Button>
               </div>
-            ))}
+            ) : team.length === 0 ? (
+              // Empty state
+              <div className='col-span-full text-center py-12 text-gray-500'>
+                Hiện tại chưa có thông tin đội ngũ bác sĩ
+              </div>
+            ) : (
+              // Team data
+              team.map((member, index) => (
+                <div
+                  key={member.consultantId || index}
+                  className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-500 hover:-translate-y-2 ${isVisible.team ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  style={{ transitionDelay: `${index * 150}ms` }}
+                >
+                  <div className='relative overflow-hidden'>
+                    <img
+                      src={
+                        member.profilePicture ||
+                        member.image ||
+                        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300'
+                      }
+                      alt={member.fullName || member.name}
+                      className='w-full h-64 object-cover transition-transform duration-700 hover:scale-110'
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300'
+                      }}
+                    />
+                    <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300'>
+                      <div className='absolute bottom-0 left-0 right-0 p-4 text-white'>
+                        <p className='font-medium text-sm'>
+                          "{member.yearOfExperience || member.yearsOfExperience || '0'} năm kinh nghiệm trong lĩnh vực
+                          chuyên môn"
+                        </p>
+                        {member.biography && <p className='text-xs mt-2 opacity-90 line-clamp-2'>{member.biography}</p>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className='p-6 text-center'>
+                    <h4 className='text-xl font-semibold text-gray-900 mb-1'>{member.fullName || member.name}</h4>
+                    {member.degree && <p className='text-sm text-gray-600 mb-1'>{member.degree}</p>}
+                    <p className='text-primary-600 font-medium mb-2'>{member.specialization || member.position}</p>
+                    <p className='text-gray-500 text-sm'>
+                      {member.yearOfExperience || member.yearsOfExperience} năm kinh nghiệm
+                    </p>
+                    {member.biography && <p className='text-gray-600 text-xs mt-3 line-clamp-3'>{member.biography}</p>}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -743,6 +832,20 @@ const AboutPage = () => {
 
         .animate-floatReverse {
           animation: floatReverse 7s ease-in-out infinite;
+        }
+
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </>
