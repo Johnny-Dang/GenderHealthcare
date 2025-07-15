@@ -149,7 +149,7 @@ const StaffDashboard = () => {
           .filter((a) => new Date(a.slotDate) >= today)
           // Sắp xếp theo ngày gần nhất
           .sort((a, b) => new Date(a.slotDate) - new Date(b.slotDate))
-          .slice(0, 5)
+          .slice(0, 2)
           .map((appointment) => ({
             id: appointment.bookingDetailId,
             patientName: `${appointment.firstName} ${appointment.lastName}`,

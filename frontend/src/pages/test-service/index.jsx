@@ -203,7 +203,7 @@ const Services = () => {
                         {service.category}
                       </span>
                       <h3 className='text-xl font-bold text-gray-900 mb-2'>{service.serviceName}</h3>
-                      <p className='text-gray-600 mb-2 flex-1'>{service.description}</p>
+                      <p className='text-gray-600 mb-2 flex-1'>{service.title}</p>
                       <div className='flex items-center gap-2 text-sm text-gray-500 mb-2'>
                         <Clock className='w-4 h-4' />
                         <span>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : ''}</span>

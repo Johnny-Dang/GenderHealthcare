@@ -68,7 +68,7 @@ export default function PersonalInfoForm({
         gender: form.gender
       })
 
-      toast.success('Đặt lịch thành công!')
+      toast.success('Đặt lịch thành công hãy kiểm tra giỏ hàng!')
       dispatch(incrementCart())
 
       // Gọi callback để cập nhật thông tin slot
