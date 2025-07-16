@@ -33,17 +33,110 @@ export default function PersonalInfoForm({
     gender: true
   })
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+
+  // Validation functions
+  const validateName = (name, fieldName) => {
+    if (!name.trim()) {
+      return `${fieldName} không được để trống`
+    }
+    if (name.trim().length < 2) {
+      return `${fieldName} phải có ít nhất 2 ký tự`
+    }
+    if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(name.trim())) {
+      return `${fieldName} chỉ được chứa chữ cái và khoảng trắng`
+    }
+    return ''
+  }
+
+  const validatePhone = (phone) => {
+    if (!phone.trim()) {
+      return 'Số điện thoại không được để trống'
+    }
+    const cleanPhone = phone.replace(/[\s\-()]/g, '')
+    if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
+      return 'Số điện thoại không hợp lệ (VD: 0912345678)'
+    }
+    return ''
+  }
+
+  const validateDateOfBirth = (dateOfBirth) => {
+    if (!dateOfBirth) {
+      return 'Ngày sinh không được để trống'
+    }
+    const selectedDate = new Date(dateOfBirth)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    if (selectedDate >= today) {
+      return 'Ngày sinh phải trước ngày hiện tại'
+    }
+
+    const age = today.getFullYear() - selectedDate.getFullYear()
+    if (age > 150) {
+      return 'Ngày sinh không hợp lệ'
+    }
+
+    return ''
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    const lastNameError = validateName(form.lastName, 'Họ')
+    if (lastNameError) newErrors.lastName = lastNameError
+
+    const firstNameError = validateName(form.firstName, 'Tên')
+    if (firstNameError) newErrors.firstName = firstNameError
+
+    const phoneError = validatePhone(form.phone)
+    if (phoneError) newErrors.phone = phoneError
+
+    const dobError = validateDateOfBirth(form.dateOfBirth)
+    if (dobError) newErrors.dateOfBirth = dobError
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+    const newValue = name === 'gender' ? value === 'true' : type === 'checkbox' ? checked : value
+
     setForm((prev) => ({
       ...prev,
-      [name]: name === 'gender' ? value === 'true' : type === 'checkbox' ? checked : value
+      [name]: newValue
     }))
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
+
+    // Real-time validation for phone number formatting
+    if (name === 'phone' && value) {
+      // Only allow numbers and some formatting characters
+      const cleanValue = value.replace(/[^\d\s\-()]/g, '')
+      if (cleanValue !== value) {
+        setForm((prev) => ({
+          ...prev,
+          [name]: cleanValue
+        }))
+      }
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validate form before submitting
+    if (!validateForm()) {
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -61,14 +154,14 @@ export default function PersonalInfoForm({
         serviceId: selectedService.serviceId,
         slotDate: selectedSlot.slotDate,
         shift: selectedSlot.shift,
-        firstName: form.firstName,
-        lastName: form.lastName,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
         dateOfBirth: form.dateOfBirth,
-        phone: form.phone,
+        phone: form.phone.replace(/[\s\-()]/g, ''), // Clean phone number
         gender: form.gender
       })
 
-      toast.success('Đặt lịch thành công!')
+      toast.success('Đặt lịch thành công hãy kiểm tra giỏ hàng!')
       dispatch(incrementCart())
 
       // Gọi callback để cập nhật thông tin slot
@@ -87,6 +180,7 @@ export default function PersonalInfoForm({
         phone: '',
         gender: true
       })
+      setErrors({})
     } catch (err) {
       console.error('Lỗi đặt lịch:', err)
       toast.error('Đặt lịch thất bại! Vui lòng thử lại.')
@@ -99,7 +193,7 @@ export default function PersonalInfoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-md'>
         <DialogHeader>
-          <DialogTitle>Thông tin cá nhân</DialogTitle>\{' '}
+          <DialogTitle>Thông tin cá nhân</DialogTitle>
           <DialogDescription>Vui lòng nhập thông tin cá nhân để hoàn tất đặt lịch</DialogDescription>
         </DialogHeader>
 
@@ -129,7 +223,7 @@ export default function PersonalInfoForm({
           <div className='flex gap-2'>
             <div className='w-1/2'>
               <label className='block font-medium mb-1' htmlFor='lastName'>
-                Họ
+                Họ <span className='text-red-500'>*</span>
               </label>
               <Input
                 id='lastName'
@@ -138,11 +232,13 @@ export default function PersonalInfoForm({
                 onChange={handleChange}
                 placeholder='Họ'
                 required
+                className={errors.lastName ? 'border-red-500' : ''}
               />
+              {errors.lastName && <p className='text-red-500 text-xs mt-1'>{errors.lastName}</p>}
             </div>
             <div className='w-1/2'>
               <label className='block font-medium mb-1' htmlFor='firstName'>
-                Tên
+                Tên <span className='text-red-500'>*</span>
               </label>
               <Input
                 id='firstName'
@@ -151,13 +247,15 @@ export default function PersonalInfoForm({
                 onChange={handleChange}
                 placeholder='Tên'
                 required
+                className={errors.firstName ? 'border-red-500' : ''}
               />
+              {errors.firstName && <p className='text-red-500 text-xs mt-1'>{errors.firstName}</p>}
             </div>
           </div>
 
           <div>
             <label className='block font-medium mb-1' htmlFor='dateOfBirth'>
-              Ngày tháng năm sinh
+              Ngày tháng năm sinh <span className='text-red-500'>*</span>
             </label>
             <Input
               id='dateOfBirth'
@@ -166,12 +264,15 @@ export default function PersonalInfoForm({
               value={form.dateOfBirth}
               onChange={handleChange}
               required
+              max={new Date().toISOString().split('T')[0]} // Không cho chọn ngày tương lai
+              className={errors.dateOfBirth ? 'border-red-500' : ''}
             />
+            {errors.dateOfBirth && <p className='text-red-500 text-xs mt-1'>{errors.dateOfBirth}</p>}
           </div>
 
           <div>
             <label className='block font-medium mb-1' htmlFor='phone'>
-              Số điện thoại
+              Số điện thoại <span className='text-red-500'>*</span>
             </label>
             <Input
               id='phone'
@@ -180,7 +281,10 @@ export default function PersonalInfoForm({
               onChange={handleChange}
               placeholder='Số điện thoại'
               required
+              maxLength={15}
+              className={errors.phone ? 'border-red-500' : ''}
             />
+            {errors.phone && <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>}
           </div>
 
           <div className='flex items-center gap-4'>
