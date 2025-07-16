@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,8 +19,20 @@ import { useNavigate } from 'react-router-dom'
 import Navigation from '@/components/Navigation'
 import api from '@/configs/axios'
 import { useSelector } from 'react-redux'
+import { useToast } from '@/hooks/useToast'
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  try {
+    return new Date(dateString).toLocaleDateString('vi-VN')
+  } catch (error) {
+    return 'N/A'
+  }
+}
 
 const PaymentHistory = () => {
+  const { showSuccess, showError } = useToast()
+
   const [groupedPayments, setGroupedPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -28,11 +40,13 @@ const PaymentHistory = () => {
   const navigate = useNavigate()
   const user = useSelector((state) => state.user?.userInfo)
 
-  useEffect(() => {
-    fetchPaymentHistory()
-  }, [])
+  const fetchPaymentHistory = useCallback(async () => {
+    if (!user?.accountId) {
+      setError('Vui lòng đăng nhập để xem lịch sử thanh toán')
+      setLoading(false)
+      return
+    }
 
-  const fetchPaymentHistory = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -44,15 +58,12 @@ const PaymentHistory = () => {
         const grouped = groupPaymentsByBooking(paymentsData)
         setGroupedPayments(grouped)
       } else {
-        console.warn('Payments data is not an array:', paymentsData)
+        setError('Dữ liệu không hợp lệ')
         setGroupedPayments([])
       }
     } catch (error) {
-      console.error('Error fetching payment history:', error)
-
       if (error.response?.status === 404) {
         setError('Không tìm thấy lịch sử thanh toán')
-        setGroupedPayments([])
       } else if (error.response?.status === 401) {
         setError('Phiên đăng nhập đã hết hạn')
       } else {
@@ -62,13 +73,21 @@ const PaymentHistory = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.accountId]) // Thêm dependency user.accountId
+
+  useEffect(() => {
+    fetchPaymentHistory()
+  }, [fetchPaymentHistory]) // Sử dụng fetchPaymentHistory từ useCallback
 
   const groupPaymentsByBooking = (payments) => {
+    if (!Array.isArray(payments)) return []
+
     const grouped = {}
 
     payments.forEach((payment) => {
       const bookingId = payment.bookingId
+      if (!bookingId) return // Bỏ qua items không có bookingId
+
       if (!grouped[bookingId]) {
         grouped[bookingId] = {
           bookingId,
@@ -100,7 +119,8 @@ const PaymentHistory = () => {
 
   const truncateId = (id, length = 8) => {
     if (!id) return ''
-    return id.toString().length > length ? id.toString().substring(0, length) + '...' : id.toString()
+    const idStr = String(id)
+    return idStr.length > length ? `${idStr.substring(0, length)}...` : idStr
   }
 
   const getShiftTime = (shift) => {
@@ -108,25 +128,28 @@ const PaymentHistory = () => {
   }
 
   const copyToClipboard = (text) => {
+    if (!text) {
+      showError('Không có dữ liệu để sao chép')
+      return
+    }
+
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        // Có thể thêm toast notification ở đây thay vì alert
-        const toast = document.createElement('div')
-        toast.textContent = 'Đã sao chép!'
-        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50'
-        document.body.appendChild(toast)
-        setTimeout(() => document.body.removeChild(toast), 2000)
+        showSuccess('Đã sao chép!')
       })
-      .catch((err) => {
-        console.error('Không thể sao chép: ', err)
+      .catch(() => {
+        showError('Không thể sao chép vào clipboard')
       })
   }
 
-  // Calculate totals
-  const totalBookings = groupedPayments.length
-  const totalServices = groupedPayments.reduce((sum, booking) => sum + booking.totalServices, 0)
-  const totalAmount = groupedPayments.reduce((sum, booking) => sum + booking.totalAmount, 0)
+  const { totalBookings, totalServices, totalAmount } = React.useMemo(() => {
+    return {
+      totalBookings: groupedPayments.length,
+      totalServices: groupedPayments.reduce((sum, booking) => sum + booking.totalServices, 0),
+      totalAmount: groupedPayments.reduce((sum, booking) => sum + booking.totalAmount, 0)
+    }
+  }, [groupedPayments])
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-pink-50 to-pink-100'>
@@ -135,7 +158,7 @@ const PaymentHistory = () => {
         {/* Header */}
         <div className='mb-6 flex items-center justify-between'>
           <div className='flex items-center gap-4'>
-            <Button onClick={() => navigate('/')} variant='outline' className='flex items-center gap-2'>
+            <Button onClick={() => navigate(-1)} variant='outline' className='flex items-center gap-2'>
               <ArrowLeft size={16} />
               Quay lại
             </Button>
@@ -211,11 +234,10 @@ const PaymentHistory = () => {
                               className='h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors'
                               onClick={() => copyToClipboard(booking.bookingId)}
                             />
-                            {/* Thêm Badge "Đã thanh toán" ở đây */}
                             <Badge className='bg-green-100 text-green-800'>Đã thanh toán</Badge>
                           </div>
                           <p className='text-sm text-gray-600'>
-                            {booking.totalServices} dịch vụ • {new Date(booking.createAt).toLocaleDateString('vi-VN')}
+                            {booking.totalServices} dịch vụ • {formatDate(booking.createAt)}
                           </p>
                         </div>
                       </div>
@@ -274,9 +296,7 @@ const PaymentHistory = () => {
                                 <Calendar className='h-4 w-4 text-primary-500' />
                                 <div>
                                   <p className='text-xs text-gray-500'>Ngày sử dụng</p>
-                                  <p className='text-sm font-medium'>
-                                    {new Date(service.slotDate).toLocaleDateString('vi-VN')}
-                                  </p>
+                                  <p className='text-sm font-medium'>{formatDate(service.slotDate)}</p>
                                 </div>
                               </div>
                               <div className='flex items-center gap-2'>
@@ -307,9 +327,7 @@ const PaymentHistory = () => {
                                 </div>
                                 <div>
                                   <span className='text-gray-500'>Ngày sinh:</span>
-                                  <span className='ml-2 font-medium'>
-                                    {new Date(service.dateOfBirth).toLocaleDateString('vi-VN')}
-                                  </span>
+                                  <span className='ml-2 font-medium'>{formatDate(service.dateOfBirth)}</span>
                                 </div>
                                 <div>
                                   <span className='text-gray-500'>Giới tính:</span>
@@ -328,7 +346,6 @@ const PaymentHistory = () => {
           )}
         </div>
 
-        {/* Summary */}
         {totalBookings > 0 && (
           <Card className='mt-6 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200'>
             <CardContent className='p-6'>

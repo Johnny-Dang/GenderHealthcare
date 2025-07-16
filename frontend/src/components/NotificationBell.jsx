@@ -1,53 +1,96 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import api from '@/configs/axios'
 import { formatDistanceToNow, addHours } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import { useSelector } from 'react-redux'
+import { useToast } from '@/hooks/useToast'
 
 const NotificationBell = () => {
+  const { showError } = useToast()
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState(null)
   const dropdownRef = useRef(null)
   const lastFetchRef = useRef(0)
+  const lastErrorShownRef = useRef(0) // Để tránh hiển thị lỗi quá nhiều lần
+  const abortControllerRef = useRef(null)
 
   const userInfo = useSelector((state) => state.user?.userInfo)
   const userId = useMemo(() => userInfo?.accountId, [userInfo])
 
-  const fetchNotifications = useCallback(async () => {
-    if (!userId || loading) return
+  const fetchNotifications = useCallback(
+    async (forceRefresh = false) => {
+      if (!userId || (loading && !forceRefresh)) return
 
-    const now = Date.now()
-    if (now - lastFetchRef.current < 30000) return
+      const now = Date.now()
+      if (!forceRefresh && now - lastFetchRef.current < 30000) return
 
-    try {
-      setLoading(true)
-      const [notificationRes, countRes] = await Promise.all([
-        api.get('/api/Notification'),
-        api.get('/api/Notification/count')
-      ])
-
-      const notificationsData = notificationRes?.data
-      if (Array.isArray(notificationsData)) {
-        setNotifications(notificationsData)
-      } else {
-        setNotifications([])
+      // Hủy request cũ nếu có
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
       }
 
-      const countData = countRes?.data
-      setUnreadCount(typeof countData === 'number' ? countData : 0)
+      // Tạo abort controller mới
+      abortControllerRef.current = new AbortController()
 
-      lastFetchRef.current = now
-    } catch (error) {
-      setNotifications([])
-      setUnreadCount(0)
-    } finally {
-      setLoading(false)
-    }
-  }, [userId, loading])
+      try {
+        setLoading(true)
+        setFetchError(null)
+
+        const [notificationRes, countRes] = await Promise.all([
+          api.get('/api/Notification', {
+            signal: abortControllerRef.current.signal,
+            _noToast: true, // Không hiển thị toast lỗi tự động
+            timeout: 8000 // Timeout nhanh hơn để tránh chờ lâu
+          }),
+          api.get('/api/Notification/count', {
+            signal: abortControllerRef.current.signal,
+            _noToast: true,
+            timeout: 8000
+          })
+        ])
+
+        const notificationsData = notificationRes?.data
+        if (Array.isArray(notificationsData)) {
+          setNotifications(notificationsData)
+        } else {
+          setNotifications([])
+        }
+
+        const countData = countRes?.data
+        setUnreadCount(typeof countData === 'number' ? countData : 0)
+
+        lastFetchRef.current = now
+      } catch (error) {
+        if (error.name === 'AbortError' || error.name === 'CanceledError') {
+          // Request bị hủy, không làm gì
+          return
+        }
+
+        // Chỉ show error message nếu người dùng cố tình mở dropdown
+        if (forceRefresh) {
+          setFetchError('Không thể tải thông báo. Vui lòng thử lại sau.')
+
+          // Chỉ hiển thị toast nếu đã lâu không hiện
+          if (now - lastErrorShownRef.current > 10000) {
+            showError('Không thể tải thông báo. Máy chủ có thể đang bảo trì.')
+            lastErrorShownRef.current = now
+          }
+        }
+
+        // Giữ nguyên dữ liệu cũ nếu có
+        // KHÔNG reset notifications và unreadCount
+      } finally {
+        setLoading(false)
+        abortControllerRef.current = null
+      }
+    },
+    [userId, loading, showError]
+  )
 
   const markAsRead = useCallback(
     async (notificationId) => {
@@ -82,9 +125,25 @@ const NotificationBell = () => {
     }
   }, [userId, unreadCount])
 
+  // Thêm refresh khi mở dropdown
   const handleToggleDropdown = useCallback(() => {
-    setIsOpen((prev) => !prev)
-  }, [])
+    const newState = !isOpen
+    setIsOpen(newState)
+
+    // Nếu mở dropdown, force refresh data
+    if (newState) {
+      fetchNotifications(true) // true = force refresh
+    }
+  }, [isOpen, fetchNotifications])
+
+  // Thêm button refresh thủ công
+  const handleManualRefresh = useCallback(
+    (e) => {
+      e.stopPropagation()
+      fetchNotifications(true) // force refresh
+    },
+    [fetchNotifications]
+  )
 
   const convertToVietnamTime = useCallback((dateString) => {
     return addHours(new Date(dateString), 7)
@@ -110,8 +169,25 @@ const NotificationBell = () => {
   }, [isOpen])
 
   const renderedNotifications = useMemo(() => {
-    if (loading) {
+    if (loading && notifications.length === 0) {
       return <div className='p-4 text-center text-gray-500'>Đang tải...</div>
+    }
+
+    if (fetchError) {
+      return (
+        <div className='p-4 text-center'>
+          <div className='flex flex-col items-center text-red-500 mb-2'>
+            <AlertCircle className='h-5 w-5 mb-1' />
+            <p className='text-sm'>{fetchError}</p>
+          </div>
+          <button
+            className='mt-2 text-xs bg-primary-50 text-primary-600 px-3 py-1 rounded-md hover:bg-primary-100'
+            onClick={handleManualRefresh}
+          >
+            Thử lại
+          </button>
+        </div>
+      )
     }
 
     if (!Array.isArray(notifications) || notifications.length === 0) {
@@ -149,7 +225,7 @@ const NotificationBell = () => {
         </div>
       </div>
     ))
-  }, [notifications, loading, markAsRead, convertToVietnamTime])
+  }, [notifications, loading, fetchError, markAsRead, handleManualRefresh, convertToVietnamTime])
 
   if (!userInfo) return null
 
@@ -172,11 +248,22 @@ const NotificationBell = () => {
         <div className='absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-100'>
           <div className='p-3 border-b border-gray-100 flex justify-between items-center'>
             <h3 className='font-semibold text-gray-800'>Thông báo</h3>
-            {unreadCount > 0 && (
-              <button className='text-xs text-primary-600 hover:text-primary-800' onClick={markAllAsRead}>
-                Đánh dấu tất cả đã đọc
+            <div className='flex items-center gap-2'>
+              {/* Thêm nút refresh */}
+              <button
+                className='text-xs text-gray-500 hover:text-primary-600'
+                onClick={handleManualRefresh}
+                disabled={loading}
+              >
+                {loading ? 'Đang tải...' : 'Làm mới'}
               </button>
-            )}
+
+              {unreadCount > 0 && (
+                <button className='text-xs text-primary-600 hover:text-primary-800' onClick={markAllAsRead}>
+                  Đánh dấu tất cả đã đọc
+                </button>
+              )}
+            </div>
           </div>
 
           <div className='max-h-[350px] overflow-y-auto'>{renderedNotifications}</div>

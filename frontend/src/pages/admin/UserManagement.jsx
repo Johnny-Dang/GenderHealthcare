@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Table, Button, Space, Spin, Modal, Form, Input, Select, Typography, Divider, Tag } from 'antd'
+import { Table, Button, Space, Modal, Form, Input, Select, Typography, Divider, Tag } from 'antd'
 import {
   EditOutlined,
   DeleteOutlined,
@@ -10,8 +10,7 @@ import {
 } from '@ant-design/icons'
 import moment from 'moment'
 import api from '../../configs/axios'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/useToast'
 import Loading from '../../components/Loading'
 
 const { Option } = Select
@@ -28,9 +27,10 @@ const UserManagement = () => {
   const [currentUser, setCurrentUser] = useState(null)
   const [form] = Form.useForm()
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null })
-  const [searchText, setSearchText] = useState('') // Add search state
+  const [searchText, setSearchText] = useState('')
   const [lastFetched, setLastFetched] = useState(0)
   const [shouldRefresh, setShouldRefresh] = useState(false)
+  const { showSuccess, showError } = useToast()
 
   // Tạo hàm fetchUsers với useCallback để nó không bị tạo lại khi component re-render
   const fetchUsers = useCallback(
@@ -63,19 +63,18 @@ const UserManagement = () => {
         setLastFetched(now)
         setShouldRefresh(false)
       } catch {
-        toast.error('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.')
+        showError('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.')
       } finally {
         setLoading(false)
       }
     },
-    [lastFetched, userData.length]
+    [lastFetched, userData.length, showError]
   )
 
   useEffect(() => {
     fetchUsers()
   }, [fetchUsers])
 
-  // Thêm một refresh button để cho phép người dùng làm mới dữ liệu khi cần
   const handleRefresh = () => {
     fetchUsers(true)
   }
@@ -103,16 +102,14 @@ const UserManagement = () => {
             firstName = parts.join(' ')
           }
           if (currentUser) {
-            // Cập nhật thông tin người dùng
             await api.put(`/api/accounts/${currentUser.id}`, {
               email: values.email,
               firstName,
               lastName,
               roleName: values.role
             })
-            toast.success('Cập nhật người dùng thành công!')
+            showSuccess('Cập nhật người dùng thành công!')
           } else {
-            // Tạo người dùng mới
             const response = await api.post(`/api/accounts`, {
               email: values.email,
               password: values.password || 'DefaultPassword123',
@@ -121,21 +118,20 @@ const UserManagement = () => {
               roleName: values.role
             })
             if (response.data?.accountId) {
-              toast.success('Thêm người dùng thành công!')
+              showSuccess('Thêm người dùng thành công!')
             }
           }
-          // Đánh dấu cần refresh data sau khi thêm/sửa
-          setShouldRefresh(true)
           setIsModalVisible(false)
           form.resetFields()
           fetchUsers(true) // Force refresh sau khi thêm/sửa
         } catch (error) {
-          console.error('Error saving user:', error)
           const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.'
-          toast.error(errorMessage)
+          showError(errorMessage)
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        // Form validation failed - không cần làm gì
+      })
   }
 
   const handleCancel = () => {
@@ -144,8 +140,6 @@ const UserManagement = () => {
   }
 
   const handleDelete = (userId) => {
-    console.log('Xóa người dùng với ID:', userId)
-
     setDeleteModal({ open: true, id: userId })
   }
 
@@ -269,7 +263,6 @@ const UserManagement = () => {
 
   return (
     <>
-      <ToastContainer />
       <div className='mb-6'>
         <Title level={3} className='text-gray-800 mb-1'>
           Quản lý người dùng
@@ -367,10 +360,10 @@ const UserManagement = () => {
         onOk={async () => {
           try {
             await api.delete(`api/accounts/${deleteModal.id}`)
-            toast.success('Đã xóa (mềm) người dùng!')
-            fetchUsers(true) // Force refresh sau khi xóa
+            showSuccess('Đã xóa (mềm) người dùng!')
+            fetchUsers(true)
           } catch {
-            toast.error('Không thể xóa người dùng. Vui lòng thử lại sau.')
+            showError('Không thể xóa người dùng. Vui lòng thử lại sau.')
           }
           setDeleteModal({ open: false, id: null })
         }}

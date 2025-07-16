@@ -33,5 +33,7 @@ namespace backend.Application.Services
         Task<List<BookingDetailResponse>> GetAllAsync(string status = null);
 
         Task<List<BookingDetailResponse>> GetPaidByAccountIdAsync(Guid accountId);
+
+        Task SendBookingDetailEmailToCustomer(Guid bookingId);
     }
 }

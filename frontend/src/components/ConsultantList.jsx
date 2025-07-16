@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import Loading from '@/components/Loading'
 import { Award, User, Briefcase, GraduationCap } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { toast } from 'react-toastify'
 import api from '@/configs/axios'
+import { useToast } from '../hooks/useToast'
 
 const ConsultantList = ({
   showBookingButton = true,
@@ -14,6 +14,7 @@ const ConsultantList = ({
   cardClassName = ''
 }) => {
   const [loading, setLoading] = useState(true)
+  const { showError } = useToast()
   const [consultants, setConsultants] = useState([])
   const [isPaused, setIsPaused] = useState(false)
   const scrollContainerRef = React.useRef(null)
@@ -26,8 +27,7 @@ const ConsultantList = ({
         const response = await api.get('/api/consultants')
         setConsultants(response.data)
       } catch (error) {
-        console.error('Error fetching consultants:', error)
-        toast.error('Không thể tải danh sách tư vấn viên')
+        showError('Không thể tải danh sách tư vấn viên' + (error.response?.data?.message || ''))
       } finally {
         setLoading(false)
       }

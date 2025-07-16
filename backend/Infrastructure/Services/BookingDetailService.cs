@@ -7,6 +7,8 @@ using backend.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Text;
+using backend.Application.Interfaces;
 
 namespace backend.Infrastructure.Services
 {
@@ -18,6 +20,7 @@ namespace backend.Infrastructure.Services
         private readonly INotificationService _notificationService;
         private readonly ICloudinaryService _cloudinaryService;
         private readonly INotificationDomainService _notificationDomainService;
+        private readonly IEmailService _emailService;
 
         public BookingDetailService(
             IBookingDetailRepository bookingDetailRepository,
@@ -25,7 +28,8 @@ namespace backend.Infrastructure.Services
             ITestServiceSlotService testServiceSlotService,
             INotificationService notificationService,
             ICloudinaryService cloudinaryService,
-            INotificationDomainService notificationDomainService)
+            INotificationDomainService notificationDomainService,
+            IEmailService emailService)
         {
             _bookingDetailRepository = bookingDetailRepository;
             _testServiceRepository = testServiceRepository;
@@ -33,6 +37,7 @@ namespace backend.Infrastructure.Services
             _notificationService = notificationService;
             _cloudinaryService = cloudinaryService;
             _notificationDomainService = notificationDomainService;
+            _emailService = emailService;
         }
 
         public async Task<BookingDetailResponse> CreateAsync(CreateBookingDetailRequest request)
@@ -447,6 +452,142 @@ namespace backend.Infrastructure.Services
                 });
             }
             return result;
+        }
+
+        public async Task SendBookingDetailEmailToCustomer(Guid bookingId)
+        {
+            // Lấy booking và account
+            var booking = await _bookingDetailRepository.GetBookingAsync(bookingId);
+            if (booking == null || booking.Account == null) return;
+
+            var bookingDetails = await _bookingDetailRepository.GetByBookingIdAsync(bookingId);
+            if (bookingDetails == null || !bookingDetails.Any()) return;
+
+            // Lấy thông tin khách hàng
+            var customer = booking.Account;
+            var customerName = $"{customer.FirstName} {customer.LastName}".Trim();
+            
+            // Tính tổng tiền
+            var totalAmount = await _bookingDetailRepository.CalculateTotalAmountByBookingIdAsync(bookingId);
+            
+            // Tạo nội dung email
+            var bookingDetailRows = new StringBuilder();
+            foreach (var detail in bookingDetails)
+            {
+                var slotResult = await _testServiceSlotService.GetSlotByIdAsync(detail.SlotId);
+                if (!slotResult.IsSuccess)
+                    continue;
+
+                // Map shift value to Vietnamese
+                string shiftDisplay = slotResult.Data.Shift switch
+                {
+                    "AM" => "7:30 - 12:00",
+                    "PM" => "13:30 - 17:00",
+                    _ => slotResult.Data.Shift
+                };
+
+                bookingDetailRows.AppendLine($@"
+                    <tr>
+                        <td style='padding: 12px; border: 1px solid #ddd;'>{detail.TestService?.ServiceName}</td>
+                        <td style='padding: 12px; border: 1px solid #ddd; text-align: center;'>{slotResult.Data.SlotDate:dd/MM/yyyy}</td>
+                        <td style='padding: 12px; border: 1px solid #ddd; text-align: center;'>{shiftDisplay}</td>
+                        <td style='padding: 12px; border: 1px solid #ddd; text-align: right;'>{detail.TestService?.Price.ToString("#,##0")} VND</td>
+                    </tr>
+                ");
+            }
+
+            var htmlContent = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Xác nhận lịch hẹn xét nghiệm</title>
+</head>
+<body style='margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f9f9f9;'>
+    <div style='max-width: 650px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);'>
+        <!-- Header -->
+        <div style='background-color: #2d8cf0; padding: 20px; text-align: center;'>
+            <h1 style='color: white; margin: 0;'>WellCare Health Center</h1>
+        </div>
+
+        <!-- Content -->
+        <div style='padding: 30px 20px;'>
+            <h2 style='color: #2d8cf0; margin-top: 0;'>Xác nhận lịch hẹn xét nghiệm</h2>
+            
+            <p>Xin chào <strong>{customerName}</strong>,</p>
+            
+            <p>Cảm ơn bạn đã thanh toán thành công. Dưới đây là thông tin chi tiết lịch hẹn xét nghiệm của bạn:</p>
+            
+            <!-- Customer Info Box -->
+            <div style='background-color: #f8f9fa; border-left: 4px solid #2d8cf0; padding: 15px; margin: 20px 0;'>
+                <div style='margin-bottom: 10px;'><strong>Mã đặt lịch:</strong> #{booking.BookingId.ToString().Substring(0, 8).ToUpper()}</div>
+                <div style='margin-bottom: 10px;'><strong>Khách hàng:</strong> {customerName}</div>
+                <div style='margin-bottom: 10px;'><strong>Email:</strong> {customer.Email}</div>
+                <div><strong>Điện thoại:</strong> {customer.Phone}</div>
+            </div>
+
+            <!-- Services Table -->
+            <h3 style='color: #2d8cf0; margin-top: 25px;'>Chi tiết dịch vụ</h3>
+            <table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>
+                <thead>
+                    <tr style='background-color: #f4f4f4;'>
+                        <th style='padding: 12px; border: 1px solid #ddd; text-align: left;'>Dịch vụ</th>
+                        <th style='padding: 12px; border: 1px solid #ddd; text-align: center;'>Ngày</th>
+                        <th style='padding: 12px; border: 1px solid #ddd; text-align: center;'>Thời gian</th>
+                        <th style='padding: 12px; border: 1px solid #ddd; text-align: right;'>Giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {bookingDetailRows}
+                </tbody>
+                <tfoot>
+                    <tr style='background-color: #f8f9fa; font-weight: bold;'>
+                        <td colspan='3' style='padding: 12px; border: 1px solid #ddd; text-align: right;'>Tổng cộng:</td>
+                        <td style='padding: 12px; border: 1px solid #ddd; text-align: right;'>{totalAmount.ToString("#,##0")} VND</td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <!-- Location Info -->
+            <div style='background-color: #f0f8ff; border: 1px solid #b3e0ff; border-radius: 4px; padding: 15px; margin: 20px 0;'>
+                <h4 style='margin-top: 0; color: #0066cc;'>Địa điểm xét nghiệm</h4>
+                <p style='margin-bottom: 5px;'><strong>Trung tâm WellCare</strong></p>
+                <p style='margin-bottom: 5px;'>Tòa nhà BS16 The Oasis, Vinhomes Grand Park, Quận 9, Tp. Hồ Chí Minh</p>
+                <p style='margin-bottom: 0;'>Quý khách vui lòng đến đúng giờ và mang theo CMND/CCCD.</p>
+            </div>
+            
+            <!-- Notes -->
+            <div style='margin: 20px 0;'>
+                <p style='color: #555;'>Nếu có thắc mắc hoặc cần hỗ trợ, vui lòng liên hệ:</p>
+                <ul style='color: #555; padding-left: 20px;'>
+                    <li>Hotline: 1900 1234 567</li>
+                    <li>Email: info@wellcare.vn</li>
+                </ul>
+            </div>
+            
+            <!-- CTA Button -->
+            <div style='text-align: center; margin: 30px 0;'>
+                <a href='https://gender-healthcare.vercel.app/customer/payment-history' style='background: #2d8cf0; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>Xem chi tiết lịch hẹn</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style='background-color: #f4f4f4; padding: 20px; text-align: center; border-top: 1px solid #ddd;'>
+            <p style='margin: 0; color: #666; font-size: 13px;'>© 2025 WellCare - Trung tâm chăm sóc sức khỏe giới tính</p>
+            <p style='margin: 10px 0 0; color: #666; font-size: 12px;'>Email này được gửi tự động. Vui lòng không trả lời email này.</p>
+        </div>
+    </div>
+</body>
+</html>
+";
+
+            // Gửi email
+            await _emailService.SendBookingDetailEmailAsync(
+                booking.Account.Email,
+                "Xác nhận lịch hẹn xét nghiệm - WellCare Health Center",
+                htmlContent
+            );
         }
     }
 }

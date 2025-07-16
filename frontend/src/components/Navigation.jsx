@@ -6,13 +6,14 @@ import { Heart, Menu, X, User, LogOut, Settings, ChevronDown, CreditCard, FileTe
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '@/redux/features/userSlice'
 import api from '@/configs/axios'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/useToast'
 import CartIcon from './CartIcon'
 import NotificationBell from './NotificationBell'
 
 const Navigation = () => {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { showSuccess } = useToast()
   const location = useLocation()
   const userInfo = useSelector((state) => state.user?.userInfo || {})
   const dispatch = useDispatch()
@@ -117,7 +118,7 @@ const Navigation = () => {
 
       setIsMenuOpen(false)
       navigate('/')
-      toast.success('Đã đăng xuất thành công')
+      showSuccess('Đăng xuất thành công')
     }
   }
 

@@ -17,7 +17,6 @@ import {
 import api from '../../configs/axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
-import { toast } from 'react-toastify'
 
 const { Header, Content, Footer, Sider } = Layout
 const { Text } = Typography
