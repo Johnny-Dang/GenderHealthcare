@@ -3,11 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, MessageSquare } from 'lucide-react'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/useToast'
 import api from '@/configs/axios'
 
 const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSuccess }) => {
   const userInfo = useSelector((state) => state.user?.userInfo || {})
+
+  const { showSuccess, showError } = useToast()
 
   const [formData, setFormData] = useState({
     guestName: '',
@@ -116,12 +118,12 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
     setApiError('')
 
     if (!validateForm()) {
-      toast.error('Vui lòng điền đầy đủ thông tin!')
+      showError('Vui lòng điền đầy đủ thông tin!')
       return
     }
 
     if (!consultant) {
-      toast.error('Vui lòng chọn tư vấn viên!')
+      showError('Vui lòng chọn tư vấn viên!')
       return
     }
 
@@ -142,14 +144,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
       onOpenChange(false)
 
-      toast.success('Đặt lịch thành công! Chúng tôi sẽ liên hệ bạn sớm nhất.', {
-        position: 'top-center',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      })
+      showSuccess('Đặt lịch thành công! Chúng tôi sẽ liên hệ bạn sớm nhất.')
 
       // Reset form data
       setFormData({
@@ -172,7 +167,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
       if (error.response?.data?.message) {
         setApiError(error.response.data.message)
-        toast.error(error.response.data.message)
+        showError(error.response.data.message)
       } else if (error.response?.data?.errors) {
         const serverErrors = error.response.data.errors
         const newErrors = {}
@@ -184,10 +179,10 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
         })
 
         setFormErrors(newErrors)
-        toast.error('Đã có lỗi khi đặt lịch. Vui lòng kiểm tra lại thông tin.')
+        showError('Đã có lỗi khi đặt lịch. Vui lòng kiểm tra lại thông tin.')
       } else {
         setApiError('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
-        toast.error('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
+        showError('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
       }
     }
   }

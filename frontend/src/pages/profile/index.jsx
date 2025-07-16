@@ -7,10 +7,11 @@ import Avatar from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/useToast'
 import api from '@/configs/axios'
 
 const ProfilePage = () => {
+  const { showSuccess, showError } = useToast()
   const userInfo = useSelector((state) => state.user?.userInfo || {})
   const [form, setForm] = useState({
     firstName: '',
@@ -30,14 +31,10 @@ const ProfilePage = () => {
   const [fetching, setFetching] = useState(true)
   const [formErrors, setFormErrors] = useState({})
   const [apiError, setApiError] = useState('')
-
-  // Lấy thông tin user mới nhất từ API khi vào trang
   const fetchedRef = useRef(false)
 
   useEffect(() => {
-    // Tránh gọi API nhiều lần trong development mode với React.StrictMode
     if (fetchedRef.current) return
-
     if (!userInfo?.accountId || !userInfo?.role) {
       setFetching(false)
       return
@@ -66,23 +63,15 @@ const ProfilePage = () => {
       })
       .catch((error) => {
         console.error('Error fetching profile:', error)
-        toast.error('Không thể lấy thông tin người dùng')
+        showError('Không thể lấy thông tin người dùng')
       })
       .finally(() => setFetching(false))
-  }, [userInfo])
+  }, [userInfo, showError])
 
   const handleChange = (e) => {
     const { name, value } = e.target
-
-    // Clear error for this field when user makes changes
-    setFormErrors({
-      ...formErrors,
-      [name]: undefined
-    })
-
-    // Clear API error when user makes any changes
+    setFormErrors({ ...formErrors, [name]: undefined })
     setApiError('')
-
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -93,19 +82,16 @@ const ProfilePage = () => {
   const validateForm = () => {
     const errors = {}
 
-    // Validate required fields
     if (!form.firstName.trim()) errors.firstName = 'Tên không được để trống'
     if (!form.lastName.trim()) errors.lastName = 'Họ không được để trống'
     if (!form.phone.trim()) errors.phone = 'Số điện thoại không được để trống'
     if (!form.dateOfBirth) errors.dateOfBirth = 'Ngày sinh không được để trống'
     if (!form.gender) errors.gender = 'Vui lòng chọn giới tính'
 
-    // Phone number validation
     if (form.phone && !/^[0-9]{10,11}$/.test(form.phone.replace(/\s/g, ''))) {
       errors.phone = 'Số điện thoại không hợp lệ'
     }
 
-    // Date of birth validation - ensure user is at least 12 years old
     if (form.dateOfBirth) {
       const birthDate = new Date(form.dateOfBirth)
       const today = new Date()
@@ -118,7 +104,6 @@ const ProfilePage = () => {
       }
     }
 
-    // Validate staff/consultant specific fields if applicable
     if (isStaffOrConsultant) {
       if (form.yearOfExperience && (isNaN(form.yearOfExperience) || form.yearOfExperience < 0)) {
         errors.yearOfExperience = 'Số năm kinh nghiệm không hợp lệ'
@@ -131,19 +116,15 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    // Clear API error
     setApiError('')
 
-    // Validate form
     if (!validateForm()) {
-      toast.error('Vui lòng kiểm tra lại thông tin đã nhập!')
+      showError('Vui lòng kiểm tra lại thông tin đã nhập!')
       return
     }
 
     setLoading(true)
     try {
-      // Tạo payload theo yêu cầu API
       let payload = {
         firstName: form.firstName,
         lastName: form.lastName,
@@ -154,7 +135,6 @@ const ProfilePage = () => {
         roleName: form.roleName || userInfo?.role
       }
 
-      // Nếu là staff/consultant, thêm thông tin chuyên môn
       if (isStaffOrConsultant) {
         payload = {
           ...payload,
@@ -166,32 +146,27 @@ const ProfilePage = () => {
       }
 
       await api.put(`/api/users/${userInfo?.accountId}`, payload)
-      toast.success('Cập nhật thông tin thành công!')
+      showSuccess('Cập nhật thông tin thành công!')
       setFormErrors({})
       setApiError('')
     } catch (error) {
-      console.log('Error updating profile:', error)
-
-      // Extract error message from API response
       if (error.response?.data?.message) {
         setApiError(error.response.data.message)
-        toast.error(error.response.data.message)
+        showError(error.response.data.message)
       } else if (error.response?.data?.errors) {
-        // Handle validation errors from API if returned in this format
         const serverErrors = error.response.data.errors
         const newErrors = {}
 
-        // Map server validation errors to form fields
         Object.keys(serverErrors).forEach((key) => {
           const fieldName = key.charAt(0).toLowerCase() + key.slice(1)
           newErrors[fieldName] = serverErrors[key][0]
         })
 
         setFormErrors(newErrors)
-        toast.error('Vui lòng kiểm tra lại thông tin đã nhập!')
+        showError('Vui lòng kiểm tra lại thông tin đã nhập!')
       } else {
         setApiError('Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại sau.')
-        toast.error('Cập nhật thất bại')
+        showError('Cập nhật thất bại')
       }
     } finally {
       setLoading(false)
@@ -199,7 +174,7 @@ const ProfilePage = () => {
   }
 
   const handleAvatarUpload = (uploadedUrl) => {
-    setForm(prev => ({ ...prev, avatarUrl: uploadedUrl }))
+    setForm((prev) => ({ ...prev, avatarUrl: uploadedUrl }))
   }
 
   if (!userInfo?.accountId || !userInfo?.role) {
@@ -220,7 +195,6 @@ const ProfilePage = () => {
     )
   }
 
-  // Loading khi đang lấy dữ liệu từ API
   if (fetching) {
     return (
       <div className='min-h-screen flex flex-col'>
@@ -240,7 +214,6 @@ const ProfilePage = () => {
       <Navigation />
       <main className='flex-1 py-12 px-4'>
         <div className='max-w-4xl mx-auto'>
-          {/* Profile Header */}
           <div className='mb-8 text-center'>
             <h1 className='text-3xl md:text-4xl font-bold text-gray-800 mb-2'>
               Thông tin <span className='text-pink-600'>cá nhân</span>
@@ -249,14 +222,13 @@ const ProfilePage = () => {
           </div>
 
           <Card className='overflow-hidden border-none shadow-lg'>
-            {/* Profile Card Header with Avatar */}
             <div className='bg-gradient-to-r from-pink-400 to-pink-600 p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 text-white'>
               <Avatar
                 src={form.avatarUrl}
-                alt="Avatar"
-                size="2xl"
+                alt='Avatar'
+                size='2xl'
                 fallbackText={`${form.firstName || ''} ${form.lastName || ''}`}
-                className="border-white"
+                className='border-white'
                 clickable={true}
               />
               <div className='text-center sm:text-left'>
@@ -272,10 +244,8 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            {/* Profile Form */}
             <div className='p-6 sm:p-8 bg-white'>
               <form onSubmit={handleSubmit} className='space-y-6'>
-                {/* API Error message at the top of the form */}
                 {apiError && (
                   <div className='bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg'>
                     <p className='font-medium'>Lỗi từ hệ thống:</p>
@@ -283,7 +253,6 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Personal Information Section */}
                 <div>
                   <h3 className='text-xl font-semibold text-gray-800 mb-4 flex items-center'>
                     <span className='inline-block w-1.5 h-1.5 bg-pink-500 rounded-full mr-2'></span>
@@ -321,7 +290,6 @@ const ProfilePage = () => {
                       {formErrors.firstName && <p className='text-red-600 text-xs mt-1'>{formErrors.firstName}</p>}
                     </div>
 
-                    {/* Similar validation for other fields */}
                     <div className='space-y-1'>
                       <label className='block text-sm font-medium text-gray-700'>Email</label>
                       <Input
@@ -393,13 +361,12 @@ const ProfilePage = () => {
                       <CloudinaryUpload
                         onUploadSuccess={handleAvatarUpload}
                         currentAvatarUrl={form.avatarUrl}
-                        className="mt-2"
+                        className='mt-2'
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Professional Information Section */}
                 {isStaffOrConsultant && (
                   <div>
                     <h3 className='text-xl font-semibold text-gray-800 mb-4 flex items-center border-t pt-6'>
@@ -454,7 +421,6 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Submit Button */}
                 <div className='pt-2'>
                   <Button
                     type='submit'

@@ -24,13 +24,16 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { Table, Tag, Button, Card, Typography, Badge, Empty, Statistic, Row, Col, Tooltip, Spin } from 'antd'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/useToast'
 import Loading from '../../components/Loading'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const { Title, Text } = Typography
 
 function ConsultantBookingSchedule() {
+  // Thêm hook useToast
+  const { showSuccess, showError } = useToast()
+
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -62,26 +65,25 @@ function ConsultantBookingSchedule() {
 
   const fetchBookings = async () => {
     if (!userInfo) {
-      toast.error('Bạn cần đăng nhập để xem lịch đặt tư vấn')
+      showError('Bạn cần đăng nhập để xem lịch đặt tư vấn')
       setLoading(false)
       return
     }
 
     // Check for consultant role instead of just id
     if (userInfo.role !== 'Consultant') {
-      toast.error('Bạn không có quyền xem lịch đặt tư vấn này')
+      showError('Bạn không có quyền xem lịch đặt tư vấn này')
       setLoading(false)
       return
     }
 
     try {
       setLoading(true)
-      // If we're here, the user is authorized, so proceed with the API call
       const response = await api.get(`/api/ConsultationBooking/consultant/${userInfo.accountId}`)
       setBookings(response.data)
     } catch (error) {
       console.error('Error fetching bookings:', error)
-      toast.error('Không thể tải danh sách lịch đặt')
+      showError('Không thể tải danh sách lịch đặt')
     } finally {
       setLoading(false)
     }
@@ -89,11 +91,9 @@ function ConsultantBookingSchedule() {
 
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      console.log(`Updating booking ${bookingId} to status: ${newStatus}`) // Debug log
-
       // Ensure newStatus is one of the valid values: "pending", "confirmed", "cancelled"
       if (!['pending', 'confirmed', 'cancelled'].includes(newStatus)) {
-        toast.error('Trạng thái không hợp lệ')
+        showError('Trạng thái không hợp lệ')
         return
       }
 
@@ -112,11 +112,11 @@ function ConsultantBookingSchedule() {
         cancelled: 'từ chối'
       }
 
-      toast.success(`Đã ${statusMessage[newStatus] || 'cập nhật'} lịch hẹn`)
+      showSuccess(`Đã ${statusMessage[newStatus] || 'cập nhật'} lịch hẹn`)
     } catch (error) {
-      console.error('Error updating booking status:', error)
-      console.error('Error details:', error.response?.data) // Log more details about the error
-      toast.error(`Không thể cập nhật trạng thái: ${error.response?.data?.message || error.message}`)
+      console.error('Error updating booking status:', error.message)
+
+      showError(`Không thể cập nhật trạng thái: ${error.response?.data?.message || error.message}`)
     }
   }
 
@@ -378,9 +378,7 @@ function ConsultantBookingSchedule() {
     }
   ]
 
-  // Lọc dữ liệu theo trạng thái, số điện thoại, ngày
   const filteredBookings = bookings.filter((b) => {
-    // Lọc theo trạng thái
     if (statusFilter !== 'all' && b.status !== statusFilter) return false
     // Lọc theo số điện thoại
     if (searchTerm) {

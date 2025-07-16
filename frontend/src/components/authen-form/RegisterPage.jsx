@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Heart, AlertCircle, ArrowRight, CheckCircle2, Mail } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/useToast'
 import api from '../../configs/axios'
 
 const Register = () => {
+  const { showSuccess, showError } = useToast()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -145,17 +146,17 @@ const Register = () => {
 
   const handleSendCode = async () => {
     if (!formData.email) {
-      toast.error('Vui lòng nhập email trước khi gửi mã.')
+      showError('Vui lòng nhập email trước khi gửi mã.')
       return
     }
     try {
       setIsLoading(true)
       await api.post('/Account/send-verification-code', { email: formData.email })
-      toast.success('Mã xác thực đã được gửi đến email của bạn.')
+      showSuccess('Mã xác thực đã được gửi đến email của bạn.')
       setIsCodeSent(true)
       setIsCounting(true)
     } catch (error) {
-      toast.error('Gửi mã xác thực thất bại. Vui lòng thử lại.')
+      showError('Gửi mã xác thực thất bại. Vui lòng thử lại.')
     } finally {
       setIsLoading(false)
     }
@@ -170,7 +171,7 @@ const Register = () => {
 
     if (!validateStep2()) return
     if (!isCodeSent) {
-      toast.error('Vui lòng gửi và nhập mã xác thực.')
+      showError('Vui lòng gửi và nhập mã xác thực.')
       return
     }
 
@@ -188,11 +189,11 @@ const Register = () => {
         gender: genderBoolean,
         verificationCode: verificationCode
       })
-      toast.success('Đăng ký thành công!')
+      showSuccess('Đăng ký thành công!')
       navigate('/login')
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
-      toast.error(errorMessage)
+      showError(errorMessage)
     } finally {
       setIsLoading(false)
     }

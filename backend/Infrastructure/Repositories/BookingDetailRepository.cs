@@ -42,6 +42,7 @@ namespace backend.Infrastructure.Repositories
         {
             return await _context.BookingDetail
                 .Include(bd => bd.TestService)
+                .Include(bd => bd.TestServiceSlot)
                 .Where(bd => bd.BookingId == bookingId)
                 .ToListAsync();
         }
