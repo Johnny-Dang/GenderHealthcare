@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Loading from '@/components/Loading'
@@ -17,8 +17,11 @@ const ConsultantList = ({
   const { showError } = useToast()
   const [consultants, setConsultants] = useState([])
   const [isPaused, setIsPaused] = useState(false)
+  const [_isActive, setIsActive] = useState(false) // Track if this instance should handle scroll
   const scrollContainerRef = React.useRef(null)
   const animationRef = React.useRef(null)
+  const componentRef = React.useRef(null)
+  const timeoutRef = React.useRef(null)
 
   useEffect(() => {
     const fetchConsultants = async () => {
@@ -34,6 +37,7 @@ const ConsultantList = ({
     }
 
     fetchConsultants()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Auto-scroll effect
@@ -75,11 +79,118 @@ const ConsultantList = ({
     }
   }, [loading, consultants.length, isPaused])
 
+  // Enhanced scroll lock logic when component touches navbar
+  useEffect(() => {
+    const handleGlobalWheel = (event) => {
+      if (!componentRef.current || !scrollContainerRef.current) return
+
+      // Check if component is at the top (touching navbar)
+      const rect = componentRef.current.getBoundingClientRect()
+      const isAtNavbar = rect.top <= 100 && rect.bottom > 100 // Navbar area
+
+      if (!isAtNavbar) {
+        setIsActive(false)
+        return // Allow normal scrolling when not at navbar
+      }
+
+      // Mark this instance as active
+      setIsActive(true)
+
+      const container = scrollContainerRef.current
+      const maxScrollLeft = container.scrollWidth - container.clientWidth
+      const currentScrollLeft = container.scrollLeft
+
+      // Check if there's horizontal content to scroll
+      if (maxScrollLeft > 5) {
+        // Add small threshold to handle floating point precision
+        const scrollingDown = event.deltaY > 0
+        const scrollingUp = event.deltaY < 0
+
+        // Convert vertical scroll to horizontal when scrolling down
+        if (scrollingDown && currentScrollLeft < maxScrollLeft - 5) {
+          // Add threshold - Can scroll right - prevent page scroll and scroll horizontally
+          event.preventDefault()
+          event.stopPropagation()
+
+          setIsPaused(true)
+
+          const scrollAmount = Math.abs(event.deltaY) * 2
+          container.scrollLeft += scrollAmount
+
+          // Clear any existing timeout
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+          }
+          timeoutRef.current = setTimeout(() => {
+            setIsPaused(false)
+          }, 1000)
+
+          return
+        }
+
+        // Convert vertical scroll to horizontal when scrolling up
+        if (scrollingUp && currentScrollLeft > 5) {
+          // Add threshold - Can scroll left - prevent page scroll and scroll horizontally
+          event.preventDefault()
+          event.stopPropagation()
+
+          setIsPaused(true)
+
+          const scrollAmount = Math.abs(event.deltaY) * 2
+          container.scrollLeft -= scrollAmount
+
+          // Clear any existing timeout
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+          }
+          timeoutRef.current = setTimeout(() => {
+            setIsPaused(false)
+          }, 1000)
+
+          return
+        }
+      }
+
+      // If we reach here (no horizontal scrolling needed or already at boundaries),
+      // allow normal page scrolling
+    }
+
+    const handleScroll = () => {
+      if (!componentRef.current) return
+
+      const rect = componentRef.current.getBoundingClientRect()
+      const isAtNavbar = rect.top <= 100 && rect.bottom > 100
+
+      if (!isAtNavbar) {
+        setIsActive(false)
+      } else {
+        setIsActive(true)
+      }
+    }
+
+    // Only add listeners if component is visible
+    if (componentRef.current) {
+      document.addEventListener('wheel', handleGlobalWheel, { passive: false })
+      window.addEventListener('scroll', handleScroll, { passive: true })
+    }
+
+    return () => {
+      document.removeEventListener('wheel', handleGlobalWheel)
+      window.removeEventListener('scroll', handleScroll)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [consultants.length])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
       }
     }
   }, [])
@@ -93,6 +204,15 @@ const ConsultantList = ({
     if (onConsultantSelect) {
       onConsultantSelect(consultant)
     }
+  }
+
+  // Mouse handlers with improved scroll lock
+  const handleMouseEnter = () => {
+    setIsPaused(true)
+  }
+
+  const handleMouseLeave = () => {
+    setIsPaused(false)
   }
 
   if (loading) {
@@ -111,14 +231,12 @@ const ConsultantList = ({
   }
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className}`} ref={componentRef}>
       <div
         ref={scrollContainerRef}
         className='overflow-x-auto scrollbar-hide scroll-smooth'
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div className='flex gap-6 pb-4' style={{ width: 'max-content' }}>
           {consultants.map((consultant) => (
@@ -202,15 +320,6 @@ const ConsultantList = ({
           ))}
         </div>
       </div>
-
-      {/* Scroll indicator */}
-      <div className='flex justify-center mt-4'>
-        <p className='text-sm text-gray-500 flex items-center'>
-          <span className='mr-2'>←</span>
-          Tự động cuộn hoặc kéo ngang để xem thêm
-          <span className='ml-2'>→</span>
-        </p>
-      </div>
     </div>
   )
 }
@@ -231,6 +340,13 @@ const styles = `
   }
   .scrollbar-hide:hover {
     scroll-behavior: auto; /* Allow manual scrolling when hovering */
+  }
+  
+  /* Enhanced scroll lock styles */
+  body.scroll-locked {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
   }
 `
 
