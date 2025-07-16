@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ChatBot from '@/components/ChatBot'
+import ConsultantList from '@/components/ConsultantList'
 import { Card, CardContent } from '@/components/ui/card'
-import axios from '@/configs/axios'
 import {
   Heart,
   Calendar,
@@ -22,10 +22,11 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import PreFooter from '../../components/PreFooter'
 
 const AboutPage = () => {
   // Thông tin công ty
-  const [companyInfo, setCompanyInfo] = useState({
+  const [companyInfo] = useState({
     yearsOfExperience: 15,
     totalExperts: 50,
     happyClients: 10000,
@@ -36,7 +37,7 @@ const AboutPage = () => {
   })
 
   // Giá trị cốt lõi
-  const [values, setValues] = useState([
+  const [values] = useState([
     {
       icon: Heart,
       title: 'Chăm sóc tận tâm',
@@ -58,7 +59,7 @@ const AboutPage = () => {
   ])
 
   // Dịch vụ
-  const [services, setServices] = useState([
+  const [services] = useState([
     {
       icon: Calendar,
       title: 'Theo dõi chu kỳ kinh nguyệt',
@@ -96,75 +97,10 @@ const AboutPage = () => {
     }
   ])
 
-  // Đội ngũ chuyên gia
-  const [team, setTeam] = useState([])
-  const [loadingTeam, setLoadingTeam] = useState(true)
-  const [teamError, setTeamError] = useState('')
-
-  // Fetch đội ngũ bác sĩ từ API
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        setLoadingTeam(true)
-        setTeamError('')
-        const response = await axios.get('/api/consultants')
-        // Map dữ liệu từ API để có cấu trúc nhất quán
-        const mappedTeam = response.data.map((consultant) => ({
-          consultantId: consultant.consultantId,
-          fullName: consultant.fullName,
-          specialization: consultant.specialization,
-          profilePicture: consultant.profilePicture,
-          degree: consultant.degree,
-          yearOfExperience: consultant.yearOfExperience,
-          biography: consultant.biography
-        }))
-        setTeam(mappedTeam)
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách bác sĩ:', error)
-        setTeamError('Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.')
-        // Fallback to mock data if API fails
-        setTeam([
-          {
-            consultantId: 1,
-            fullName: 'TS.BS Nguyễn Thị Minh Hương',
-            specialization: 'Trưởng khoa Phụ sản',
-            profilePicture: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300',
-            degree: 'Tiến sĩ, Bác sĩ',
-            yearOfExperience: 20,
-            biography:
-              'Bác sĩ có hơn 20 năm kinh nghiệm trong lĩnh vực phụ sản, chuyên về điều trị vô sinh hiếm muộn và chăm sóc sức khỏe sinh sản.'
-          },
-          {
-            consultantId: 2,
-            fullName: 'PGS.TS Trần Văn Nam',
-            specialization: 'Chuyên gia Nội tiết',
-            profilePicture: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=300',
-            degree: 'Phó Giáo sư, Tiến sĩ',
-            yearOfExperience: 15,
-            biography:
-              'Chuyên gia hàng đầu về nội tiết sinh sản, có nhiều nghiên cứu về rối loạn hormone và điều trị PCOS.'
-          },
-          {
-            consultantId: 3,
-            fullName: 'ThS.BS Lê Thị Thanh',
-            specialization: 'Tư vấn Sức khỏe Sinh sản',
-            profilePicture: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=300',
-            degree: 'Thạc sĩ, Bác sĩ',
-            yearOfExperience: 12,
-            biography:
-              'Bác sĩ chuyên về tư vấn sức khỏe sinh sản và giáo dục giới tính, có kinh nghiệm làm việc với nhiều đối tượng khách hàng khác nhau.'
-          }
-        ])
-      } finally {
-        setLoadingTeam(false)
-      }
-    }
-
-    fetchTeam()
-  }, [])
+  // Đội ngũ chuyên gia - sử dụng ConsultantList component
 
   // Chứng nhận và giải thưởng
-  const [certifications, setCertifications] = useState([
+  const [certifications] = useState([
     {
       icon: Shield,
       name: 'Chứng nhận ISO 9001:2015',
@@ -194,25 +130,6 @@ const AboutPage = () => {
       year: '2020'
     }
   ])
-
-  // Thông tin liên hệ
-  const [contactInfo, setContactInfo] = useState({
-    address: 'Tòa nhà BS16 The Oasis, Vinhomes Grand Park, Quận 9, Tp. Hồ Chí Minh',
-    phone: '1900 1234 567',
-    email: 'info@wellcare.vn',
-    workingHours: [
-      { days: 'Thứ 2 - Thứ 6', hours: '7:30 - 17:30' },
-      { days: 'Thứ 7', hours: '8:00 - 16:00' },
-      { days: 'Chủ nhật', hours: '8:00 - 12:00' }
-    ],
-    mapUrl:
-      'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4946681012693!2d106.70093145092787!3d10.771600992283384!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4670702e31%3A0xa5777fb3a5d0d14f!2zMTIzIE5ndXnhu4VuIEh14buHLCBC4bq_biBOZ2jDqSwgUXXhuq1uIDEsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaCwgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1660125399332!5m2!1svi!2s',
-    socialMedia: {
-      facebook: 'https://facebook.com/wellcare',
-      instagram: 'https://instagram.com/wellcare',
-      youtube: 'https://youtube.com/wellcare'
-    }
-  })
 
   // Thêm các refs và state cho animation
   const [isVisible, setIsVisible] = useState({
@@ -438,75 +355,13 @@ const AboutPage = () => {
             </p>
           </div>
 
-          <div className='grid md:grid-cols-3 gap-8'>
-            {loadingTeam ? (
-              // Loading skeleton
-              Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className='bg-white rounded-xl shadow-md overflow-hidden animate-pulse'>
-                  <div className='w-full h-64 bg-gray-300'></div>
-                  <div className='p-6 text-center'>
-                    <div className='h-6 bg-gray-300 rounded mb-2'></div>
-                    <div className='h-4 bg-gray-300 rounded mb-2 w-2/3 mx-auto'></div>
-                    <div className='h-4 bg-gray-300 rounded w-1/2 mx-auto'></div>
-                  </div>
-                </div>
-              ))
-            ) : teamError ? (
-              // Error state
-              <div className='col-span-full text-center py-12'>
-                <div className='text-red-500 mb-4'>{teamError}</div>
-                <Button onClick={() => window.location.reload()} className='bg-primary-600 hover:bg-primary-700'>
-                  Thử lại
-                </Button>
-              </div>
-            ) : team.length === 0 ? (
-              // Empty state
-              <div className='col-span-full text-center py-12 text-gray-500'>
-                Hiện tại chưa có thông tin đội ngũ bác sĩ
-              </div>
-            ) : (
-              // Team data
-              team.map((member, index) => (
-                <div
-                  key={member.consultantId || index}
-                  className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-500 hover:-translate-y-2 ${isVisible.team ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                  style={{ transitionDelay: `${index * 150}ms` }}
-                >
-                  <div className='relative overflow-hidden'>
-                    <img
-                      src={
-                        member.profilePicture ||
-                        member.image ||
-                        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300'
-                      }
-                      alt={member.fullName || member.name}
-                      className='w-full h-64 object-cover transition-transform duration-700 hover:scale-110'
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=300'
-                      }}
-                    />
-                    <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300'>
-                      <div className='absolute bottom-0 left-0 right-0 p-4 text-white'>
-                        <p className='font-medium text-sm'>
-                          "{member.yearOfExperience || member.yearsOfExperience || '0'} năm kinh nghiệm trong lĩnh vực
-                          chuyên môn"
-                        </p>
-                        {member.biography && <p className='text-xs mt-2 opacity-90 line-clamp-2'>{member.biography}</p>}
-                      </div>
-                    </div>
-                  </div>
-                  <div className='p-6 text-center'>
-                    <h4 className='text-xl font-semibold text-gray-900 mb-1'>{member.fullName || member.name}</h4>
-                    {member.degree && <p className='text-sm text-gray-600 mb-1'>{member.degree}</p>}
-                    <p className='text-primary-600 font-medium mb-2'>{member.specialization || member.position}</p>
-                    <p className='text-gray-500 text-sm'>
-                      {member.yearOfExperience || member.yearsOfExperience} năm kinh nghiệm
-                    </p>
-                    {member.biography && <p className='text-gray-600 text-xs mt-3 line-clamp-3'>{member.biography}</p>}
-                  </div>
-                </div>
-              ))
-            )}
+          {/* Sử dụng ConsultantList component */}
+          <div
+            className={`transition-all duration-700 ${
+              isVisible.team ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+          >
+            <ConsultantList showBookingButton={false} className='consultant-list-about' cardClassName='bg-white' />
           </div>
         </div>
       </section>
@@ -634,124 +489,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Thông tin liên hệ và địa điểm */}
-      <section ref={contactRef} className='py-16 bg-gray-50'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div
-            className={`text-center mb-12 transition-all duration-700 ${isVisible.contact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-          >
-            <h2 className='text-3xl lg:text-4xl font-bold text-gray-900 mb-6'>
-              Thông tin <span className='text-primary-600'>liên hệ</span>
-            </h2>
-            <p className='text-lg text-gray-600 max-w-3xl mx-auto'>
-              Bạn có thể dễ dàng tìm thấy chúng tôi hoặc liên hệ qua các kênh dưới đây
-            </p>
-          </div>
-
-          <div className='grid lg:grid-cols-5 gap-8'>
-            {/* Bản đồ Google Maps */}
-            <div
-              className={`lg:col-span-3 rounded-xl overflow-hidden shadow-md h-auto flex transition-all duration-1000 ${isVisible.contact ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}
-              style={{ height: '100%' }}
-            >
-              <iframe
-                src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.5272031630207!2d106.84166977451802!3d10.84744815788076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317521003765a9f5%3A0x8ea99e10017a1831!2sT%C3%B2a%20BS16%20-%20The%20Oasis%20-%20Vinhomes%20Grand%20Park!5e0!3m2!1svi!2s!4v1751703515467!5m2!1svi!2s'
-                width='100%'
-                height='100%'
-                style={{ border: 0 }}
-                allowFullScreen=''
-                loading='lazy'
-                referrerPolicy='no-referrer-when-downgrade'
-              ></iframe>
-            </div>
-
-            {/* Thông tin liên hệ */}
-            <div
-              className={`lg:col-span-2 space-y-6 transition-all duration-1000 ${isVisible.contact ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}
-            >
-              <div className='bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-500'>
-                <h3 className='text-xl font-semibold mb-6 text-gray-900'>Thông tin liên hệ</h3>
-
-                <div className='space-y-5'>
-                  <div className='flex items-start group'>
-                    <div className='w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 group-hover:bg-primary-200'>
-                      <MapPin className='w-5 h-5 text-primary-600' />
-                    </div>
-                    <div className='ml-4'>
-                      <h4 className='text-sm font-medium text-gray-700'>Địa chỉ</h4>
-                      <p className='text-gray-600 mt-1'>{contactInfo.address}</p>
-                    </div>
-                  </div>
-
-                  <div className='flex items-start group'>
-                    <div className='w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 group-hover:bg-primary-200'>
-                      <Phone className='w-5 h-5 text-primary-600' />
-                    </div>
-                    <div className='ml-4'>
-                      <h4 className='text-sm font-medium text-gray-700'>Hotline (24/7)</h4>
-                      <p className='text-gray-600 mt-1'>{contactInfo.phone}</p>
-                    </div>
-                  </div>
-
-                  <div className='flex items-start group'>
-                    <div className='w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 group-hover:bg-primary-200'>
-                      <Mail className='w-5 h-5 text-primary-600' />
-                    </div>
-                    <div className='ml-4'>
-                      <h4 className='text-sm font-medium text-gray-700'>Email</h4>
-                      <p className='text-gray-600 mt-1'>{contactInfo.email}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className='bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-500'>
-                <h3 className='text-xl font-semibold mb-6 text-gray-900'>Giờ làm việc</h3>
-
-                <div className='space-y-4'>
-                  {contactInfo.workingHours.map((item, index) => (
-                    <div key={index} className='flex items-start group'>
-                      <div className='w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 group-hover:bg-primary-200'>
-                        <ClockIcon className='w-5 h-5 text-primary-600' />
-                      </div>
-                      <div className='ml-4'>
-                        <h4 className='text-sm font-medium text-gray-700'>{item.days}</h4>
-                        <p className='text-gray-600 mt-1'>{item.hours}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Kêu gọi hành động */}
-      <section className='py-16 bg-white'>
-        <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-6'>Sẵn sàng chăm sóc sức khỏe của bạn?</h2>
-          <p className='text-lg text-gray-600 mb-8 max-w-3xl mx-auto'>
-            Hãy đặt lịch tư vấn hoặc khám sức khỏe ngay hôm nay để nhận được sự chăm sóc tốt nhất từ đội ngũ chuyên gia
-            của chúng tôi.
-          </p>
-          <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-            <Button
-              asChild
-              className='px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1'
-            >
-              <Link to='/test-service'>Đặt lịch ngay</Link>
-            </Button>
-            <Button
-              asChild
-              variant='outline'
-              className='px-6 py-3 border border-primary-600 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-300 hover:shadow-md hover:-translate-y-1'
-            >
-              <Link to='/booking-consultant'>Liên hệ tư vấn</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <PreFooter contactRef={contactRef} isVisible={isVisible} />
 
       <Footer />
       <ChatBot />
