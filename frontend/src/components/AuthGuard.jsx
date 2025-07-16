@@ -28,9 +28,7 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }) => {
           return
         }
       }
-
-      // Nếu kiểm tra qua, cho phép truy cập
-      console.log('Access granted for:', userInfo.fullName || userInfo.email)
+      // console.log('Access granted for:', userInfo.fullName || userInfo.email)
       setIsAllowed(true)
       setIsVerifying(false)
     }

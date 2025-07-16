@@ -31,7 +31,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog'
 import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useToast } from '@/hooks/useToast'
 
 const BookingDetailPage = () => {
   const { bookingId } = useParams()
@@ -48,6 +48,7 @@ const BookingDetailPage = () => {
     rating: 5,
     loading: false
   })
+  const { showSuccess, showError } = useToast()
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -85,10 +86,10 @@ const BookingDetailPage = () => {
         detail: feedbackModal.content,
         rating: feedbackModal.rating
       })
-      toast.success('Gửi feedback thành công!')
+      showSuccess('Gửi feedback thành công!')
       setFeedbackModal({ open: false, detail: null, content: '', rating: 5, loading: false })
     } catch (err) {
-      toast.error('Gửi feedback thất bại!')
+      showError('Gửi feedback thất bại!')
       setFeedbackModal((s) => ({ ...s, loading: false }))
     }
   }

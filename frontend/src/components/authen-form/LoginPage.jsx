@@ -6,14 +6,15 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Heart, AlertCircle } from 'lucide-react'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '@/hooks/useToast'
 import GoogleLoginButton from '../GoogleLoginButton'
 import { useDispatch } from 'react-redux'
 import api from '../../configs/axios'
 import { login } from '../../redux/features/userSlice'
 
 const Login = () => {
+  const { showSuccess, showError } = useToast()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -35,7 +36,7 @@ const Login = () => {
 
       dispatch(login(response.data))
       if (response?.data?.accessToken && response?.data?.role) {
-        toast.success('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
+        showSuccess('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
 
         switch (response.data.role) {
           case 'Admin':
@@ -57,12 +58,12 @@ const Login = () => {
             navigate('/')
         }
       } else {
-        toast.error('Dữ liệu phản hổi không hợp lệ')
+        showError('Dữ liệu phản hổi không hợp lệ')
         setError('Dữ liệu phản hổi không hợp lệ')
       }
     } catch (error) {
       const errorMessage = error.response?.data
-      toast.error(errorMessage)
+      showError(errorMessage)
       setError(errorMessage)
     }
   }
@@ -74,10 +75,10 @@ const Login = () => {
       await api.post('/Account/forgot-password/send-code', {
         email: forgotPasswordEmail
       })
-      toast.success('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.')
+      showSuccess('Email khôi phục đã được gửi. Vui lòng kiểm tra email để đặt lại mật khẩu.')
       setShowResetForm(true)
     } catch (error) {
-      toast.error('Gửi email khôi phục thất bại. Vui lòng thử lại!')
+      showError('Gửi email khôi phục thất bại. Vui lòng thử lại!')
     }
   }
 
@@ -90,14 +91,14 @@ const Login = () => {
         verificationCode,
         newPassword
       })
-      toast.success('Đặt lại mật khẩu thành công!')
+      showSuccess('Đặt lại mật khẩu thành công!')
       setShowResetForm(false)
       setIsForgotPasswordOpen(false)
       setForgotPasswordEmail('')
       setVerificationCode('')
       setNewPassword('')
     } catch (error) {
-      toast.error('Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại mã xác thực hoặc thử lại!')
+      showError('Đặt lại mật khẩu thất bại. Vui lòng kiểm tra lại mã xác thực hoặc thử lại!')
     }
   }
 
@@ -249,18 +250,8 @@ const Login = () => {
                 </Link>
               </p>
             </div>
-
-            {/* <div className='mt-4 p-3 bg-blue-50 rounded-md text-sm'>
-              <p className='font-medium text-blue-800 mb-2'>Tài khoản demo:</p>
-              <p className='text-blue-700'>Admin: admin@wellcare.com / admin123</p>
-              <p className='text-blue-700'>Manager: manager@wellcare.com / manager123</p>
-              <p className='text-blue-700'>Staff: staff@wellcare.com / staff123</p>
-              <p className='text-blue-700'>Consultant: consultant@wellcare.com / consultant123</p>
-              <p className='text-blue-700'>User: user@wellcare.com / user123</p>
-            </div> */}
           </CardContent>
         </Card>
-        <ToastContainer position='top-right' autoClose={3000} hideProgressBar={false} />
       </div>
     </div>
   )

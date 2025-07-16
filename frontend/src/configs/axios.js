@@ -1,10 +1,12 @@
 import axios from 'axios'
 import { store } from '@/redux/store'
 import { login, logout } from '@/redux/features/userSlice'
+import { toast } from 'react-toastify'
 
 // Set config defaults when creating the instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, //'https://localhost:7195',
+  baseURL: 'https://localhost:7195',
+  // baseURL: import.meta.env.VITE_API_URL, //'https://localhost:7195',
   withCredentials: true, // Để gửi cookie refreshToken lên backend
   timeout: 30000
 })
@@ -42,6 +44,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
@@ -77,6 +80,16 @@ api.interceptors.response.use(
         return Promise.reject(err)
       } finally {
         isRefreshing = false
+      }
+    } else {
+      if (error.response?.status !== 401) {
+        const errorMsg = error.response?.data?.message || 'Đã xảy ra lỗi khi kết nối đến server'
+        if (!originalRequest?._noToast) {
+          toast.error(errorMsg, {
+            position: 'top-right',
+            autoClose: 4000
+          })
+        }
       }
     }
     return Promise.reject(error)
