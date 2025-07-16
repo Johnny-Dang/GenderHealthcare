@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using backend.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -48,5 +48,15 @@ namespace backend.Infrastructure.Services
 
             return response.IsSuccessStatusCode;
         }
-    }
-} 
+
+        public async Task<bool> SendBookingDetailEmailAsync(string toEmail, string subject, string htmlContent)
+        {
+            var from = new EmailAddress(_senderEmail, _senderName);
+            var to = new EmailAddress(toEmail);
+            var plainTextContent = "Bạn có lịch hẹn mới. Vui lòng kiểm tra chi tiết trong email này.";
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            var response = await _sendGridClient.SendEmailAsync(msg);
+            return response.IsSuccessStatusCode;
+        }
+    } 
+}

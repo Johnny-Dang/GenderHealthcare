@@ -19,14 +19,21 @@ namespace backend.Infrastructure.Services
         private readonly IPaymentRepository _paymentRepository;
         private readonly IBookingRepository _bookingRepository;
         private readonly IBookingDetailRepository _bookingDetailRepository;
+        private readonly IBookingDetailService _bookingDetailService;
         
-        public PaymentService(IConfiguration configuration, IPaymentRepository paymentRepository,
-            IBookingDetailRepository bookingDetail, IBookingRepository booking)
+        public PaymentService(
+            IConfiguration configuration,
+            IPaymentRepository paymentRepository,
+            IBookingDetailRepository bookingDetail,
+            IBookingRepository booking,
+            IBookingDetailService bookingDetailService
+        )
         {
             _configuration = configuration;
             _paymentRepository = paymentRepository;
             _bookingRepository = booking;
             _bookingDetailRepository = bookingDetail;
+            _bookingDetailService = bookingDetailService;
         }
 
         public string CreatePaymentUrl(CreateVnPayRequest model, HttpContext context)
@@ -77,12 +84,12 @@ namespace backend.Infrastructure.Services
                     CreatedAt = DateTime.Now,
                 };
                 
-                // Use repository to store payment
                 await _paymentRepository.CreatePaymentAsync(newPayment);
-
-                // Cập nhật trạng thái Booking và BookingDetail
                 await _bookingRepository.UpdateStatusAsync(response.BookingId, "Đã thanh toán");
                 await _bookingDetailRepository.UpdateStatusByBookingIdAsync(response.BookingId, BookingDetailStatus.Pending);
+
+                // --- GỌI HÀM GỬI EMAIL ---
+                await _bookingDetailService.SendBookingDetailEmailToCustomer(response.BookingId);
             }
             return response;
         }
