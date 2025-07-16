@@ -5,8 +5,7 @@ import { toast } from 'react-toastify'
 
 // Set config defaults when creating the instance
 const api = axios.create({
-  baseURL: 'https://localhost:7195',
-  // baseURL: import.meta.env.VITE_API_URL, //'https://localhost:7195',
+  baseURL: import.meta.env.VITE_API_URL, //'https://localhost:7195',
   withCredentials: true, // Để gửi cookie refreshToken lên backend
   timeout: 30000
 })
