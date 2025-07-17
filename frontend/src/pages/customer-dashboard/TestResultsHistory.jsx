@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,8 +25,8 @@ const TestResultsHistory = () => {
   const [testResults, setTestResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [reviewedServices, setReviewedServices] = useState(new Set())
-  const [toast, setToast] = useState({ show: false, message: '', type: '' }) // Thêm toast state
+  const [userFeedbacks, setUserFeedbacks] = useState([]) // Thay đổi từ reviewedServices sang userFeedbacks
+  const [toast, setToast] = useState({ show: false, message: '', type: '' })
   const [feedbackModal, setFeedbackModal] = useState({
     open: false,
     serviceId: null,
@@ -47,58 +47,86 @@ const TestResultsHistory = () => {
     }, 3000)
   }
 
-  useEffect(() => {
-    fetchTestResults()
-    loadReviewedServices()
-  }, [])
+  // Load feedback data từ API thay vì localStorage
+  const loadUserFeedbacks = useCallback(async () => {
+    if (!user?.accountId) return
 
-  const loadReviewedServices = () => {
-    const saved = localStorage.getItem(`reviewed_services_${user?.accountId}`)
-    if (saved) {
-      setReviewedServices(new Set(JSON.parse(saved)))
+    try {
+      console.log('Loading feedbacks for account:', user.accountId) // Debug log
+      const response = await api.get(`/api/Feedback/account/${user.accountId}`)
+      console.log('API response:', response.data) // Debug log
+      setUserFeedbacks(response.data || [])
+    } catch (error) {
+      console.error('Error loading user feedbacks:', error)
+      if (error.response?.status === 404) {
+        console.log('No feedbacks found (404) - this is normal for new users') // Debug log
+        setUserFeedbacks([])
+      } else {
+        setUserFeedbacks([])
+      }
     }
-  }
+  }, [user?.accountId])
 
-  const saveReviewedService = (serviceId) => {
-    const updated = new Set([...reviewedServices, serviceId])
-    setReviewedServices(updated)
-    localStorage.setItem(`reviewed_services_${user?.accountId}`, JSON.stringify([...updated]))
-  }
+  // Không cần saveReviewedService nữa vì API sẽ tự động lưu khi gửi feedback
 
-  const fetchTestResults = async () => {
+  const fetchTestResults = useCallback(async () => {
+    if (!user?.accountId) return
+
     try {
       setLoading(true)
       setError(null)
       const response = await api.get(`/api/booking-details/paid/account/${user.accountId}`)
 
-      const testResults = response.data.filter(
-        (item) => item.status === 'Đã có kết quả' || item.status === 'Đã xét nghiệm'
-      )
+      // Hiển thị tất cả dịch vụ đã thanh toán (cả chưa xét nghiệm và đã có kết quả)
+      const allPaidServices = response.data || []
 
-      setTestResults(testResults || [])
+      setTestResults(allPaidServices)
     } catch (error) {
       console.error('Error fetching test results:', error)
 
       if (error.response?.status === 404) {
-        setError('Không tìm thấy kết quả xét nghiệm')
+        setError('Không tìm thấy dịch vụ nào')
         setTestResults([])
       } else if (error.response?.status === 401) {
         setError('Phiên đăng nhập đã hết hạn')
       } else {
-        setError('Không thể tải kết quả xét nghiệm. Vui lòng thử lại.')
+        setError('Không thể tải danh sách dịch vụ. Vui lòng thử lại.')
       }
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.accountId])
+
+  useEffect(() => {
+    if (user?.accountId) {
+      fetchTestResults()
+      loadUserFeedbacks()
+    }
+  }, [user?.accountId, fetchTestResults, loadUserFeedbacks])
 
   const handleViewResult = (result) => {
-    if (result.resultFileUrl) {
-      const serviceKey = result.serviceId || result.bookingDetailId
+    console.log('=== handleViewResult Debug ===') // Debug log
+    console.log('Result data:', result) // Debug log
+    console.log('User feedbacks:', userFeedbacks) // Debug log
 
-      if (reviewedServices.has(serviceKey)) {
+    if (result.resultFileUrl) {
+      // Sử dụng serviceId từ TestService, không phải bookingDetailId
+      const serviceKey = result.serviceId
+      console.log('Service key (serviceId):', serviceKey) // Debug log
+
+      // Kiểm tra xem user đã feedback cho service này chưa
+      const hasReviewed = userFeedbacks.some((feedback) => feedback.serviceId === serviceKey)
+      console.log('Has reviewed:', hasReviewed) // Debug log
+      console.log(
+        'Matching feedback:',
+        userFeedbacks.find((feedback) => feedback.serviceId === serviceKey)
+      ) // Debug log
+
+      if (hasReviewed) {
+        console.log('Opening result directly (already reviewed)') // Debug log
         window.open(result.resultFileUrl, '_blank')
       } else {
+        console.log('Opening feedback modal (not reviewed yet)') // Debug log
         setFeedbackModal({
           open: true,
           serviceId: serviceKey,
@@ -112,6 +140,7 @@ const TestResultsHistory = () => {
     } else {
       showToast('Chưa có kết quả để xem', 'error')
     }
+    console.log('=== End Debug ===') // Debug log
   }
 
   const handleSendFeedback = async () => {
@@ -127,7 +156,8 @@ const TestResultsHistory = () => {
         rating: feedbackModal.rating
       })
 
-      saveReviewedService(feedbackModal.serviceId)
+      // Reload feedbacks từ API sau khi gửi thành công
+      await loadUserFeedbacks()
       showToast('Gửi đánh giá thành công! Cảm ơn bạn đã góp ý.', 'success')
 
       if (feedbackModal.resultUrl) {
@@ -151,7 +181,8 @@ const TestResultsHistory = () => {
   }
 
   const handleSkipFeedback = () => {
-    saveReviewedService(feedbackModal.serviceId)
+    // Không lưu vào localStorage khi bỏ qua feedback
+    // Chỉ mở kết quả và đóng modal
 
     if (feedbackModal.resultUrl) {
       window.open(feedbackModal.resultUrl, '_blank')
@@ -174,6 +205,12 @@ const TestResultsHistory = () => {
         return <Badge className='bg-green-100 text-green-800'>Có kết quả</Badge>
       case 'Đã xét nghiệm':
         return <Badge className='bg-yellow-100 text-yellow-800'>Chờ kết quả</Badge>
+      case 'Đã thanh toán':
+        return <Badge className='bg-blue-100 text-blue-800'>Chưa xét nghiệm</Badge>
+      case 'Đã xác nhận':
+        return <Badge className='bg-purple-100 text-purple-800'>Đã xác nhận</Badge>
+      case 'Đang chờ xác nhận':
+        return <Badge className='bg-orange-100 text-orange-800'>Chờ xác nhận</Badge>
       default:
         return <Badge className='bg-gray-100 text-gray-800'>{status}</Badge>
     }
@@ -189,8 +226,13 @@ const TestResultsHistory = () => {
   }
 
   const isServiceReviewed = (result) => {
-    const serviceKey = result.serviceId || result.bookingDetailId
-    return reviewedServices.has(serviceKey)
+    // Chỉ những dịch vụ có kết quả mới có thể được đánh giá
+    if (result.status !== 'Đã có kết quả') {
+      return false
+    }
+    // Sử dụng serviceId từ TestService, không phải bookingDetailId
+    const serviceKey = result.serviceId
+    return userFeedbacks.some((feedback) => feedback.serviceId === serviceKey)
   }
 
   return (
@@ -234,8 +276,8 @@ const TestResultsHistory = () => {
               Quay lại
             </Button>
             <div>
-              <h1 className='text-2xl font-bold text-gray-900'>Kết quả xét nghiệm</h1>
-              <p className='text-gray-600'>Xem kết quả và tiến trình xét nghiệm</p>
+              <h1 className='text-2xl font-bold text-gray-900'>Lịch sử dịch vụ</h1>
+              <p className='text-gray-600'>Theo dõi tiến trình và kết quả các dịch vụ đã đặt</p>
             </div>
           </div>
 
@@ -273,12 +315,12 @@ const TestResultsHistory = () => {
             <Card className='p-8'>
               <div className='text-center text-gray-500'>
                 <FileText className='h-12 w-12 mx-auto mb-4 text-gray-300' />
-                <p className='mb-4'>Chưa có kết quả xét nghiệm nào</p>
+                <p className='mb-4'>Chưa có dịch vụ nào được đặt</p>
                 <Button
                   onClick={() => navigate('/test-service')}
                   className='bg-gradient-primary hover:opacity-90 text-white'
                 >
-                  Đặt xét nghiệm ngay
+                  Đặt dịch vụ ngay
                 </Button>
               </div>
             </Card>
@@ -355,7 +397,7 @@ const TestResultsHistory = () => {
                   </div>
 
                   {/* Result Status */}
-                  {result.resultFileUrl ? (
+                  {result.status === 'Đã có kết quả' && result.resultFileUrl ? (
                     <div className='p-4 bg-green-50 border border-green-200 rounded-lg'>
                       <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-3'>
@@ -378,7 +420,7 @@ const TestResultsHistory = () => {
                         </Button>
                       </div>
                     </div>
-                  ) : (
+                  ) : result.status === 'Đã xét nghiệm' ? (
                     <div className='p-4 bg-yellow-50 border border-yellow-200 rounded-lg'>
                       <div className='flex items-center gap-3'>
                         <div className='p-2 bg-yellow-100 rounded-full'>
@@ -387,6 +429,44 @@ const TestResultsHistory = () => {
                         <div>
                           <p className='font-semibold text-yellow-800'>Đang chờ kết quả</p>
                           <p className='text-sm text-yellow-600'>Kết quả sẽ có trong 1-2 ngày làm việc</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : result.status === 'Đã thanh toán' ? (
+                    <div className='p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+                      <div className='flex items-center gap-3'>
+                        <div className='p-2 bg-blue-100 rounded-full'>
+                          <Calendar className='h-5 w-5 text-blue-600' />
+                        </div>
+                        <div>
+                          <p className='font-semibold text-blue-800'>Chưa xét nghiệm</p>
+                          <p className='text-sm text-blue-600'>Vui lòng đến cơ sở y tế vào ngày đã đặt</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : result.status === 'Đã xác nhận' ? (
+                    <div className='p-4 bg-purple-50 border border-purple-200 rounded-lg'>
+                      <div className='flex items-center gap-3'>
+                        <div className='p-2 bg-purple-100 rounded-full'>
+                          <CheckCircle className='h-5 w-5 text-purple-600' />
+                        </div>
+                        <div>
+                          <p className='font-semibold text-purple-800'>Đã xác nhận</p>
+                          <p className='text-sm text-purple-600'>
+                            Lịch hẹn đã được xác nhận, chuẩn bị cho việc xét nghiệm
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='p-4 bg-gray-50 border border-gray-200 rounded-lg'>
+                      <div className='flex items-center gap-3'>
+                        <div className='p-2 bg-gray-100 rounded-full'>
+                          <Clock className='h-5 w-5 text-gray-600' />
+                        </div>
+                        <div>
+                          <p className='font-semibold text-gray-800'>{result.status}</p>
+                          <p className='text-sm text-gray-600'>Vui lòng đến cơ sở y tế vào ngày đã đặt</p>
                         </div>
                       </div>
                     </div>
