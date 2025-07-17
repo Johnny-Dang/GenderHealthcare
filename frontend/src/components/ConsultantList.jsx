@@ -17,11 +17,15 @@ const ConsultantList = ({
   const { showError } = useToast()
   const [consultants, setConsultants] = useState([])
   const [isPaused, setIsPaused] = useState(false)
-  const [_isActive, setIsActive] = useState(false) // Track if this instance should handle scroll
+  const [isDragging, setIsDragging] = useState(false)
   const scrollContainerRef = React.useRef(null)
   const animationRef = React.useRef(null)
   const componentRef = React.useRef(null)
-  const timeoutRef = React.useRef(null)
+  const dragState = React.useRef({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0
+  })
 
   useEffect(() => {
     const fetchConsultants = async () => {
@@ -65,13 +69,10 @@ const ConsultantList = ({
         animationRef.current = requestAnimationFrame(autoScroll)
       }
 
-      // Start auto-scroll after a short delay
-      const timeout = setTimeout(() => {
-        animationRef.current = requestAnimationFrame(autoScroll)
-      }, 2000)
+      // Start auto-scroll immediately
+      animationRef.current = requestAnimationFrame(autoScroll)
 
       return () => {
-        clearTimeout(timeout)
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current)
         }
@@ -79,118 +80,92 @@ const ConsultantList = ({
     }
   }, [loading, consultants.length, isPaused])
 
-  // Enhanced scroll lock logic when component touches navbar
+  // Drag to scroll logic
   useEffect(() => {
-    const handleGlobalWheel = (event) => {
-      if (!componentRef.current || !scrollContainerRef.current) return
+    const container = scrollContainerRef.current
+    if (!container || loading || consultants.length === 0) return
 
-      // Check if component is at the top (touching navbar)
-      const rect = componentRef.current.getBoundingClientRect()
-      const isAtNavbar = rect.top <= 100 && rect.bottom > 100 // Navbar area
+    const handleMouseDown = (e) => {
+      // Only handle left mouse button
+      if (e.button !== 0) return
 
-      if (!isAtNavbar) {
-        setIsActive(false)
-        return // Allow normal scrolling when not at navbar
+      // Don't start drag if clicking on interactive elements
+      if (e.target.closest('button, a, input, textarea, select')) {
+        return
       }
 
-      // Mark this instance as active
-      setIsActive(true)
+      dragState.current.isDragging = true
+      setIsDragging(true)
+      setIsPaused(true)
+      dragState.current.startX = e.pageX - container.offsetLeft
+      dragState.current.scrollLeft = container.scrollLeft
 
-      const container = scrollContainerRef.current
-      const maxScrollLeft = container.scrollWidth - container.clientWidth
-      const currentScrollLeft = container.scrollLeft
+      // Add visual feedback
+      container.style.cursor = 'grabbing'
+      container.style.userSelect = 'none'
 
-      // Check if there's horizontal content to scroll
-      if (maxScrollLeft > 5) {
-        // Add small threshold to handle floating point precision
-        const scrollingDown = event.deltaY > 0
-        const scrollingUp = event.deltaY < 0
-
-        // Convert vertical scroll to horizontal when scrolling down
-        if (scrollingDown && currentScrollLeft < maxScrollLeft - 5) {
-          // Add threshold - Can scroll right - prevent page scroll and scroll horizontally
-          event.preventDefault()
-          event.stopPropagation()
-
-          setIsPaused(true)
-
-          const scrollAmount = Math.abs(event.deltaY) * 2
-          container.scrollLeft += scrollAmount
-
-          // Clear any existing timeout
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-          }
-          timeoutRef.current = setTimeout(() => {
-            setIsPaused(false)
-          }, 1000)
-
-          return
-        }
-
-        // Convert vertical scroll to horizontal when scrolling up
-        if (scrollingUp && currentScrollLeft > 5) {
-          // Add threshold - Can scroll left - prevent page scroll and scroll horizontally
-          event.preventDefault()
-          event.stopPropagation()
-
-          setIsPaused(true)
-
-          const scrollAmount = Math.abs(event.deltaY) * 2
-          container.scrollLeft -= scrollAmount
-
-          // Clear any existing timeout
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-          }
-          timeoutRef.current = setTimeout(() => {
-            setIsPaused(false)
-          }, 1000)
-
-          return
-        }
-      }
-
-      // If we reach here (no horizontal scrolling needed or already at boundaries),
-      // allow normal page scrolling
+      // Prevent text selection
+      e.preventDefault()
     }
 
-    const handleScroll = () => {
-      if (!componentRef.current) return
+    const handleMouseMove = (e) => {
+      if (!dragState.current.isDragging) return
 
-      const rect = componentRef.current.getBoundingClientRect()
-      const isAtNavbar = rect.top <= 100 && rect.bottom > 100
+      e.preventDefault()
+      const x = e.pageX - container.offsetLeft
+      const walk = (x - dragState.current.startX) * 0.8 // Reduced scroll speed multiplier from 2 to 0.8
+      container.scrollLeft = dragState.current.scrollLeft - walk
+    }
 
-      if (!isAtNavbar) {
-        setIsActive(false)
-      } else {
-        setIsActive(true)
+    const handleMouseUp = () => {
+      dragState.current.isDragging = false
+      setIsDragging(false)
+
+      container.style.cursor = 'grab'
+      container.style.userSelect = 'auto'
+
+      // Resume auto-scroll immediately if mouse is not over container
+      const rect = container.getBoundingClientRect()
+      const mouseOverContainer = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
+      if (!container.contains(mouseOverContainer)) {
+        setIsPaused(false)
       }
     }
 
-    // Only add listeners if component is visible
-    if (componentRef.current) {
-      document.addEventListener('wheel', handleGlobalWheel, { passive: false })
-      window.addEventListener('scroll', handleScroll, { passive: true })
+    const handleMouseLeave = () => {
+      if (dragState.current.isDragging) {
+        dragState.current.isDragging = false
+        setIsDragging(false)
+
+        container.style.cursor = 'grab'
+        container.style.userSelect = 'auto'
+
+        // Resume auto-scroll immediately when leaving while dragging
+        setIsPaused(false)
+      }
     }
+
+    container.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    container.addEventListener('mouseleave', handleMouseLeave)
+
+    // Set initial cursor
+    container.style.cursor = 'grab'
 
     return () => {
-      document.removeEventListener('wheel', handleGlobalWheel)
-      window.removeEventListener('scroll', handleScroll)
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
+      container.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      container.removeEventListener('mouseleave', handleMouseLeave)
     }
-  }, [consultants.length])
+  }, [loading, consultants.length]) // Run after data loads
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
       }
     }
   }, [])
@@ -206,13 +181,17 @@ const ConsultantList = ({
     }
   }
 
-  // Mouse handlers with improved scroll lock
+  // Mouse handlers for drag-aware pause control
   const handleMouseEnter = () => {
-    setIsPaused(true)
+    if (!isDragging) {
+      setIsPaused(true)
+    }
   }
 
   const handleMouseLeave = () => {
-    setIsPaused(false)
+    if (!isDragging) {
+      setIsPaused(false) // Resume immediately without delay
+    }
   }
 
   if (loading) {
@@ -234,15 +213,22 @@ const ConsultantList = ({
     <div className={`${className}`} ref={componentRef}>
       <div
         ref={scrollContainerRef}
-        className='overflow-x-auto scrollbar-hide scroll-smooth'
+        className='overflow-x-auto scrollbar-hide scroll-smooth select-none'
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          scrollBehavior: isDragging ? 'auto' : 'smooth'
+        }}
       >
         <div className='flex gap-6 pb-4' style={{ width: 'max-content' }}>
           {consultants.map((consultant) => (
             <Card
               key={consultant.id}
               className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex-shrink-0 w-80 ${cardClassName}`}
+              style={{
+                pointerEvents: isDragging ? 'none' : 'auto'
+              }}
             >
               <CardContent className='p-8 text-center'>
                 <div className='relative inline-block mb-6'>
@@ -251,6 +237,7 @@ const ConsultantList = ({
                       src={consultant.avatarUrl}
                       alt={consultant.fullName}
                       className='w-24 h-24 rounded-full object-cover mx-auto'
+                      draggable={false}
                     />
                   ) : (
                     <div className='w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-2xl mx-auto'>
@@ -305,7 +292,8 @@ const ConsultantList = ({
                 {showBookingButton && (
                   <Button
                     asChild={!onConsultantSelect}
-                    className='w-full bg-gradient-primary hover:opacity-90 text-white'
+                    className='w-full bg-gradient-primary hover:opacity-90 text-white relative z-10'
+                    style={{ pointerEvents: 'auto' }}
                     onClick={onConsultantSelect ? () => handleConsultantAction(consultant) : undefined}
                   >
                     {onConsultantSelect ? (
@@ -326,7 +314,7 @@ const ConsultantList = ({
 
 export default ConsultantList
 
-// Add custom styles for smooth scrolling
+// Add custom styles for smooth scrolling and drag interaction
 const styles = `
   .scrollbar-hide {
     -ms-overflow-style: none;  /* Internet Explorer 10+ */
@@ -340,6 +328,14 @@ const styles = `
   }
   .scrollbar-hide:hover {
     scroll-behavior: auto; /* Allow manual scrolling when hovering */
+  }
+  
+  /* Drag interaction styles */
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
   
   /* Enhanced scroll lock styles */
