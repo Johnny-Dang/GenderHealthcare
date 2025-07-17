@@ -361,7 +361,7 @@ const AboutPage = () => {
               isVisible.team ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
           >
-            <ConsultantList showBookingButton={false} className='consultant-list-about' cardClassName='bg-white' />
+            <ConsultantList showBookingButton={true} className='consultant-list-about' cardClassName='bg-white' />
           </div>
         </div>
       </section>
