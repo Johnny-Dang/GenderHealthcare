@@ -25,7 +25,7 @@ const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   try {
     return new Date(dateString).toLocaleDateString('vi-VN')
-  } catch (error) {
+  } catch {
     return 'N/A'
   }
 }
@@ -179,175 +179,9 @@ const PaymentHistory = () => {
           </Button>
         </div>
 
-        {/* Payment List */}
-        <div className='space-y-6'>
-          {loading ? (
-            <Card className='p-8'>
-              <div className='flex items-center justify-center'>
-                <Loader className='animate-spin h-6 w-6 mr-2 text-primary-500' />
-                <span>Đang tải dữ liệu...</span>
-              </div>
-            </Card>
-          ) : error ? (
-            <Card className='p-8'>
-              <div className='text-center text-red-500'>
-                <AlertCircle className='h-12 w-12 mx-auto mb-4' />
-                <p className='mb-4'>{error}</p>
-                <Button onClick={fetchPaymentHistory} variant='outline'>
-                  Thử lại
-                </Button>
-              </div>
-            </Card>
-          ) : groupedPayments.length === 0 ? (
-            <Card className='p-8'>
-              <div className='text-center text-gray-500'>
-                <CreditCard className='h-12 w-12 mx-auto mb-4 text-gray-300' />
-                <p className='mb-4'>Chưa có đơn hàng thanh toán nào</p>
-                <Button
-                  onClick={() => navigate('/test-service')}
-                  className='bg-gradient-primary hover:opacity-90 text-white'
-                >
-                  Đặt dịch vụ ngay
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            groupedPayments.map((booking) => {
-              const isExpanded = expandedBookings.has(booking.bookingId)
-
-              return (
-                <Card
-                  key={booking.bookingId}
-                  className='border shadow-sm hover:shadow-md transition-shadow overflow-hidden'
-                >
-                  {/* Booking Header */}
-                  <div className='bg-gradient-to-r from-primary-50 to-blue-50 p-4 border-b'>
-                    <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-3'>
-                        <div className='p-2 bg-white rounded-full shadow-sm'>
-                          <CreditCard className='h-5 w-5 text-primary-500' />
-                        </div>
-                        <div>
-                          <div className='flex items-center gap-2'>
-                            <h3 className='font-bold text-gray-900'>Đơn hàng #{truncateId(booking.bookingId, 10)}</h3>
-                            <Copy
-                              className='h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors'
-                              onClick={() => copyToClipboard(booking.bookingId)}
-                            />
-                            <Badge className='bg-green-100 text-green-800'>Đã thanh toán</Badge>
-                          </div>
-                          <p className='text-sm text-gray-600'>
-                            {booking.totalServices} dịch vụ • {formatDate(booking.createAt)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className='flex items-center gap-3'>
-                        <div className='text-right'>
-                          <p className='text-sm text-gray-600'>Tổng thanh toán</p>
-                          <p className='font-bold text-lg text-green-600'>{booking.totalAmount.toLocaleString()} VND</p>
-                        </div>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => toggleExpanded(booking.bookingId)}
-                          className='ml-2'
-                        >
-                          {isExpanded ? (
-                            <>
-                              <ChevronUp size={16} className='mr-1' />
-                              Thu gọn
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown size={16} className='mr-1' />
-                              Chi tiết
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Services List - Expandable */}
-                  {isExpanded && (
-                    <CardContent className='p-0'>
-                      <div className='divide-y divide-gray-100'>
-                        {booking.services.map((service, index) => (
-                          <div key={service.bookingDetailId} className='p-4 hover:bg-gray-50 transition-colors'>
-                            <div className='flex items-start justify-between mb-3'>
-                              <div className='flex items-center gap-3'>
-                                <div className='w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center'>
-                                  <span className='text-sm font-medium text-blue-600'>{index + 1}</span>
-                                </div>
-                                <div>
-                                  <h4 className='font-semibold text-gray-900'>{service.serviceName}</h4>
-                                  <p className='text-sm text-gray-500'>#{truncateId(service.bookingDetailId, 8)}</p>
-                                </div>
-                              </div>
-                              <div className='text-right'>
-                                <p className='font-bold text-green-600'>{service.price?.toLocaleString()} VND</p>
-                              </div>
-                            </div>
-
-                            {/* Service Details */}
-                            <div className='grid md:grid-cols-2 gap-4 mb-4 ml-11'>
-                              <div className='flex items-center gap-2'>
-                                <Calendar className='h-4 w-4 text-primary-500' />
-                                <div>
-                                  <p className='text-xs text-gray-500'>Ngày sử dụng</p>
-                                  <p className='text-sm font-medium'>{formatDate(service.slotDate)}</p>
-                                </div>
-                              </div>
-                              <div className='flex items-center gap-2'>
-                                <Clock className='h-4 w-4 text-primary-500' />
-                                <div>
-                                  <p className='text-xs text-gray-500'>Ca sử dụng</p>
-                                  <p className='text-sm font-medium'>{getShiftTime(service.slotShift)}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Customer Info */}
-                            <div className='ml-11 p-3 bg-gray-50 rounded-lg'>
-                              <div className='flex items-center gap-2 mb-2'>
-                                <User className='h-4 w-4 text-primary-500' />
-                                <span className='text-sm font-medium text-gray-700'>Thông tin khách hàng</span>
-                              </div>
-                              <div className='grid md:grid-cols-2 gap-3 text-sm'>
-                                <div>
-                                  <span className='text-gray-500'>Tên:</span>
-                                  <span className='ml-2 font-medium'>
-                                    {service.firstName} {service.lastName}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className='text-gray-500'>SĐT:</span>
-                                  <span className='ml-2 font-medium'>{service.phone}</span>
-                                </div>
-                                <div>
-                                  <span className='text-gray-500'>Ngày sinh:</span>
-                                  <span className='ml-2 font-medium'>{formatDate(service.dateOfBirth)}</span>
-                                </div>
-                                <div>
-                                  <span className='text-gray-500'>Giới tính:</span>
-                                  <span className='ml-2 font-medium'>{service.gender ? 'Nam' : 'Nữ'}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
-              )
-            })
-          )}
-        </div>
-
+        {/* Tổng kết thanh toán - Hiển thị trước */}
         {totalBookings > 0 && (
-          <Card className='mt-6 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200'>
+          <Card className='mb-6 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200'>
             <CardContent className='p-6'>
               <h3 className='text-lg font-bold text-gray-900 mb-4 text-center'>Tổng kết thanh toán</h3>
               <div className='grid md:grid-cols-3 gap-6'>
@@ -376,6 +210,178 @@ const PaymentHistory = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Lịch sử thanh toán - Hiển thị sau với khoảng cách */}
+        <div className='mt-8'>
+          <h2 className='text-xl font-bold text-gray-900 mb-6'>Thông tin thanh toán</h2>
+          <div className='space-y-6'>
+            {loading ? (
+              <Card className='p-8'>
+                <div className='flex items-center justify-center'>
+                  <Loader className='animate-spin h-6 w-6 mr-2 text-primary-500' />
+                  <span>Đang tải dữ liệu...</span>
+                </div>
+              </Card>
+            ) : error ? (
+              <Card className='p-8'>
+                <div className='text-center text-red-500'>
+                  <AlertCircle className='h-12 w-12 mx-auto mb-4' />
+                  <p className='mb-4'>{error}</p>
+                  <Button onClick={fetchPaymentHistory} variant='outline'>
+                    Thử lại
+                  </Button>
+                </div>
+              </Card>
+            ) : groupedPayments.length === 0 ? (
+              <Card className='p-8'>
+                <div className='text-center text-gray-500'>
+                  <CreditCard className='h-12 w-12 mx-auto mb-4 text-gray-300' />
+                  <p className='mb-4'>Chưa có đơn hàng thanh toán nào</p>
+                  <Button
+                    onClick={() => navigate('/test-service')}
+                    className='bg-gradient-primary hover:opacity-90 text-white'
+                  >
+                    Đặt dịch vụ ngay
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              groupedPayments.map((booking) => {
+                const isExpanded = expandedBookings.has(booking.bookingId)
+
+                return (
+                  <Card
+                    key={booking.bookingId}
+                    className='border shadow-sm hover:shadow-md transition-shadow overflow-hidden'
+                  >
+                    {/* Booking Header */}
+                    <div className='bg-gradient-to-r from-primary-50 to-blue-50 p-4 border-b'>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-3'>
+                          <div className='p-2 bg-white rounded-full shadow-sm'>
+                            <CreditCard className='h-5 w-5 text-primary-500' />
+                          </div>
+                          <div>
+                            <div className='flex items-center gap-2'>
+                              <h3 className='font-bold text-gray-900'>Đơn hàng #{truncateId(booking.bookingId, 10)}</h3>
+                              <Copy
+                                className='h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors'
+                                onClick={() => copyToClipboard(booking.bookingId)}
+                              />
+                              <Badge className='bg-green-100 text-green-800'>Đã thanh toán</Badge>
+                            </div>
+                            <p className='text-sm text-gray-600'>
+                              {booking.totalServices} dịch vụ • {formatDate(booking.createAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className='flex items-center gap-3'>
+                          <div className='text-right'>
+                            <p className='text-sm text-gray-600'>Tổng thanh toán</p>
+                            <p className='font-bold text-lg text-green-600'>
+                              {booking.totalAmount.toLocaleString()} VND
+                            </p>
+                          </div>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => toggleExpanded(booking.bookingId)}
+                            className='ml-2'
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp size={16} className='mr-1' />
+                                Thu gọn
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown size={16} className='mr-1' />
+                                Chi tiết
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Services List - Expandable */}
+                    {isExpanded && (
+                      <CardContent className='p-0'>
+                        <div className='divide-y divide-gray-100'>
+                          {booking.services.map((service, index) => (
+                            <div key={service.bookingDetailId} className='p-4 hover:bg-gray-50 transition-colors'>
+                              <div className='flex items-start justify-between mb-3'>
+                                <div className='flex items-center gap-3'>
+                                  <div className='w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center'>
+                                    <span className='text-sm font-medium text-blue-600'>{index + 1}</span>
+                                  </div>
+                                  <div>
+                                    <h4 className='font-semibold text-gray-900'>{service.serviceName}</h4>
+                                    <p className='text-sm text-gray-500'>#{truncateId(service.bookingDetailId, 8)}</p>
+                                  </div>
+                                </div>
+                                <div className='text-right'>
+                                  <p className='font-bold text-green-600'>{service.price?.toLocaleString()} VND</p>
+                                </div>
+                              </div>
+
+                              {/* Service Details */}
+                              <div className='grid md:grid-cols-2 gap-4 mb-4 ml-11'>
+                                <div className='flex items-center gap-2'>
+                                  <Calendar className='h-4 w-4 text-primary-500' />
+                                  <div>
+                                    <p className='text-xs text-gray-500'>Ngày sử dụng</p>
+                                    <p className='text-sm font-medium'>{formatDate(service.slotDate)}</p>
+                                  </div>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  <Clock className='h-4 w-4 text-primary-500' />
+                                  <div>
+                                    <p className='text-xs text-gray-500'>Ca sử dụng</p>
+                                    <p className='text-sm font-medium'>{getShiftTime(service.slotShift)}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Customer Info */}
+                              <div className='ml-11 p-3 bg-gray-50 rounded-lg'>
+                                <div className='flex items-center gap-2 mb-2'>
+                                  <User className='h-4 w-4 text-primary-500' />
+                                  <span className='text-sm font-medium text-gray-700'>Thông tin khách hàng</span>
+                                </div>
+                                <div className='grid md:grid-cols-2 gap-3 text-sm'>
+                                  <div>
+                                    <span className='text-gray-500'>Tên:</span>
+                                    <span className='ml-2 font-medium'>
+                                      {service.firstName} {service.lastName}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className='text-gray-500'>SĐT:</span>
+                                    <span className='ml-2 font-medium'>{service.phone}</span>
+                                  </div>
+                                  <div>
+                                    <span className='text-gray-500'>Ngày sinh:</span>
+                                    <span className='ml-2 font-medium'>{formatDate(service.dateOfBirth)}</span>
+                                  </div>
+                                  <div>
+                                    <span className='text-gray-500'>Giới tính:</span>
+                                    <span className='ml-2 font-medium'>{service.gender ? 'Nam' : 'Nữ'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                )
+              })
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
