@@ -34,9 +34,8 @@ const Login = () => {
         password
       })
 
-      dispatch(login(response.data))
       if (response?.data?.accessToken && response?.data?.role) {
-        showSuccess('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
+        dispatch(login(response.data))
 
         switch (response.data.role) {
           case 'Admin':
@@ -57,9 +56,7 @@ const Login = () => {
           default:
             navigate('/')
         }
-      } else {
-        showError('Dữ liệu phản hổi không hợp lệ')
-        setError('Dữ liệu phản hổi không hợp lệ')
+        showSuccess('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
       }
     } catch (error) {
       const errorMessage = error.response?.data

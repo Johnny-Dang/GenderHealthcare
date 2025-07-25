@@ -82,7 +82,7 @@ api.interceptors.response.use(
       }
     } else {
       if (error.response?.status !== 401) {
-        const errorMsg = error.response?.data?.message || 'Đã xảy ra lỗi khi kết nối đến server'
+        const errorMsg = error.response?.data?.message
         if (!originalRequest?._noToast) {
           toast.error(errorMsg, {
             position: 'top-right',
