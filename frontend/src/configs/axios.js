@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { store } from '@/redux/store'
 import { login, logout } from '@/redux/features/userSlice'
-import { toast } from 'react-toastify'
 
 // Set config defaults when creating the instance
 const api = axios.create({
@@ -79,16 +78,6 @@ api.interceptors.response.use(
         return Promise.reject(err)
       } finally {
         isRefreshing = false
-      }
-    } else {
-      if (error.response?.status !== 401) {
-        const errorMsg = error.response?.data?.message
-        if (!originalRequest?._noToast) {
-          toast.error(errorMsg, {
-            position: 'top-right',
-            autoClose: 4000
-          })
-        }
       }
     }
     return Promise.reject(error)
