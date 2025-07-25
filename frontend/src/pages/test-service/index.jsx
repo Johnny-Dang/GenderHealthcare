@@ -3,7 +3,7 @@ import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Clock, MapPin, Phone, Shield, CheckCircle, X } from 'lucide-react'
+import { Clock, MapPin, Phone, Shield, Heart, CheckCircle, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from '@/configs/axios'
 import ServiceBookingForm from '@/components/ServiceBookingForm'
@@ -29,6 +29,7 @@ const Services = () => {
   const [openDetailModal, setOpenDetailModal] = useState(false)
   const [selectedServiceDetail, setSelectedServiceDetail] = useState(null)
   const [dateError, setDateError] = useState('')
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const navigate = useNavigate()
   const accountId = useSelector((state) => state.user?.userInfo?.accountId)
 
@@ -374,8 +375,7 @@ const Services = () => {
                                 }
 
                                 if (!accountId) {
-                                  alert('Đăng nhập trước khi chọn dịch vụ')
-                                  navigate('/login')
+                                  setShowLoginModal(true)
                                   return
                                 }
 
@@ -538,6 +538,37 @@ const Services = () => {
                     </Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal xác nhận đăng nhập */}
+      {showLoginModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl'>
+            <div className='text-center'>
+              <div className='w-16 h-16 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4'>
+                <Heart className='w-5 h-5 text-white' />
+              </div>
+              <h3 className='text-lg font-semibold text-gray-900 mb-2'>Yêu cầu đăng nhập</h3>
+              <p className='text-gray-600 mb-6'>
+                Bạn cần đăng nhập trước khi sử dụng dịch vụ này. Vui lòng đăng nhập để tiếp tục.
+              </p>
+              <div className='flex gap-3 justify-center'>
+                <Button variant='outline' onClick={() => setShowLoginModal(false)} className='px-6'>
+                  Hủy
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowLoginModal(false)
+                    navigate('/login')
+                  }}
+                  className='bg-primary-600 hover:bg-primary-700 text-white px-6'
+                >
+                  Đăng nhập
+                </Button>
               </div>
             </div>
           </div>
