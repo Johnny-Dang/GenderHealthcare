@@ -1,5 +1,4 @@
 import React from 'react'
-import './index.css'
 import LoginPage from '../authen-form/LoginPage'
 import RegisterPage from '../authen-form/RegisterPage'
 function AuthenTemplate({ isLogin }) {
