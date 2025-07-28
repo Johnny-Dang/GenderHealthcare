@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Table, Button, Space, Modal, Form, Input, Select, Typography, Divider, Tag } from 'antd'
 import {
   EditOutlined,
@@ -15,9 +15,10 @@ import Loading from '../../components/Loading'
 
 const { Option } = Select
 const { Title, Text } = Typography
+
 const GENDER_MAP = {
-  true: { label: 'Nam', value: 'male' },
-  false: { label: 'Nữ', value: 'female' }
+  true: { label: 'Nam' },
+  false: { label: 'Nữ' }
 }
 
 const UserManagement = () => {
@@ -28,165 +29,127 @@ const UserManagement = () => {
   const [form] = Form.useForm()
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null })
   const [searchText, setSearchText] = useState('')
-  const [lastFetched, setLastFetched] = useState(0)
-  const [shouldRefresh, setShouldRefresh] = useState(false)
   const { showSuccess, showError } = useToast()
 
-  // Tạo hàm fetchUsers với useCallback để nó không bị tạo lại khi component re-render
-  const fetchUsers = useCallback(
-    async (force = false) => {
-      // Nếu đã fetch trong vòng 5 phút và không yêu cầu force refresh, thì không fetch lại
-      const now = Date.now()
-      if (!force && lastFetched && now - lastFetched < 5 * 60 * 1000 && userData.length > 0) {
-        return
-      }
-
-      setLoading(true)
-      try {
-        const response = await api.get(`/api/accounts`)
-        const formattedData = response.data.map((user, index) => ({
-          key: index.toString(),
-          id: user.accountId,
-          name: user.fullName || (user.firstName || '') + ' ' + (user.lastName || ''),
-          email: user.email,
-          phone: user.phone,
-          gender: GENDER_MAP[user.gender]?.label || 'N/A',
-          dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
-          createAt: moment(user.createAt).format('DD/MM/YYYY'),
-          role: user.roleName,
-          avatarUrl: user.avatarUrl,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          isDeleted: user.isDeleted
-        }))
-        setUserData(formattedData)
-        setLastFetched(now)
-        setShouldRefresh(false)
-      } catch {
-        showError('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [lastFetched, userData.length, showError]
-  )
+  const fetchUsers = async () => {
+    setLoading(true)
+    try {
+      const response = await api.get('/api/accounts')
+      const formattedData = response.data.map((user) => ({
+        key: user.accountId,
+        id: user.accountId,
+        name: user.fullName || 'Chưa cập nhật',
+        email: user.email,
+        phone: user.phone || 'Chưa cập nhật',
+        gender: GENDER_MAP[user.gender]?.label || 'Chưa xác định',
+        dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format('DD/MM/YYYY') : 'Chưa cập nhật',
+        createAt: moment(user.createAt).format('DD/MM/YYYY'),
+        role: user.roleName,
+        isDeleted: user.isDeleted
+      }))
+      setUserData(formattedData)
+    } catch {
+      showError('Không thể tải dữ liệu người dùng')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchUsers()
-  }, [fetchUsers])
-
-  const handleRefresh = () => {
-    fetchUsers(true)
-  }
+  }, [])
 
   const showModal = (user = null) => {
     setCurrentUser(user)
     if (user) {
-      form.setFieldsValue(user)
+      form.setFieldsValue({
+        name: user.name === 'Chưa cập nhật' ? '' : user.name,
+        email: user.email,
+        role: user.role
+      })
     } else {
       form.resetFields()
     }
     setIsModalVisible(true)
   }
 
-  const handleOk = () => {
-    form
-      .validateFields()
-      .then(async (values) => {
-        try {
-          let firstName = '',
-            lastName = ''
-          if (values.name) {
-            const parts = values.name.trim().split(' ')
-            lastName = parts.pop()
-            firstName = parts.join(' ')
-          }
-          if (currentUser) {
-            await api.put(`/api/accounts/${currentUser.id}`, {
-              email: values.email,
-              firstName,
-              lastName,
-              roleName: values.role
-            })
-            showSuccess('Cập nhật người dùng thành công!')
-          } else {
-            const response = await api.post(`/api/accounts`, {
-              email: values.email,
-              password: values.password || 'DefaultPassword123',
-              firstName,
-              lastName,
-              roleName: values.role
-            })
-            if (response.data?.accountId) {
-              showSuccess('Thêm người dùng thành công!')
-            }
-          }
-          setIsModalVisible(false)
-          form.resetFields()
-          fetchUsers(true) // Force refresh sau khi thêm/sửa
-        } catch (error) {
-          const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.'
-          showError(errorMessage)
-        }
-      })
-      .catch(() => {
-        // Form validation failed - không cần làm gì
-      })
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields()
+      const payload = {
+        email: values.email,
+        fullName: values.name,
+        roleName: values.role
+      }
+
+      if (currentUser) {
+        await api.put(`/api/accounts/${currentUser.id}`, payload)
+        showSuccess('Cập nhật thành công!')
+      } else {
+        await api.post('/api/accounts', {
+          ...payload,
+          password: values.password || 'Hashedpassword'
+        })
+        showSuccess('Thêm người dùng thành công!')
+      }
+
+      setIsModalVisible(false)
+      form.resetFields()
+      fetchUsers()
+    } catch (error) {
+      showError(error.response?.data?.message || 'Có lỗi xảy ra')
+    }
   }
 
   const handleCancel = () => {
     setIsModalVisible(false)
     form.resetFields()
+    setCurrentUser(null)
   }
 
-  const handleDelete = (userId) => {
-    setDeleteModal({ open: true, id: userId })
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/api/accounts/${deleteModal.id}`)
+      showSuccess('Đã xóa người dùng!')
+      fetchUsers()
+    } catch {
+      showError('Không thể xóa người dùng')
+    }
+    setDeleteModal({ open: false, id: null })
   }
 
-  // Filtered data based on searchText
   const filteredData = userData.filter((user) => {
-    const search = searchText.trim().toLowerCase()
-    if (!search) return true
+    const search = searchText.toLowerCase()
     return (
+      !search ||
       user.name?.toLowerCase().includes(search) ||
       user.email?.toLowerCase().includes(search) ||
-      user.phone?.toLowerCase().includes(search) ||
       user.role?.toLowerCase().includes(search)
     )
   })
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: '16%'
-    },
-    {
       title: 'Tên',
       dataIndex: 'name',
       key: 'name',
       render: (text) => <Text strong>{text}</Text>,
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      width: '10%'
+      sorter: (a, b) => a.name.localeCompare(b.name)
     },
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email',
-      width: '10%'
+      key: 'email'
     },
     {
       title: 'Số điện thoại',
       dataIndex: 'phone',
-      key: 'phone',
-      width: '12%'
+      key: 'phone'
     },
     {
       title: 'Giới tính',
       dataIndex: 'gender',
       key: 'gender',
-      width: '10%',
       filters: [
         { text: 'Nam', value: 'Nam' },
         { text: 'Nữ', value: 'Nữ' }
@@ -194,34 +157,24 @@ const UserManagement = () => {
       onFilter: (value, record) => record.gender === value
     },
     {
-      title: 'Ngày sinh',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
-      width: '12%',
-      render: (date) => <span>{date || 'N/A'}</span>
-    },
-    {
       title: 'Vai trò',
       dataIndex: 'role',
       key: 'role',
       render: (role) => {
-        let color = 'blue'
-        if (role === 'Admin') color = 'pink'
-        else if (role === 'Consultant') color = 'geekblue'
-        else if (role === 'Manager') color = 'gold'
-        else if (role === 'Staff') color = 'purple'
-        else if (role === 'User') color = 'blue'
-        return (
-          <Tag color={color} className='px-3 py-1 rounded-full'>
-            {role}
-          </Tag>
-        )
+        const colors = {
+          Admin: 'red',
+          Manager: 'blue',
+          Staff: 'green',
+          Consultant: 'purple',
+          User: 'default'
+        }
+        return <Tag color={colors[role]}>{role}</Tag>
       },
       filters: [
         { text: 'Admin', value: 'Admin' },
-        { text: 'Consultant', value: 'Consultant' },
         { text: 'Manager', value: 'Manager' },
         { text: 'Staff', value: 'Staff' },
+        { text: 'Consultant', value: 'Consultant' },
         { text: 'User', value: 'User' }
       ],
       onFilter: (value, record) => record.role === value
@@ -230,7 +183,6 @@ const UserManagement = () => {
       title: 'Trạng thái',
       dataIndex: 'isDeleted',
       key: 'isDeleted',
-      width: '10%',
       render: (isDeleted) => <Tag color={isDeleted ? 'red' : 'green'}>{isDeleted ? 'Đã xóa' : 'Hoạt động'}</Tag>,
       filters: [
         { text: 'Hoạt động', value: false },
@@ -241,55 +193,50 @@ const UserManagement = () => {
     {
       title: 'Hành động',
       key: 'action',
-      width: '12%',
-      render: (_, record) => (
-        <Space size='middle'>
-          <Button
-            type='primary'
-            ghost
-            icon={<EditOutlined />}
-            onClick={() => showModal(record)}
-            className='border-pink-500 text-pink-500 hover:border-pink-700 hover:text-pink-700'
-          />
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} />
-        </Space>
-      )
+      render: (_, record) => {
+        const isAdmin = record.role === 'Admin'
+        return (
+          <Space>
+            {!isAdmin && <Button type='primary' ghost icon={<EditOutlined />} onClick={() => showModal(record)} />}
+            {!isAdmin && (
+              <Button danger icon={<DeleteOutlined />} onClick={() => setDeleteModal({ open: true, id: record.id })} />
+            )}
+            {isAdmin && <Text type='secondary'>Bảo vệ</Text>}
+          </Space>
+        )
+      }
     }
   ]
 
-  if (loading) {
-    return <Loading />
-  }
+  if (loading) return <Loading />
 
   return (
     <>
       <div className='mb-6'>
-        <Title level={3} className='text-gray-800 mb-1'>
-          Quản lý người dùng
-        </Title>
+        <Title level={3}>Quản lý người dùng</Title>
         <Text type='secondary'>Quản lý thông tin và phân quyền của người dùng trong hệ thống</Text>
-        <Divider className='mt-4 mb-6' />
+        <Divider />
       </div>
 
-      <div className='flex justify-between items-center mb-5'>
-        <div className='flex items-center'>
+      <div className='flex justify-between items-center mb-6'>
+        <div className='flex items-center gap-3'>
           <Input
-            placeholder='Tìm kiếm người dùng...'
-            prefix={<SearchOutlined className='text-gray-400' />}
-            className='w-64 mr-4'
+            placeholder='Tìm kiếm...'
+            prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
+            className='w-64'
           />
-          <Button onClick={handleRefresh} icon={<ReloadOutlined />} className='mr-2' loading={loading}>
+          <Button onClick={fetchUsers} icon={<ReloadOutlined />} loading={loading} size='sm'>
             Làm mới
           </Button>
         </div>
         <Button
-          type='primary'
           icon={<PlusOutlined />}
           onClick={() => showModal()}
-          className='bg-gradient-to-r from-pink-500 to-pink-600 border-none hover:from-pink-600 hover:to-pink-700 shadow-md'
+          className='bg-gradient-primary hover:opacity-90 text-white border-none'
+          size='sm'
         >
           Thêm người dùng
         </Button>
@@ -298,35 +245,34 @@ const UserManagement = () => {
       <Table
         columns={columns}
         dataSource={filteredData}
-        rowClassName='hover:bg-pink-50'
         pagination={{
           pageSize: 10,
           showSizeChanger: true,
-          showTotal: (total) => `Tổng cộng ${total} người dùng`
+          showTotal: (total) => `Tổng: ${total} người dùng`
         }}
-        className='rounded-lg overflow-hidden shadow-md'
+        className='shadow-md'
       />
 
       <Modal
         title={
-          <div className='flex items-center'>
-            <UserOutlined className='text-pink-500 mr-2 text-xl' />
-            <span>{currentUser ? 'Sửa thông tin người dùng' : 'Thêm người dùng mới'}</span>
+          <div className='flex items-center gap-2'>
+            <UserOutlined />
+            <span>{currentUser ? 'Sửa người dùng' : 'Thêm người dùng'}</span>
           </div>
         }
         open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
-        okButtonProps={{
-          className: 'bg-gradient-to-r from-pink-500 to-pink-600 border-none hover:from-pink-600 hover:to-pink-700'
-        }}
         centered
-        maskClosable={false}
+        okButtonProps={{
+          className: 'bg-gradient-primary hover:opacity-90 text-white border-none'
+        }}
       >
-        <Form form={form} layout='vertical' name='userForm' className='pt-4'>
-          <Form.Item name='name' label='Tên' rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}>
-            <Input placeholder='Nhập họ và tên người dùng' />
+        <Form form={form} layout='vertical' className='pt-4'>
+          <Form.Item name='name' label='Họ tên' rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}>
+            <Input placeholder='Nhập họ và tên' />
           </Form.Item>
+
           <Form.Item
             name='email'
             label='Email'
@@ -335,44 +281,36 @@ const UserManagement = () => {
               { type: 'email', message: 'Email không hợp lệ!' }
             ]}
           >
-            <Input placeholder='Nhập địa chỉ email' />
+            <Input placeholder='Nhập email' />
           </Form.Item>
+
           <Form.Item name='role' label='Vai trò' rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}>
             <Select placeholder='Chọn vai trò'>
-              <Option value='Admin'>Admin</Option>
-              <Option value='Consultant'>Consultant</Option>
               <Option value='Manager'>Manager</Option>
               <Option value='Staff'>Staff</Option>
+              <Option value='Consultant'>Consultant</Option>
               <Option value='User'>User</Option>
             </Select>
           </Form.Item>
-          {/* Show password field only for new users */}
+
           {!currentUser && (
             <Form.Item name='password' label='Mật khẩu'>
-              <Input.Password placeholder='Nhập mật khẩu (mặc định: DefaultPassword123)' />
+              <Input.Password placeholder='Mặc định: Hashedpassword' />
             </Form.Item>
           )}
         </Form>
       </Modal>
 
       <Modal
+        title='Xác nhận xóa'
         open={deleteModal.open}
-        onOk={async () => {
-          try {
-            await api.delete(`api/accounts/${deleteModal.id}`)
-            showSuccess('Đã xóa (mềm) người dùng!')
-            fetchUsers(true)
-          } catch {
-            showError('Không thể xóa người dùng. Vui lòng thử lại sau.')
-          }
-          setDeleteModal({ open: false, id: null })
-        }}
+        onOk={handleDelete}
         onCancel={() => setDeleteModal({ open: false, id: null })}
         okText='Xóa'
         okType='danger'
         cancelText='Hủy'
       >
-        Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.
+        Bạn có chắc chắn muốn xóa người dùng này?
       </Modal>
     </>
   )

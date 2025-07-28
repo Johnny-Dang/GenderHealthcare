@@ -8,8 +8,7 @@ import api from '@/configs/axios'
 
 const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSuccess }) => {
   const userInfo = useSelector((state) => state.user?.userInfo || {})
-
-  const { showSuccess, showError } = useToast()
+  const { showSuccess } = useToast()
 
   const [formData, setFormData] = useState({
     guestName: '',
@@ -24,14 +23,13 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
   const [formErrors, setFormErrors] = useState({})
   const [apiError, setApiError] = useState('')
 
-  // Cập nhật formData khi component mount và khi userInfo thay đổi
   useEffect(() => {
     if (userInfo?.accountId && userInfo?.role) {
       setFormData((prevData) => ({
         ...prevData,
         guestName: userInfo.fullName || '',
         guestEmail: userInfo.email || '',
-        guestPhone: userInfo.phone || ''
+        guestPhone: ''
       }))
     } else {
       setFormData((prevData) => ({
@@ -48,12 +46,10 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
     return name.charAt(0).toUpperCase()
   }
 
-  // Validate form fields
   const validateForm = () => {
     const errors = {}
 
-    // Guest information validation (only if not logged in)
-    if (!userInfo) {
+    if (!userInfo?.accountId || !userInfo?.role) {
       if (!formData.guestName.trim()) {
         errors.guestName = 'Họ tên không được để trống'
       }
@@ -65,11 +61,10 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
       if (!formData.guestPhone.trim()) {
         errors.guestPhone = 'Số điện thoại không được để trống'
       } else if (!/^[0-9]{10,11}$/.test(formData.guestPhone.replace(/\s/g, ''))) {
-        errors.guestPhone = 'Số điện thoại không hợp lệ'
+        errors.guestPhone = 'Số điện thoại phải có 10-11 chữ số'
       }
     }
 
-    // Booking information validation
     if (!formData.scheduledDate) {
       errors.scheduledDate = 'Vui lòng chọn ngày'
     } else {
@@ -85,12 +80,20 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
     if (!formData.scheduledTime) {
       errors.scheduledTime = 'Vui lòng chọn giờ'
     } else {
-      const now = new Date()
-      const selectedDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}:00`)
-      const timeDiffInHours = (selectedDateTime - now) / (1000 * 60 * 60)
+      const [hours] = formData.scheduledTime.split(':').map(Number)
 
-      if (timeDiffInHours < 2) {
-        errors.scheduledTime = 'Vui lòng chọn thời gian ít nhất 2 tiếng sau thời điểm hiện tại'
+      if (hours < 8 || hours >= 17) {
+        errors.scheduledTime = 'Giờ làm việc từ 8:00 - 17:00'
+      }
+
+      if (formData.scheduledDate) {
+        const now = new Date()
+        const selectedDateTime = new Date(`${formData.scheduledDate}T${formData.scheduledTime}:00`)
+        const timeDiffInHours = (selectedDateTime - now) / (1000 * 60 * 60)
+
+        if (timeDiffInHours < 2) {
+          errors.scheduledTime = 'Vui lòng chọn thời gian ít nhất 2 tiếng sau thời điểm hiện tại'
+        }
       }
     }
 
@@ -100,6 +103,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
   const handleFormChange = (e) => {
     const { name, value } = e.target
+
     setFormErrors({
       ...formErrors,
       [name]: undefined
@@ -118,12 +122,11 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
     setApiError('')
 
     if (!validateForm()) {
-      showError('Vui lòng điền đầy đủ thông tin!')
       return
     }
 
     if (!consultant) {
-      showError('Vui lòng chọn tư vấn viên!')
+      setApiError('Vui lòng chọn tư vấn viên!')
       return
     }
 
@@ -146,11 +149,10 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
       showSuccess('Đặt lịch thành công! Chúng tôi sẽ liên hệ bạn sớm nhất.')
 
-      // Reset form data
       setFormData({
         guestName: userInfo?.fullName || '',
         guestEmail: userInfo?.email || '',
-        guestPhone: userInfo?.phone || '',
+        guestPhone: '',
         staffId: '',
         scheduledDate: '',
         scheduledTime: '',
@@ -167,22 +169,21 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
 
       if (error.response?.data?.message) {
         setApiError(error.response.data.message)
-        showError(error.response.data.message)
       } else if (error.response?.data?.errors) {
         const serverErrors = error.response.data.errors
         const newErrors = {}
 
         Object.keys(serverErrors).forEach((key) => {
           if (serverErrors[key] && serverErrors[key].length > 0) {
-            newErrors[key] = serverErrors[key][0]
+            const fieldName = key.charAt(0).toLowerCase() + key.slice(1)
+            newErrors[fieldName] = serverErrors[key][0]
           }
         })
 
         setFormErrors(newErrors)
-        showError('Đã có lỗi khi đặt lịch. Vui lòng kiểm tra lại thông tin.')
+        setApiError('Đã có lỗi khi đặt lịch. Vui lòng kiểm tra lại thông tin.')
       } else {
         setApiError('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
-        showError('Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau.')
       }
     }
   }
@@ -199,9 +200,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
           </DialogTitle>
         </DialogHeader>
 
-        {/* Booking form with system theme */}
         <form onSubmit={handleBookingSubmit} className='mt-4 space-y-4'>
-          {/* API Error message at the top of the form */}
           {apiError && (
             <div className='bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm'>
               <p className='font-medium'>Lỗi:</p>
@@ -209,7 +208,6 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
             </div>
           )}
 
-          {/* Consultant info panel - centered */}
           <div className='bg-gradient-to-r from-primary-50 to-secondary-50 p-4 rounded-lg flex flex-col items-center text-center'>
             {consultant.avatarUrl ? (
               <img
@@ -228,13 +226,14 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
             </div>
           </div>
 
-          {/* Guest info section - only shown when not logged in */}
           {!userInfo?.accountId || !userInfo?.role ? (
             <div className='space-y-3 border border-gray-200 rounded-lg p-4'>
               <h4 className='font-medium text-sm text-gray-700'>Thông tin cá nhân</h4>
               <div className='grid grid-cols-1 gap-3'>
                 <div className='space-y-1'>
-                  <label className='text-xs font-medium text-gray-700'>Họ và tên</label>
+                  <label className='text-xs font-medium text-gray-700'>
+                    Họ và tên <span className='text-red-500'>*</span>
+                  </label>
                   <input
                     type='text'
                     name='guestName'
@@ -249,7 +248,9 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
                 </div>
                 <div className='grid grid-cols-2 gap-3'>
                   <div className='space-y-1'>
-                    <label className='text-xs font-medium text-gray-700'>Email</label>
+                    <label className='text-xs font-medium text-gray-700'>
+                      Email <span className='text-red-500'>*</span>
+                    </label>
                     <input
                       type='email'
                       name='guestEmail'
@@ -263,7 +264,9 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
                     {formErrors.guestEmail && <p className='text-red-600 text-xs mt-1'>{formErrors.guestEmail}</p>}
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-medium text-gray-700'>Số điện thoại</label>
+                    <label className='text-xs font-medium text-gray-700'>
+                      Số điện thoại <span className='text-red-500'>*</span>
+                    </label>
                     <input
                       type='tel'
                       name='guestPhone'
@@ -297,12 +300,11 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
             </div>
           )}
 
-          {/* Date and time selection */}
           <div className='grid grid-cols-2 gap-3'>
             <div className='space-y-1'>
               <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
                 <Calendar className='w-3.5 h-3.5' />
-                Ngày tư vấn
+                Ngày tư vấn <span className='text-red-500'>*</span>
               </label>
               <input
                 type='date'
@@ -320,7 +322,7 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
             <div className='space-y-1'>
               <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
                 <Clock className='w-3.5 h-3.5' />
-                Giờ tư vấn
+                Giờ tư vấn <span className='text-red-500'>*</span>
               </label>
               <select
                 name='scheduledTime'
@@ -331,10 +333,13 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
                   formErrors.scheduledTime ? 'border-red-500 bg-red-50' : 'border-gray-300'
                 }`}
               >
-                <option value=''>Chọn giờ</option>
+                <option value=''>Chọn giờ (8:00 - 17:00)</option>
                 <option value='08:00'>08:00</option>
                 <option value='09:00'>09:00</option>
                 <option value='10:00'>10:00</option>
+                <option value='11:00'>11:00</option>
+                <option value='12:00'>12:00</option>
+                <option value='13:00'>13:00</option>
                 <option value='14:00'>14:00</option>
                 <option value='15:00'>15:00</option>
                 <option value='16:00'>16:00</option>
@@ -343,7 +348,6 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
             </div>
           </div>
 
-          {/* Message textarea */}
           <div className='space-y-1'>
             <label className='text-xs font-medium text-gray-700 flex items-center gap-1'>
               <MessageSquare className='w-3.5 h-3.5' />
@@ -359,7 +363,6 @@ const ConsultantBookingDialog = ({ isOpen, onOpenChange, consultant, onBookingSu
             ></textarea>
           </div>
 
-          {/* Submit button */}
           <Button type='submit' className='w-full bg-gradient-primary hover:opacity-90 text-white font-medium shadow'>
             Xác nhận đặt lịch
           </Button>
