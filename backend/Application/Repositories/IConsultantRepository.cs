@@ -7,6 +7,5 @@ namespace backend.Application.Repositories
     {
         Task<List<ConsultantResponse>> GetAllConsultantsAsync();
         Task<ConsultantResponse?> GetConsultantByIdAsync(Guid consultantId);
-        Task SaveChangesAsync();
     }
 }

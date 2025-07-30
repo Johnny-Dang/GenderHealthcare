@@ -59,8 +59,7 @@ const Login = () => {
         showSuccess('Đăng nhập thành công: Chào mừng bạn quay trở lại!')
       }
     } catch (error) {
-      const errorMessage = error.response?.data
-      showError(errorMessage)
+      const errorMessage = 'Mật khẩu hoặc email không chính xác. Vui lòng thử lại!'
       setError(errorMessage)
     }
   }

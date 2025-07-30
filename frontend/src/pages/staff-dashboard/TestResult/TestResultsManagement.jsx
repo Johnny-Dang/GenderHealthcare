@@ -402,20 +402,17 @@ const TestResultsByService = () => {
 
   const handleDateRangeChange = (dates) => {
     setSelectedDateRange(dates)
-    // Có thể thêm logic filter theo date nếu cần
   }
 
   const getFilteredData = (data) => {
     let filtered = data
 
-    // Filter by search term (name or phone)
     if (searchTerm) {
       filtered = filtered.filter(
         (item) => item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || item.phone.includes(searchTerm)
       )
     }
 
-    // Filter by date range
     if (selectedDateRange && selectedDateRange.length === 2) {
       const [startDate, endDate] = selectedDateRange
       filtered = filtered.filter((item) => {

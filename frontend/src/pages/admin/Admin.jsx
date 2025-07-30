@@ -1,150 +1,69 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
-import { Layout, Menu, theme, Avatar, Typography, Breadcrumb, Dropdown, Spin } from 'antd'
+import { Layout, Menu, Avatar, Typography, Breadcrumb, Dropdown } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
-import { PieChart, Users, Calendar, Settings, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
+import { PieChart, Users, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import api from '../../configs/axios'
 
 const { Header, Content, Footer, Sider } = Layout
 const { Text } = Typography
 
-function getItem(label, key, icon, children) {
+function getItem(label, key, icon) {
   return {
     key,
     icon,
-    children,
     label: <Link to={`/admin/${key}`}>{label}</Link>
   }
 }
 
 const items = [
   getItem('Dashboard', 'dashboard', <PieChart size={18} />),
-  getItem('Quản lý người dùng', 'users', <Users size={18} />),
-  getItem('Quản lý job', 'jobs', <Settings size={18} />)
+  getItem('Quản lý người dùng', 'users', <Users size={18} />)
 ]
 
 const AdminPage = () => {
   const [collapsed, setCollapsed] = useState(false)
-  const [breadcrumbItems, setBreadcrumbItems] = useState([])
-  const [loading, setLoading] = useState(true)
   const location = useLocation()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-
-  // Lấy thông tin user từ Redux store
   const userInfo = useSelector((state) => state.user?.userInfo || {})
-
-  // Kiểm tra xác thực và quyền admin
-  const isAdmin = userInfo?.accountId && userInfo?.role === 'Admin'
-
-  const {
-    token: { colorBgContainer, borderRadiusLG }
-  } = theme.useToken()
 
   const breadcrumbMap = {
     '/admin/users': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý người dùng' }],
-    '/admin/services': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý dịch vụ xét nghiệm' }],
-    '/admin/jobs': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý job' }],
     '/admin/dashboard': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }]
   }
 
-  useEffect(() => {
-    const breadcrumb = breadcrumbMap[location.pathname] || breadcrumbMap['/admin/dashboard']
-    setBreadcrumbItems(breadcrumb)
-  }, [location])
-
-  useEffect(() => {
-    const checkAuth = setTimeout(() => {
-      if (!isAdmin) {
-        console.log('Not authenticated as Admin, redirecting')
-        navigate('/')
-      } else {
-        console.log('Authenticated as Admin')
-      }
-    }, 100)
-
-    return () => clearTimeout(checkAuth)
-  }, [isAdmin, navigate])
-
-  useEffect(() => {
-    console.log('Admin page loaded, auth state:', { userInfo, isAdmin })
-  }, [userInfo, isAdmin])
+  const getBreadcrumbItems = () => {
+    return breadcrumbMap[location.pathname] || breadcrumbMap['/admin/dashboard']
+  }
 
   const getActiveMenu = () => {
     const path = location.pathname
     if (path.includes('/users')) return 'users'
-    if (path.includes('/services')) return 'services'
-    if (path.includes('/jobs')) return 'jobs'
     return 'dashboard'
   }
 
   const handleLogout = async () => {
     try {
       const token = userInfo?.accessToken
-
       if (token) {
         await api.post(
           '/Account/logout',
           {},
           {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+            headers: { Authorization: `Bearer ${token}` }
           }
         )
       }
     } catch (error) {
-      console.log('Lỗi logout API:', error)
+      console.error('Logout error:', error)
     } finally {
       dispatch(logout())
       navigate('/')
     }
   }
-
-  // Kiểm tra quyền truy cập
-  useEffect(() => {
-    const verifyAdminAccess = () => {
-      setLoading(true)
-
-      // Nếu không có thông tin user hoặc không phải admin
-      if (!userInfo?.accountId || !userInfo?.role || userInfo.role !== 'Admin') {
-        console.log('Not authorized as Admin, redirecting to home')
-        navigate('/')
-        return
-      }
-
-      console.log('Admin access confirmed for:', userInfo.fullName || userInfo.email)
-      setLoading(false)
-    }
-
-    // Thêm timeout ngắn để đảm bảo Redux đã load
-    const timeoutId = setTimeout(verifyAdminAccess, 100)
-    return () => clearTimeout(timeoutId)
-  }, [userInfo, navigate])
-
-  // Hiển thị loading trong khi xác thực
-  if (loading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-        <Spin size='large' tip='Đang tải...' />
-      </div>
-    )
-  }
-
-  // Nếu không phải admin, không render gì (sẽ chuyển hướng bởi useEffect)
-  if (!isAdmin) {
-    return null
-  }
-
-  const menu = (
-    <Menu>
-      <Menu.Item key='logout' icon={<LogOut size={18} />} onClick={handleLogout} danger>
-        Đăng xuất
-      </Menu.Item>
-    </Menu>
-  )
 
   return (
     <Layout className='min-h-screen'>
@@ -193,7 +112,7 @@ const AdminPage = () => {
             >
               {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             </Button>
-            <Breadcrumb className='my-4' items={breadcrumbItems} />
+            <Breadcrumb className='my-4' items={getBreadcrumbItems()} />
           </div>
 
           <div className='flex items-center gap-6'>

@@ -1,5 +1,6 @@
 ﻿using Castle.Core.Resource;
 using DeployGenderSystem.Domain.Entity;
+using backend.Domain.Constants;
 
 namespace backend.Domain.Entities
 {
@@ -17,8 +18,8 @@ namespace backend.Domain.Entities
         public string? GuestPhone { get; set; }
         public Guid StaffId { get; set; }
         public Account Staff { get; set; }
-        public DateTime ScheduledAt { get; set; } // mong muốn gọi lúc nào
-        public string Status { get; set; } = "pending"; // pending/confirmed/cancelled
+        public DateTime ScheduledAt { get; set; }
+        public string Status { get; set; } = ConsultationBookingStatus.Pending;
         public string? Message { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

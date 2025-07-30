@@ -53,10 +53,6 @@ namespace backend.API.Controllers
             return result.IsSuccess ? Ok(result.Data) : NotFound(result.Error);
         }
 
-        // api/accounts/users-by-role
-        // api/accounts/recent-users
-        // api/accounts/user-stats
-
         [HttpGet("users-by-role")]
         public async Task<IActionResult> GetUsersByRole()
         {

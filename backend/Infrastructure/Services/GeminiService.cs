@@ -1,6 +1,8 @@
 ﻿using backend.Application.Interfaces;
 using backend.Application.Repositories;
 using backend.Application.Services;
+using backend.Domain.AppsettingsConfigurations;
+using Microsoft.Extensions.Options;
 using System.Text;
 using System.Text.Json;
 
@@ -9,19 +11,21 @@ namespace backend.Infrastructure.Services
     public class GeminiService : IGeminiService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
+        private readonly GeminiSettings _settings;
         private readonly ITestServiceRepository _testServiceRepository;
-        public GeminiService(HttpClient httpClient, 
-            IConfiguration configuration,
+        
+        public GeminiService(
+            HttpClient httpClient, 
+            IOptions<GeminiSettings> options,
             ITestServiceRepository testServiceRepository)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["Gemini:ApiKey"];
+            _settings = options.Value;
             _testServiceRepository = testServiceRepository;
         }
+        
         public async Task<string> GenerateReplyAsync(string prompt)
         {
-            // Lấy danh sách dịch vụ xét nghiệm từ database
             var services = await _testServiceRepository.GetAllAsync();
             var serviceList = string.Join("\n", services.Select(s => $"- {s.ServiceName}: {s.Description}"));
 
@@ -56,7 +60,7 @@ Câu hỏi của khách hàng: {prompt}
                 }
             };
 
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_apiKey}";
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_settings.ApiKey}";
             var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync(url, content);
 

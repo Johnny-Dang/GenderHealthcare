@@ -2,6 +2,7 @@
 using backend.Application.Services;
 using backend.Application.Repositories;
 using backend.Domain.Entities;
+using backend.Domain.Constants;
 using DeployGenderSystem.Domain.Entity;
 using backend.Application.DTOs.NotificationDTO;
 
@@ -56,7 +57,7 @@ namespace backend.Infrastructure.Services
                 StaffId = request.StaffId,
                 Staff = staff,
                 ScheduledAt = request.ScheduledAt,
-                Status = "pending",
+                Status = ConsultationBookingStatus.Pending,
                 Message = request.Message,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -94,7 +95,6 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<List<ConsultationBookingResponse>>> GetBookingsByCustomerIdAsync(Guid customerId)
         {
-            // Nếu customerId là Guid.Empty thì coi như không hợp lệ (guest không có id)
             if (customerId == Guid.Empty)
                 return Result<List<ConsultationBookingResponse>>.Failure("Guest users do not have booking history.");
 
@@ -110,10 +110,17 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<bool>> UpdateBookingStatusAsync(Guid bookingId, string status)
         {
-            var validStatuses = new[] { "pending", "confirmed", "cancelled" };
+            var validStatuses = new[] 
+            { 
+                ConsultationBookingStatus.Pending, 
+                ConsultationBookingStatus.Confirmed, 
+                ConsultationBookingStatus.Cancelled 
+            };
+            
             var booking = await _repository.GetBookingByIdAsync(bookingId);
             if (booking == null)
                 return Result<bool>.Failure("Booking not found.");
+                
             if (!validStatuses.Contains(status))
                 return Result<bool>.Failure("Invalid status value.");
 
@@ -126,12 +133,12 @@ namespace backend.Infrastructure.Services
                 string title = "Cập nhật trạng thái lịch hẹn";
                 string content = $"Lịch hẹn của bạn đã được cập nhật thành {status}";
 
-                if (status == "confirmed")
+                if (status == ConsultationBookingStatus.Confirmed)
                 {
                     title = "Lịch hẹn đã được xác nhận";
                     content = $"Lịch hẹn của bạn vào ngày {booking.ScheduledAt.ToString("dd/MM/yyyy HH:mm")} đã được xác nhận";
                 }
-                else if (status == "cancelled")
+                else if (status == ConsultationBookingStatus.Cancelled)
                 {
                     title = "Lịch hẹn đã bị hủy";
                     content = $"Lịch hẹn của bạn vào ngày {booking.ScheduledAt.ToString("dd/MM/yyyy HH:mm")} đã bị hủy";
