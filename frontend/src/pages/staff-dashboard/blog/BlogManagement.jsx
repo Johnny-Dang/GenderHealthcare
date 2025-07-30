@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/useToast'
 import { PlusCircle, Edit, Trash2, Eye, FileText, X, Filter, RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useNavigate } from 'react-router-dom'
@@ -54,6 +54,10 @@ const BlogManagement = () => {
   const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState(null)
 
+  // Delete Blog Confirmation state
+  const [showDeleteBlogConfirm, setShowDeleteBlogConfirm] = useState(false)
+  const [blogToDelete, setBlogToDelete] = useState(null)
+
   // Filter state
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedCategoryName, setSelectedCategoryName] = useState('')
@@ -76,6 +80,14 @@ const BlogManagement = () => {
     return categories.find((c) => c.categoryId === categoryId)?.name || 'Không xác định'
   }
 
+  const getStatusBadge = (status) => {
+    return status === 'published' ? (
+      <Badge className='bg-green-100 text-green-800'>Đã xuất bản</Badge>
+    ) : (
+      <Badge className='bg-yellow-100 text-yellow-800'>Nháp</Badge>
+    )
+  }
+
   const validateForm = () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       toast({
@@ -85,7 +97,6 @@ const BlogManagement = () => {
       })
       return false
     }
-
     if (!formData.categoryId) {
       toast({
         title: 'Lỗi',
@@ -94,24 +105,71 @@ const BlogManagement = () => {
       })
       return false
     }
-
     return true
   }
 
-  const handleApiError = (error, actionMessage) => {
-    console.error(`Error ${actionMessage}:`, error)
-
-    let errorDetails = error.message
-    if (error.response && error.response.data) {
-      errorDetails = error.response.data.message || errorDetails
-    }
-
-    toast({
-      title: 'Lỗi',
-      description: `Không thể ${actionMessage}: ${errorDetails}`,
-      variant: 'destructive'
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      excerpt: '',
+      content: '',
+      image: '',
+      categoryId: categories.length > 0 ? categories[0].categoryId : ''
     })
+    setEditingPost(null)
+    setShowCreateForm(false)
+    setShowEditModal(false)
   }
+
+  const preparePostData = (isUpdate = false, isDraft = false) => {
+    const postData = {
+      title: formData.title,
+      slug: generateSlug(formData.title),
+      content: formData.content,
+      excerpt: createExcerpt(formData.content, formData.excerpt),
+      authorId: user?.userInfo?.accountId,
+      categoryId: formData.categoryId,
+      featuredImageUrl: formData.image || DEFAULT_IMAGE,
+      isPublished: !isDraft
+    }
+    if (isUpdate && editingPost) {
+      postData.blogId = editingPost.id
+    }
+    return postData
+  }
+
+  const formatPostForState = (postData, responseData = {}, isDraft = false) => {
+    return {
+      id: responseData.blogId || Date.now(),
+      title: postData.title,
+      excerpt: postData.excerpt,
+      content: postData.content,
+      image: postData.featuredImageUrl,
+      status: isDraft ? 'draft' : 'published',
+      author: user?.userInfo?.fullName || 'Staff',
+      date: new Date().toISOString().split('T')[0],
+      categoryId: postData.categoryId,
+      categoryName: getCategoryName(postData.categoryId)
+    }
+  }
+
+  const handleApiError = useCallback(
+    (error, actionMessage) => {
+      console.error(`Error ${actionMessage}:`, error)
+
+      let errorDetails = error.message
+      if (error.response && error.response.data) {
+        errorDetails = error.response.data.message || errorDetails
+      }
+
+      toast({
+        title: 'Lỗi',
+        description: `Không thể ${actionMessage}: ${errorDetails}`,
+        variant: 'destructive'
+      })
+    },
+    [toast]
+  )
 
   // Use useMemo to filter blog posts based on selectedCategoryName
   const filteredBlogPosts = useMemo(() => {
@@ -122,25 +180,8 @@ const BlogManagement = () => {
     return blogPosts.filter((post) => post.categoryName === selectedCategoryName)
   }, [blogPosts, selectedCategoryName])
 
-  // Lấy danh sách categories và blogs khi component mount
-  useEffect(() => {
-    // AuthGuard already handles role-based access, so we can simplify this
-    if (!user || !user.userInfo) {
-      toast({
-        title: 'Không có quyền truy cập',
-        description: 'Bạn cần đăng nhập để quản lý blog',
-        variant: 'destructive'
-      })
-      navigate('/login')
-      return
-    }
-
-    fetchCategories()
-    fetchPublishedBlogs()
-  }, [user, navigate])
-
   // Hàm lấy danh sách blogs đã xuất bản từ API
-  async function fetchPublishedBlogs() {
+  const fetchPublishedBlogs = useCallback(async () => {
     try {
       setIsFetchingBlogs(true)
       const response = await api.get('/api/Blog/published')
@@ -165,10 +206,10 @@ const BlogManagement = () => {
     } finally {
       setIsFetchingBlogs(false)
     }
-  }
+  }, [user, handleApiError])
 
   // Hàm lấy danh sách categories từ API
-  async function fetchCategories() {
+  const fetchCategories = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await api.get('/api/BlogCategory')
@@ -186,70 +227,25 @@ const BlogManagement = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [handleApiError])
 
-  function resetForm() {
-    setFormData({
-      title: '',
-      excerpt: '',
-      content: '',
-      image: '',
-      categoryId: categories.length > 0 ? categories[0].categoryId : ''
-    })
-    setEditingPost(null)
-    setShowCreateForm(false)
-    setShowEditModal(false)
-  }
-
-  // Prepare blog post data for API
-  const preparePostData = (isUpdate = false, isDraft = false) => {
-    const slug = generateSlug(formData.title)
-    const excerpt = createExcerpt(formData.content, formData.excerpt)
-
-    // Always use the category selected in the form
-    let categoryId = formData.categoryId
-
-    const postData = {
-      title: formData.title,
-      slug: slug,
-      content: formData.content,
-      excerpt: excerpt,
-      authorId: user?.userInfo?.accountId, // Access accountId correctly from userInfo
-      categoryId: categoryId,
-      featuredImageUrl: formData.image || DEFAULT_IMAGE,
-      isPublished: !isDraft
+  useEffect(() => {
+    if (!user || !user.userInfo) {
+      toast({
+        title: 'Không có quyền truy cập',
+        description: 'Bạn cần đăng nhập để quản lý blog',
+        variant: 'destructive'
+      })
+      navigate('/login')
+      return
     }
-
-    if (isUpdate && editingPost) {
-      postData.blogId = editingPost.id
-    }
-
-    // Log để debug
-    console.log('Sending blog data:', postData)
-
-    return postData
-  }
-
-  // Format post data for local state
-  const formatPostForState = (postData, responseData = {}, isDraft = false) => {
-    return {
-      id: responseData.blogId || Date.now(),
-      title: postData.title,
-      excerpt: postData.excerpt,
-      content: postData.content,
-      image: postData.featuredImageUrl,
-      status: isDraft ? 'draft' : 'published',
-      author: user?.userInfo?.fullName || 'Staff',
-      date: new Date().toISOString().split('T')[0],
-      categoryId: postData.categoryId,
-      categoryName: getCategoryName(postData.categoryId)
-    }
-  }
+    fetchCategories()
+    fetchPublishedBlogs()
+  }, [user, navigate, fetchCategories, fetchPublishedBlogs, toast])
 
   async function handleCreatePost(isDraft = false) {
     if (!validateForm()) return
 
-    // Kiểm tra user ID
     if (!user?.userInfo?.accountId || !user?.userInfo?.role) {
       toast({
         title: 'Lỗi',
@@ -262,7 +258,6 @@ const BlogManagement = () => {
     setIsLoading(true)
     try {
       const postData = preparePostData(false, isDraft)
-
       const response = await api.post('/api/Blog', postData)
       const newPost = formatPostForState(postData, response.data, isDraft)
 
@@ -287,10 +282,8 @@ const BlogManagement = () => {
     setIsLoading(true)
     try {
       const postData = preparePostData(true, isDraft)
-
       await api.put(`/api/Blog/${editingPost.id}`, postData)
 
-      // Cập nhật state
       setBlogPosts((prev) =>
         prev.map((post) =>
           post.id === editingPost.id ? formatPostForState(postData, { blogId: post.id }, isDraft) : post
@@ -322,28 +315,33 @@ const BlogManagement = () => {
     setShowEditModal(true)
   }
 
-  async function handleDeletePost(id) {
-    // Confirm deletion with user
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
-      return
-    }
+  function openDeleteBlogConfirm(post) {
+    setBlogToDelete(post)
+    setShowDeleteBlogConfirm(true)
+  }
+
+  async function handleDeletePost() {
+    if (!blogToDelete) return
 
     setIsLoading(true)
     try {
-      await api.delete(`/api/Blog/${id}`)
+      await api.delete(`/api/Blog/${blogToDelete.id}`)
 
       // Cập nhật state để xóa bài viết khỏi danh sách
-      setBlogPosts((prev) => prev.filter((post) => post.id !== id))
+      setBlogPosts((prev) => prev.filter((post) => post.id !== blogToDelete.id))
 
       toast({
-        title: 'Đã xóa',
+        title: 'Thành công',
         description: 'Bài viết đã được xóa thành công'
       })
 
       // Nếu đang chỉnh sửa bài viết bị xóa, reset form
-      if (editingPost && editingPost.id === id) {
+      if (editingPost && editingPost.id === blogToDelete.id) {
         resetForm()
       }
+
+      // Đóng modal xác nhận
+      closeDeleteBlogConfirm()
     } catch (error) {
       handleApiError(error, 'xóa bài viết')
     } finally {
@@ -391,14 +389,6 @@ const BlogManagement = () => {
     setSelectedCategoryName('')
   }
 
-  function getStatusBadge(status) {
-    return status === 'published' ? (
-      <Badge className='bg-green-100 text-green-800'>Đã xuất bản</Badge>
-    ) : (
-      <Badge className='bg-yellow-100 text-yellow-800'>Nháp</Badge>
-    )
-  }
-
   // Hàm tạo mới danh mục
   async function handleCreateCategory() {
     if (!newCategory.name.trim()) {
@@ -442,16 +432,6 @@ const BlogManagement = () => {
     }
   }
 
-  // Mở modal chỉnh sửa danh mục
-  function openEditCategoryModal(category) {
-    setEditingCategory({
-      categoryId: category.categoryId,
-      name: category.name,
-      description: category.description || ''
-    })
-    setShowEditCategoryModal(true)
-  }
-
   // Hàm cập nhật danh mục
   async function handleUpdateCategory() {
     if (!editingCategory || !editingCategory.name.trim()) {
@@ -490,12 +470,6 @@ const BlogManagement = () => {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Mở xác nhận xóa danh mục
-  function openDeleteCategoryConfirm(category) {
-    setCategoryToDelete(category)
-    setShowDeleteCategoryConfirm(true)
   }
 
   // Hàm xóa danh mục
@@ -554,23 +528,102 @@ const BlogManagement = () => {
     }
   }
 
-  // Function to close the category modal
-  function closeCategoryModal() {
+  // Modal control functions
+  const openEditCategoryModal = (category) => {
+    setEditingCategory({
+      categoryId: category.categoryId,
+      name: category.name,
+      description: category.description || ''
+    })
+    setShowEditCategoryModal(true)
+  }
+
+  const openDeleteCategoryConfirm = (category) => {
+    setCategoryToDelete(category)
+    setShowDeleteCategoryConfirm(true)
+  }
+
+  const closeCategoryModal = () => {
     setShowCategoryModal(false)
     setNewCategory({ name: '', description: '' })
   }
 
-  // Đóng modal chỉnh sửa danh mục
-  function closeEditCategoryModal() {
+  const closeEditCategoryModal = () => {
     setShowEditCategoryModal(false)
     setEditingCategory(null)
   }
 
-  // Đóng modal xác nhận xóa danh mục
-  function closeDeleteCategoryConfirm() {
+  const closeDeleteCategoryConfirm = () => {
     setShowDeleteCategoryConfirm(false)
     setCategoryToDelete(null)
   }
+
+  const closeDeleteBlogConfirm = () => {
+    setShowDeleteBlogConfirm(false)
+    setBlogToDelete(null)
+  }
+
+  // Render helper components
+  const BlogStatsCard = ({ icon, count, label, color }) => {
+    const IconComponent = icon
+    return (
+      <Card className='border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1'>
+        <CardContent className='p-6 text-center'>
+          <IconComponent className={`h-8 w-8 ${color} mx-auto mb-2`} />
+          <p className='text-2xl font-bold text-gray-900'>{count}</p>
+          <p className='text-gray-600'>{label}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const CategorySelect = ({ value, onChange, disabled, id = 'category' }) => (
+    <select
+      id={id}
+      className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+    >
+      {categories.length === 0 ? (
+        <option value=''>Đang tải danh mục...</option>
+      ) : (
+        categories.map((category) => (
+          <option key={category.categoryId} value={category.categoryId}>
+            {category.name}
+          </option>
+        ))
+      )}
+    </select>
+  )
+
+  const FormButtons = ({ onPublish, onDraft, onCancel, loading, disabled }) => (
+    <div className='flex space-x-4'>
+      <Button
+        onClick={onPublish}
+        className='bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-md hover:shadow-lg'
+        disabled={loading || disabled}
+      >
+        {loading ? 'Đang xử lý...' : 'Xuất bản'}
+      </Button>
+      <Button
+        variant='outline'
+        onClick={onDraft}
+        disabled={loading || disabled}
+        className='hover:bg-gray-50 transition-colors duration-300'
+      >
+        {loading ? 'Đang xử lý...' : 'Lưu nháp'}
+      </Button>
+      <Button
+        variant='ghost'
+        onClick={onCancel}
+        disabled={loading}
+        className='hover:bg-red-50 hover:text-red-600 transition-colors duration-300'
+      >
+        Hủy
+      </Button>
+    </div>
+  )
 
   return (
     <div className='min-h-screen bg-blue-50'>
@@ -582,31 +635,19 @@ const BlogManagement = () => {
 
         {/* Blog Stats */}
         <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
-          <Card className='border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1'>
-            <CardContent className='p-6 text-center'>
-              <FileText className='h-8 w-8 text-blue-500 mx-auto mb-2' />
-              <p className='text-2xl font-bold text-gray-900'>{blogPosts.length}</p>
-              <p className='text-gray-600'>Tổng bài viết</p>
-            </CardContent>
-          </Card>
-          <Card className='border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1'>
-            <CardContent className='p-6 text-center'>
-              <Eye className='h-8 w-8 text-green-500 mx-auto mb-2' />
-              <p className='text-2xl font-bold text-gray-900'>
-                {blogPosts.filter((post) => post.status === 'published').length}
-              </p>
-              <p className='text-gray-600'>Đã xuất bản</p>
-            </CardContent>
-          </Card>
-          <Card className='border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1'>
-            <CardContent className='p-6 text-center'>
-              <Edit className='h-8 w-8 text-yellow-500 mx-auto mb-2' />
-              <p className='text-2xl font-bold text-gray-900'>
-                {blogPosts.filter((post) => post.status === 'draft').length}
-              </p>
-              <p className='text-gray-600'>Bản nháp</p>
-            </CardContent>
-          </Card>
+          <BlogStatsCard icon={FileText} count={blogPosts.length} label='Tổng bài viết' color='text-blue-500' />
+          <BlogStatsCard
+            icon={Eye}
+            count={blogPosts.filter((post) => post.status === 'published').length}
+            label='Đã xuất bản'
+            color='text-green-500'
+          />
+          <BlogStatsCard
+            icon={Edit}
+            count={blogPosts.filter((post) => post.status === 'draft').length}
+            label='Bản nháp'
+            color='text-yellow-500'
+          />
         </div>
 
         {/* Create/Edit Form */}
@@ -652,23 +693,11 @@ const BlogManagement = () => {
                     Thêm danh mục
                   </Button>
                 </div>
-                <select
-                  id='category'
-                  className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
+                <CategorySelect
                   value={formData.categoryId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, categoryId: e.target.value }))}
                   disabled={isLoading || categories.length === 0}
-                >
-                  {categories.length === 0 ? (
-                    <option value=''>Đang tải danh mục...</option>
-                  ) : (
-                    categories.map((category) => (
-                      <option key={category.categoryId} value={category.categoryId}>
-                        {category.name}
-                      </option>
-                    ))
-                  )}
-                </select>
+                />
               </div>
 
               <div className='space-y-2'>
@@ -703,31 +732,13 @@ const BlogManagement = () => {
                 />
               </div>
 
-              <div className='flex space-x-4'>
-                <Button
-                  onClick={() => handleCreatePost(false)}
-                  className='bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-md hover:shadow-lg'
-                  disabled={isLoading || categories.length === 0}
-                >
-                  {isLoading ? 'Đang xử lý...' : 'Xuất bản'}
-                </Button>
-                <Button
-                  variant='outline'
-                  onClick={() => handleCreatePost(true)}
-                  disabled={isLoading || categories.length === 0}
-                  className='hover:bg-gray-50 transition-colors duration-300'
-                >
-                  {isLoading ? 'Đang xử lý...' : 'Lưu nháp'}
-                </Button>
-                <Button
-                  variant='ghost'
-                  onClick={resetForm}
-                  disabled={isLoading}
-                  className='hover:bg-red-50 hover:text-red-600 transition-colors duration-300'
-                >
-                  Hủy
-                </Button>
-              </div>
+              <FormButtons
+                onPublish={() => handleCreatePost(false)}
+                onDraft={() => handleCreatePost(true)}
+                onCancel={resetForm}
+                loading={isLoading}
+                disabled={categories.length === 0}
+              />
             </CardContent>
           </Card>
         )}
@@ -894,7 +905,7 @@ const BlogManagement = () => {
                       <Button
                         size='sm'
                         variant='outline'
-                        onClick={() => handleDeletePost(post.id)}
+                        onClick={() => openDeleteBlogConfirm(post)}
                         className='text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300'
                       >
                         <Trash2 className='h-4 w-4' />
@@ -1254,7 +1265,7 @@ const BlogManagement = () => {
           <Card className='w-full max-w-md animate-fade-in'>
             <CardHeader>
               <div className='flex justify-between items-center'>
-                <CardTitle className='text-red-600'>Xác nhận xóa</CardTitle>
+                <CardTitle className='text-red-600'>Xác nhận xóa danh mục</CardTitle>
                 <Button variant='ghost' size='sm' onClick={closeDeleteCategoryConfirm}>
                   <X className='h-4 w-4' />
                 </Button>
@@ -1281,6 +1292,48 @@ const BlogManagement = () => {
                       </>
                     ) : (
                       'Xóa danh mục'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Blog Confirmation */}
+      {showDeleteBlogConfirm && blogToDelete && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
+          <Card className='w-full max-w-md animate-fade-in'>
+            <CardHeader>
+              <div className='flex justify-between items-center'>
+                <CardTitle className='text-red-600'>Xác nhận xóa bài viết</CardTitle>
+                <Button variant='ghost' size='sm' onClick={closeDeleteBlogConfirm}>
+                  <X className='h-4 w-4' />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                <p>
+                  Bạn có chắc chắn muốn xóa bài viết <strong>"{blogToDelete.title}"</strong>?
+                </p>
+                <p className='text-sm text-gray-500'>
+                  Thao tác này không thể hoàn tác. Bài viết sẽ bị xóa vĩnh viễn khỏi hệ thống.
+                </p>
+
+                <div className='flex justify-end space-x-2 pt-4'>
+                  <Button variant='outline' onClick={closeDeleteBlogConfirm} disabled={isLoading}>
+                    Hủy
+                  </Button>
+                  <Button variant='destructive' onClick={handleDeletePost} disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2'></span>
+                        Đang xử lý
+                      </>
+                    ) : (
+                      'Xóa bài viết'
                     )}
                   </Button>
                 </div>

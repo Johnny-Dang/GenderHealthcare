@@ -1,21 +1,17 @@
 ﻿using backend.API.Middleware;
 using backend.Application.Common.Mappings;
 using backend.Application.Services;
-using backend.Application.Validators;
 using backend.Domain.AppsettingsConfigurations;
 using backend.Infrastructure.BackgroundJobs;
 using backend.Infrastructure.Database;
 using backend.Infrastructure.Extensions;
 using backend.Infrastructure.Filters;
-using backend.Infrastructure.Persistence.Configurations;
 using backend.Infrastructure.Services;
-using DeployGenderSystem.Domain.Entity;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -113,7 +109,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 
-builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile), typeof(StaffInfoProfile));
+builder.Services.AddAutoMapper(typeof(AccountProfile), typeof(RoleProfile), typeof(FeedbackProfile), typeof(StaffInfoProfile), typeof(PaymentProfile));
 
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
 

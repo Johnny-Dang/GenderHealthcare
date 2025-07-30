@@ -64,9 +64,9 @@ const Introduction = () => {
 
             <div className='relative animate-fade-in'>
               <img
-                src='https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'
+                src='https://res.cloudinary.com/drks7mngp/image/upload/v1753873695/Gemini_Generated_Image_puclpqpuclpqpucl_vozdgn.png'
                 alt='Đội ngũ y tế WellCare'
-                className='rounded-2xl shadow-xl w-full h-[400px] object-cover'
+                className='rounded-2xl shadow-xl w-full h-[455px] object-cover'
               />
             </div>
           </div>

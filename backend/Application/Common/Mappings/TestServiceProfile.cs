@@ -8,12 +8,10 @@ namespace backend.Application.Common.Mappings
     {
         public TestServiceProfile()
         {
-            // Entity to DTO
             CreateMap<TestService, TestServiceResponse>();
-            
-            // DTO to Entity
             CreateMap<CreateTestServiceRequest, TestService>();
             CreateMap<UpdateTestServiceRequest, TestService>();
+            CreateMap<TestService, TestServiceAdminResponse>();
         }
     }
 } 

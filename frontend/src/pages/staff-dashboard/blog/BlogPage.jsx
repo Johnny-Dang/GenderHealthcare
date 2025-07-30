@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
@@ -6,25 +6,38 @@ import { Button } from '@/components/ui/button'
 import { Calendar, User, Loader, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import api from '@/configs/axios'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/useToast'
 import Loading from '../../../components/Loading'
 
 const BlogPage = () => {
-  const { toast } = useToast()
+  const { showError, showSuccess } = useToast()
   const [blogPosts, setBlogPosts] = useState([])
   const [categories, setCategories] = useState(['Tất cả'])
   const [selectedCategory, setSelectedCategory] = useState('Tất cả')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Stable error handler với useCallback
+  const handleError = useCallback(
+    (message) => {
+      setError(message)
+      showError(message)
+    },
+    [showError]
+  )
+
   // Lấy danh sách blog posts và categories từ API
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('BlogPage: Starting fetchData...')
+        console.log('BlogPage: API URL:', import.meta.env.VITE_API_URL)
         setLoading(true)
 
         // Lấy danh sách bài viết đã xuất bản
+        console.log('BlogPage: Fetching blog posts...')
         const blogsResponse = await api.get('/api/Blog/published')
+        console.log('BlogPage: Blog posts response:', blogsResponse.data)
         const formattedPosts = blogsResponse.data.map((blog) => ({
           id: blog.blogId,
           slug: blog.slug,
@@ -38,11 +51,14 @@ const BlogPage = () => {
           category: blog.categoryName || 'Chưa phân loại',
           categoryId: blog.categoryId
         }))
+        console.log('BlogPage: Formatted posts:', formattedPosts)
         setBlogPosts(formattedPosts)
 
         // Lấy danh sách danh mục
         try {
+          console.log('BlogPage: Fetching categories...')
           const categoriesResponse = await api.get('/api/BlogCategory')
+          console.log('BlogPage: Categories response:', categoriesResponse.data)
           const categoryOptions = ['Tất cả', ...categoriesResponse.data.map((cat) => cat.name)]
           setCategories(categoryOptions)
         } catch (categoryError) {
@@ -51,28 +67,27 @@ const BlogPage = () => {
         }
 
         setError(null)
+        console.log('BlogPage: fetchData completed successfully')
       } catch (error) {
-        console.error('Error fetching blog posts:', error)
-        setError('Không thể tải danh sách bài viết. Vui lòng thử lại sau.')
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải danh sách bài viết. Vui lòng thử lại sau.',
-          variant: 'destructive'
-        })
+        console.error('BlogPage: Error fetching blog posts:', error)
+        console.error('BlogPage: Error details:', error.response?.data || error.message)
+        handleError('Không thể tải danh sách bài viết. Vui lòng thử lại sau.')
       } finally {
+        console.log('BlogPage: Setting loading to false')
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [toast])
+  }, [handleError])
 
-  // Filter posts by category
-  const filteredPosts =
-    selectedCategory === 'Tất cả' ? blogPosts : blogPosts.filter((post) => post.category === selectedCategory)
+  // Filter posts by category với useMemo
+  const filteredPosts = useMemo(() => {
+    return selectedCategory === 'Tất cả' ? blogPosts : blogPosts.filter((post) => post.category === selectedCategory)
+  }, [selectedCategory, blogPosts])
 
-  // Function to refresh blog posts
-  const refreshBlogPosts = async () => {
+  // Function to refresh blog posts với useCallback
+  const refreshBlogPosts = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -94,22 +109,14 @@ const BlogPage = () => {
       }))
       setBlogPosts(formattedPosts)
 
-      toast({
-        title: 'Thành công',
-        description: 'Đã tải lại danh sách bài viết'
-      })
+      showSuccess('Đã tải lại danh sách bài viết')
     } catch (error) {
       console.error('Error refreshing blog posts:', error)
-      setError('Không thể tải lại danh sách bài viết. Vui lòng thử lại sau.')
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải lại danh sách bài viết. Vui lòng thử lại sau.',
-        variant: 'destructive'
-      })
+      handleError('Không thể tải lại danh sách bài viết. Vui lòng thử lại sau.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [showSuccess, handleError])
 
   return (
     <div className='min-h-screen'>
