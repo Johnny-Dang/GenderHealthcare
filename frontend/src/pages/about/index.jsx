@@ -252,11 +252,10 @@ const AboutPage = () => {
               className={`relative transition-all duration-1000 ${isVisible.story ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}
             >
               <img
-                src='https://images.unsplash.com/photo-1581091226825-a6a2a5aee158'
+                src='https://res.cloudinary.com/drks7mngp/image/upload/v1753873695/Gemini_Generated_Image_puclpqpuclpqpucl_vozdgn.png'
                 alt='Đội ngũ y tế WellCare'
-                className='rounded-2xl shadow-xl w-full h-[400px] object-cover transition-transform duration-700 hover:scale-[1.02]'
+                className='rounded-2xl shadow-xl w-full h-[455px] object-cover  transition-transform duration-700 hover:scale-[1.02]'
               />
-              <div className='absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary-600/20 to-transparent'></div>
             </div>
           </div>
 
