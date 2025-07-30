@@ -7,11 +7,11 @@ namespace backend.Domain.Entities
         public Guid BookingDetailId { get; set; }
         public Guid BookingId { get; set; }
         public Guid ServiceId { get; set; }
-        public Guid SlotId { get; set; } // SlotId bắt buộc
+        public Guid SlotId { get; set; } 
         public string FirstName { get; set; } = default!;
         public string LastName { get; set; } = default!;
         public string Phone { get; set; } = default!;
-        public string Status { get; set; } = "Chưa xét nghiệm";
+        public string Status { get; set; } = string.Empty;
         public DateOnly DateOfBirth { get; set; }
         public bool Gender { get; set; } = false;
 

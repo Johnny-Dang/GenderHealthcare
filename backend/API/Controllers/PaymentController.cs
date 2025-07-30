@@ -30,7 +30,6 @@ namespace backend.API.Controllers
         
         // GET: api/payments/vnpay-callback
         [HttpGet("vnpay-callback")]
-        [AllowAnonymous]
         [Authorize]
         public async Task<IActionResult> VnPayCallback()
         {
