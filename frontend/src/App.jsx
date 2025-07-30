@@ -44,7 +44,6 @@ import ManagerFeedbackManagement from './pages/manager-dashboard/feedback'
 import ManagerPaymentManagement from './pages/manager-dashboard/payment'
 import ManagerStaffManagement from './pages/manager-dashboard/staff'
 import ManagerTestServiceManagement from './pages/manager-dashboard/test-service'
-import JobManagement from './pages/admin/JobManagement'
 import AboutPage from './pages/about'
 import ScrollToTop from './components/ScrollToTop'
 import PaymentHistory from './pages/customer-dashboard/PaymentHistory'
@@ -114,8 +113,7 @@ function App() {
           children: [
             { index: true, element: <Navigate to='dashboard' replace /> },
             { path: 'dashboard', element: <DashboardHome /> },
-            { path: 'users', element: <UserManagement /> },
-            { path: 'jobs', element: <JobManagement /> }
+            { path: 'users', element: <UserManagement /> }
           ]
         },
 

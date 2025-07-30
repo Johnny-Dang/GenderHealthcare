@@ -1,5 +1,6 @@
 ﻿using backend.Application.DTOs.ConsultationBookingDTO;
 using backend.Application.Services;
+using backend.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,6 +54,19 @@ namespace backend.API.Controllers
             {
                 return BadRequest("Status cannot be empty");
             }
+            
+            var validStatuses = new[] 
+            { 
+                ConsultationBookingStatus.Pending, 
+                ConsultationBookingStatus.Confirmed, 
+                ConsultationBookingStatus.Cancelled 
+            };
+            
+            if (!validStatuses.Contains(status))
+            {
+                return BadRequest($"Status must be one of: {string.Join(", ", validStatuses)}");
+            }
+            
             var result = await _bookingService.UpdateBookingStatusAsync(bookingId, status);
             if (result.IsSuccess)
             {

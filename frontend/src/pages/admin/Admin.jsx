@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import { Layout, Menu, Avatar, Typography, Breadcrumb, Dropdown } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
-import { PieChart, Users, Settings, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
+import { PieChart, Users, ChevronLeft, ChevronRight, UserCircle, Heart, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import api from '../../configs/axios'
 
@@ -20,8 +20,7 @@ function getItem(label, key, icon) {
 
 const items = [
   getItem('Dashboard', 'dashboard', <PieChart size={18} />),
-  getItem('Quản lý người dùng', 'users', <Users size={18} />),
-  getItem('Quản lý job', 'jobs', <Settings size={18} />)
+  getItem('Quản lý người dùng', 'users', <Users size={18} />)
 ]
 
 const AdminPage = () => {
@@ -33,7 +32,6 @@ const AdminPage = () => {
 
   const breadcrumbMap = {
     '/admin/users': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý người dùng' }],
-    '/admin/jobs': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Quản lý job' }],
     '/admin/dashboard': [{ title: <Link to='/admin'>Admin</Link> }, { title: 'Dashboard' }]
   }
 
@@ -44,7 +42,6 @@ const AdminPage = () => {
   const getActiveMenu = () => {
     const path = location.pathname
     if (path.includes('/users')) return 'users'
-    if (path.includes('/jobs')) return 'jobs'
     return 'dashboard'
   }
 
