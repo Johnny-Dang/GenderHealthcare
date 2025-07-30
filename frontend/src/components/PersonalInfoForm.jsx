@@ -120,6 +120,10 @@ export default function PersonalInfoForm({
     if (name === 'phone' && value) {
       // Only allow numbers and some formatting characters
       const cleanValue = value.replace(/[^\d\s\-()]/g, '')
+
+      if (cleanValue.length > 10) {
+        return
+      }
       if (cleanValue !== value) {
         setForm((prev) => ({
           ...prev,
@@ -281,7 +285,7 @@ export default function PersonalInfoForm({
               onChange={handleChange}
               placeholder='Số điện thoại'
               required
-              maxLength={15}
+              maxLength={10}
               className={errors.phone ? 'border-red-500' : ''}
             />
             {errors.phone && <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>}
