@@ -31,7 +31,7 @@ const PreFooter = ({ contactRef, isVisible }) => {
             className={`text-center mb-12 transition-all duration-700 ${isVisible.contact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
           >
             <h2 className='text-3xl lg:text-4xl font-bold text-gray-900 mb-6'>
-              Thông tin <span className='text-primary-600'>liên hệ</span>
+              Thông tin <span className='gradient-text'>liên hệ</span>
             </h2>
             <p className='text-lg text-gray-600 max-w-3xl mx-auto'>
               Bạn có thể dễ dàng tìm thấy chúng tôi hoặc liên hệ qua các kênh dưới đây
@@ -126,10 +126,7 @@ const PreFooter = ({ contactRef, isVisible }) => {
             của chúng tôi.
           </p>
           <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-            <Button
-              asChild
-              className='px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1'
-            >
+            <Button asChild size='lg' className='bg-primary text-white px-8 py-3 font-medium rounded-lg'>
               <Link to='/test-service'>Đặt lịch ngay</Link>
             </Button>
             <Button

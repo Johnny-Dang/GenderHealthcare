@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Facebook, Heart, Instagram, Youtube } from 'lucide-react'
 
 const Footer = () => {
   return (
@@ -20,13 +20,17 @@ const Footer = () => {
             </p>
             <div className='flex space-x-4'>
               <div className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors cursor-pointer'>
-                <span className='text-sm font-bold'>I</span>
+                <span className='text-sm font-bold'>
+                  <Facebook />
+                </span>
               </div>
               <div className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors cursor-pointer'>
-                <span className='text-sm font-bold'>LOVE</span>
+                <Instagram />
               </div>
               <div className='w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors cursor-pointer'>
-                <span className='text-sm font-bold'>YOU</span>
+                <span className='text-sm font-bold'>
+                  <Youtube />
+                </span>
               </div>
             </div>
           </div>
