@@ -26,8 +26,11 @@ builder.Services.AddHangfireServer();
 // Add services to the container.
 builder.Services.AddService();
 
-// note hangfire job này sẽ chạy mỗi ngày lúc 00:00
+// Add service for job
 builder.Services.AddScoped<SlotGenerationJob>();
+
+builder.Services.AddScoped<IBookingCleanupService, BookingCleanupService>();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -154,11 +157,18 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     Authorization = new[] { new AdminDashboardAuthorizationFilter() }
 });
 
-// Đăng ký job chạy mỗi thứ 2 lúc 0h
+// job tạo slot
 RecurringJob.AddOrUpdate<SlotGenerationJob>(
     "generate-slots-weekly",
     job => job.GenerateSlotsForAllServicesNextWeek(),
-    "0 0 * * 1" // Cron: mỗi thứ 2 lúc 0h
+    "0 0 * * 1" // Chạy mỗi thứ 2 lúc 0h
+);
+
+// job clean booking
+RecurringJob.AddOrUpdate<IBookingCleanupService>(
+    "cleanup-unpaid-bookings",
+    service => service.CleanupUnpaidBookingsAsync(),
+    "*/5 * * * *"  // Chạy mỗi 5 phút
 );
 
 app.Run();

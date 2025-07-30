@@ -1,4 +1,5 @@
 ﻿using backend.Application.Repositories;
+using backend.Domain.Constants;
 using backend.Domain.Entities;
 using backend.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -162,6 +163,18 @@ namespace backend.Infrastructure.Repositories
             booking.UpdateAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<List<Booking>> GetUnpaidBookingsBeforeTimeAsync(DateTime cutoffTime)
+        {
+            return await _context.Booking
+                .Include(b => b.Payment)
+                .Where(b => b.CreateAt < cutoffTime && 
+                           b.Payment == null && 
+                           b.Status != BookingStatus.Completed &&
+                           b.Status != BookingStatus.Expired &&
+                           b.Status != BookingStatus.Cancelled)
+                .ToListAsync();
         }
     }
 }
