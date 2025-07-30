@@ -1,4 +1,5 @@
-﻿using backend.Application.DTOs.PaymentDTO;
+﻿using AutoMapper;
+using backend.Application.DTOs.PaymentDTO;
 using backend.Application.Repositories;
 using backend.Application.Services;
 using backend.Domain.Constants;
@@ -20,13 +21,14 @@ namespace backend.Infrastructure.Services
         private readonly IBookingRepository _bookingRepository;
         private readonly IBookingDetailRepository _bookingDetailRepository;
         private readonly IBookingDetailService _bookingDetailService;
-        
+        private readonly IMapper _mapper;
         public PaymentService(
             IConfiguration configuration,
             IPaymentRepository paymentRepository,
             IBookingDetailRepository bookingDetail,
             IBookingRepository booking,
-            IBookingDetailService bookingDetailService
+            IBookingDetailService bookingDetailService,
+            IMapper mapper
         )
         {
             _configuration = configuration;
@@ -34,6 +36,7 @@ namespace backend.Infrastructure.Services
             _bookingRepository = booking;
             _bookingDetailRepository = bookingDetail;
             _bookingDetailService = bookingDetailService;
+            _mapper = mapper;   
         }
 
         public string CreatePaymentUrl(CreateVnPayRequest model, HttpContext context)
@@ -85,64 +88,30 @@ namespace backend.Infrastructure.Services
                 };
                 
                 await _paymentRepository.CreatePaymentAsync(newPayment);
-                await _bookingRepository.UpdateStatusAsync(response.BookingId, "Đã thanh toán");
+                await _bookingRepository.UpdateStatusAsync(response.BookingId, BookingStatus.Completed);
                 await _bookingDetailRepository.UpdateStatusByBookingIdAsync(response.BookingId, BookingDetailStatus.Pending);
 
-                // --- GỌI HÀM GỬI EMAIL ---
                 await _bookingDetailService.SendBookingDetailEmailToCustomer(response.BookingId);
             }
             return response;
         }
         
-        // Additional methods for payment operations
         public async Task<PaymentDTO> GetPaymentByBookingIdAsync(Guid bookingId)
         {
             var payment = await _paymentRepository.GetPaymentByBookingIdAsync(bookingId);
-            return payment != null ? MapToDTO(payment) : null;
+            return payment != null ? _mapper.Map<PaymentDTO>(payment) : null;
         }
 
         public async Task<PaymentDTO> GetPaymentByTransactionIdAsync(string transactionId)
         {
             var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(transactionId);
-            return payment != null ? MapToDTO(payment) : null;
+            return payment != null ? _mapper.Map<PaymentDTO>(payment) : null;
         }
 
         public async Task<List<PaymentWithBookingInfoDTO>> GetAllPaymentsWithBookingInfoAsync()
         {
             var payments = await _paymentRepository.GetAllPaymentsAsync();
-            var result = new List<PaymentWithBookingInfoDTO>();
-            foreach (var payment in payments)
-            {
-                var booking = payment.Booking;
-                var account = booking?.Account;
-                result.Add(new PaymentWithBookingInfoDTO
-                {
-                    BookingId = payment.BookingId,
-                    FirstName = account?.FirstName ?? string.Empty,
-                    LastName = account?.LastName ?? string.Empty,
-                    Amount = payment.Amount,
-                    PaymentMethod = payment.PaymentMethod,
-                    CreateAt = payment.CreatedAt,
-                    Phone = account?.Phone ?? string.Empty,
-                    Email = account?.Email ?? string.Empty,
-                    Gender = account?.Gender ?? false,
-                    TransactionId = payment.TransactionId
-                });
-            }
-            return result;
-        }
-        
-        // Helper method to map Payment entity to PaymentDTO
-        private PaymentDTO MapToDTO(Payment payment)
-        {
-            return new PaymentDTO
-            {
-                BookingId = payment.BookingId,
-                TransactionId = payment.TransactionId,
-                CreatedAt = payment.CreatedAt,
-                Amount = payment.Amount,
-                PaymentMethod = payment.PaymentMethod
-            };
+            return _mapper.Map<List<PaymentWithBookingInfoDTO>>(payments);
         }
     }
 }

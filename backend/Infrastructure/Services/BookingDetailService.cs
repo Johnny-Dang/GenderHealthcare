@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Text;
 using backend.Application.Interfaces;
+using AutoMapper;
 
 namespace backend.Infrastructure.Services
 {
@@ -21,7 +22,7 @@ namespace backend.Infrastructure.Services
         private readonly ICloudinaryService _cloudinaryService;
         private readonly INotificationDomainService _notificationDomainService;
         private readonly IEmailService _emailService;
-
+        private readonly IMapper _mapper;
         public BookingDetailService(
             IBookingDetailRepository bookingDetailRepository,
             ITestServiceRepository testServiceRepository,
@@ -29,7 +30,8 @@ namespace backend.Infrastructure.Services
             INotificationService notificationService,
             ICloudinaryService cloudinaryService,
             INotificationDomainService notificationDomainService,
-            IEmailService emailService)
+            IEmailService emailService,
+            IMapper mapper)
         {
             _bookingDetailRepository = bookingDetailRepository;
             _testServiceRepository = testServiceRepository;
@@ -38,20 +40,18 @@ namespace backend.Infrastructure.Services
             _cloudinaryService = cloudinaryService;
             _notificationDomainService = notificationDomainService;
             _emailService = emailService;
+            _mapper = mapper;
         }
 
         public async Task<BookingDetailResponse> CreateAsync(CreateBookingDetailRequest request)
         {
-            // Check if booking exists
             if (!await _bookingDetailRepository.ExistsBookingAsync(request.BookingId))
                 return null;
 
-            // Check if service exists
             var service = await _testServiceRepository.GetByIdAsync(request.ServiceId);
             if (service == null)
                 return null;
 
-            // Find or create slot
             var slotResult = await _testServiceSlotService.FindOrCreateSlotAsync(
                 request.ServiceId,
                 request.SlotDate,
@@ -60,12 +60,10 @@ namespace backend.Infrastructure.Services
             if (!slotResult.IsSuccess)
                 return null;
 
-            // Check if slot has available capacity
             var hasCapacityResult = await _testServiceSlotService.HasAvailableCapacityAsync(slotResult.Data.SlotId);
             if (!hasCapacityResult.IsSuccess || !hasCapacityResult.Data)
-                return null; // Slot is full
+                return null; 
 
-            // Create booking detail entity
             var bookingDetail = new BookingDetail
             {
                 BookingDetailId = Guid.NewGuid(),
@@ -79,7 +77,6 @@ namespace backend.Infrastructure.Services
                 Gender = request.Gender
             };
 
-            // Save to database
             var createdDetail = await _bookingDetailRepository.CreateAsync(bookingDetail);
 
             // Increment slot's current quantity
@@ -453,7 +450,6 @@ namespace backend.Infrastructure.Services
             }
             return result;
         }
-
         public async Task SendBookingDetailEmailToCustomer(Guid bookingId)
         {
             // Lấy booking và account
