@@ -33,7 +33,6 @@ namespace backend.Infrastructure.Repositories
             if (existingSlot != null)
                 return existingSlot;
 
-            // Create new slot
             var newSlot = new TestServiceSlot
             {
                 SlotId = Guid.NewGuid(),
@@ -139,12 +138,6 @@ namespace backend.Infrastructure.Repositories
             slot.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<bool> IsSlotForServiceAsync(Guid slotId, Guid serviceId)
-        {
-            return await _context.TestServiceSlot
-                .AnyAsync(s => s.SlotId == slotId && s.ServiceId == serviceId);
         }
 
         public async Task<TestServiceSlot> UpdateAsync(TestServiceSlot slot)
