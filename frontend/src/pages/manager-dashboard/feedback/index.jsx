@@ -139,18 +139,22 @@ const ManagerFeedbackManagement = () => {
       message.error('Bạn cần đăng nhập để thực hiện chức năng này')
       return
     }
-    message.loading({ content: 'Đang xoá...', key: 'deleting' })
+    message.loading({ content: 'Đang xóa đánh giá...', key: 'deleting' })
     try {
-      await api.delete(`/api/Feedback/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+      await api.delete(`/api/Feedback/${id}`, {
+        headers: { Authorization: `Bearer ${userInfo.accessToken}` }
+      })
       const updated = feedbacks.filter((f) => f.id !== id)
       setFeedbacks(updated)
       const total = updated.length
       const fiveStars = updated.filter((f) => f.rating === 5).length
       const avgValue = total ? parseFloat((updated.reduce((a, b) => a + b.rating, 0) / total).toFixed(1)) : 0
       setStats({ total, fiveStars, average: avgValue })
-      message.success({ content: 'Xoá thành công!', key: 'deleting', duration: 2 })
-    } catch {
-      message.error({ content: 'Xoá thất bại. Vui lòng thử lại.', key: 'deleting', duration: 2 })
+      generateMonthlyRatingData(updated)
+      message.success({ content: 'Xóa đánh giá thành công!', key: 'deleting', duration: 2 })
+    } catch (error) {
+      console.error('Delete error:', error)
+      message.error({ content: 'Xóa đánh giá thất bại! Vui lòng thử lại.', key: 'deleting', duration: 2 })
     }
   }
 
@@ -192,10 +196,12 @@ const ManagerFeedbackManagement = () => {
             Chi tiết
           </Button>
           <Popconfirm
-            title={`Bạn có chắc chắn muốn xóa đánh giá của "${record.customerName}" không?`}
+            title='Xác nhận xóa đánh giá'
+            description={`Bạn có chắc chắn muốn xóa đánh giá của "${record.customerName}" không? Hành động này không thể hoàn tác.`}
             onConfirm={() => handleDelete(record.id)}
             okText='Xóa'
-            cancelText='Huỷ'
+            cancelText='Hủy'
+            okType='danger'
           >
             <Button
               className='bg-red-300 hover:bg-red-600 transition-all duration-300 hover:shadow-md'

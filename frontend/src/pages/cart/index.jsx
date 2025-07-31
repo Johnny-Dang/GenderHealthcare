@@ -30,6 +30,17 @@ export default function CartPage() {
   const [editData, setEditData] = useState(null)
   const [deleteCartModal, setDeleteCartModal] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [paymentConfirmModal, setPaymentConfirmModal] = useState(false)
+
+  // Function để format ca làm việc
+  const formatShift = (shift) => {
+    if (shift === 'AM') {
+      return 'Sáng (7h30 - 12h)'
+    } else if (shift === 'PM') {
+      return 'Chiều (13h30 - 17h30)'
+    }
+    return shift || 'Chưa có thông tin'
+  }
 
   const fetchServices = () => {
     if (bookingId) {
@@ -102,11 +113,16 @@ export default function CartPage() {
   // Tính tổng tiền
   const total = services.reduce((sum, s) => sum + (s.price || 0), 0)
 
-  const handlePayment = async () => {
+  const handlePayment = () => {
     if (!bookingId || total <= 0) {
       showError('Không có dịch vụ nào để thanh toán!')
       return
     }
+    setPaymentConfirmModal(true)
+  }
+
+  const handleConfirmPayment = async () => {
+    setPaymentConfirmModal(false)
     try {
       const res = await api.post('/api/payments/create-vnpay-url', {
         bookingId,
@@ -121,7 +137,7 @@ export default function CartPage() {
       } else {
         showError('Không nhận được link thanh toán!')
       }
-    } catch (err) {
+    } catch {
       showError('Tạo link thanh toán thất bại!')
     }
   }
@@ -187,6 +203,12 @@ export default function CartPage() {
                   </div>
                   <div>
                     <span className='font-medium'>Giới tính:</span> {s.gender ? 'Nam' : 'Nữ'}
+                  </div>
+                  <div>
+                    <span className='font-medium'>Ngày đặt:</span> {s.slotDate || 'Chưa có thông tin'}
+                  </div>
+                  <div>
+                    <span className='font-medium'>Ca đặt:</span> {formatShift(s.slotShift)}
                   </div>
                 </div>
                 <div className='flex gap-3 mt-6 justify-end'>
@@ -275,6 +297,47 @@ export default function CartPage() {
                   Xóa giỏ hàng
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Confirmation Modal */}
+      <Dialog open={paymentConfirmModal} onOpenChange={setPaymentConfirmModal}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center gap-2 text-orange-600'>
+              <AlertTriangle className='w-5 h-5' />
+              Xác nhận thanh toán
+            </DialogTitle>
+            <DialogDescription className='text-gray-600 mt-2'>
+              <div className='space-y-3'>
+                <p className='font-medium text-gray-800'>Bạn có chắc chắn muốn tiến hành thanh toán không?</p>
+                <div className='bg-orange-50 border border-orange-200 rounded-lg p-3'>
+                  <p className='text-orange-800 text-sm font-medium'>⚠️ Lưu ý quan trọng:</p>
+                  <ul className='text-orange-700 text-sm mt-2 space-y-1'>
+                    <li>• Bạn cam kết sẽ đi xét nghiệm đúng lịch đã đặt</li>
+                    <li>• Sau khi thanh toán, bạn không thể chỉnh sửa thông tin</li>
+                    <li>• Vui lòng kiểm tra kỹ thông tin trước khi xác nhận</li>
+                  </ul>
+                </div>
+                <div className='bg-gray-50 rounded-lg p-3'>
+                  <p className='text-gray-700 font-medium'>
+                    Tổng tiền: <span className='text-pink-600 font-bold'>{total.toLocaleString()} VNĐ</span>
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className='mt-6'>
+            <Button variant='outline' onClick={() => setPaymentConfirmModal(false)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={handleConfirmPayment}
+              className='bg-gradient-to-r from-pink-500 to-primary-500 hover:from-pink-600 hover:to-primary-600'
+            >
+              Xác nhận thanh toán
             </Button>
           </DialogFooter>
         </DialogContent>
