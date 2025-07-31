@@ -172,7 +172,6 @@ namespace backend.Infrastructure.Repositories
                 .Where(b => b.CreateAt < cutoffTime && 
                            b.Payment == null && 
                            b.Status != BookingStatus.Completed &&
-                           b.Status != BookingStatus.Expired &&
                            b.Status != BookingStatus.Cancelled)
                 .ToListAsync();
         }
