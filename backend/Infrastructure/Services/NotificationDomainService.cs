@@ -153,7 +153,7 @@ namespace backend.Infrastructure.Services
                 <div><strong>Thời gian:</strong> {shiftDisplay}</div>
             </div>
             
-            <p>Nếu bạn vẫn muốn sử dụng dịch vụ, vui lòng đặt lại lịch hẹn hoặc liên hệ với chúng tôi qua:</p>
+            <p>Nếu bạn vẫn muốn sử dụng dịch vụ, vui lòng  liên hệ với chúng tôi qua:</p>
             
             <ul style='color: #555; padding-left: 20px;'>
                 <li>Hotline: 1900 1234 567</li>
