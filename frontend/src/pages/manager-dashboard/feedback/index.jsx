@@ -14,7 +14,7 @@ import {
   Modal,
   Tabs
 } from 'antd'
-import { Trash2, Eye } from 'lucide-react'
+import { Trash2, Eye, Search, MessageSquare, Star } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import api from '../../../configs/axios'
 import { useSelector } from 'react-redux'

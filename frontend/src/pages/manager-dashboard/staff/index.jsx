@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Table, Card, Space, Button, Input, Typography, Avatar, Tag, Modal, Row, Col, Statistic, message } from 'antd'
-import { Eye, User, RefreshCw } from 'lucide-react'
+import { Eye, User, RefreshCw, Search, Users } from 'lucide-react'
 import api from '../../../configs/axios'
 import ImageModal from '../../../components/ImageModal'
 
@@ -58,6 +58,7 @@ const StaffManagement = () => {
   const filteredStaff = staffList.filter(
     (item) =>
       (item.fullName && item.fullName.toLowerCase().includes(searchText.toLowerCase())) ||
+      (item.phone && item.phone.toLowerCase().includes(searchText.toLowerCase())) ||
       item.email.toLowerCase().includes(searchText.toLowerCase()) ||
       item.department.toLowerCase().includes(searchText.toLowerCase()) ||
       item.degree.toLowerCase().includes(searchText.toLowerCase())
@@ -160,7 +161,7 @@ const StaffManagement = () => {
             Làm mới
           </Button>
           <SearchInput
-            placeholder='Tìm kiếm nhân viên...'
+            placeholder='Nhập tên, số điện thoại hoặc email'
             onSearch={handleSearch}
             style={{ width: 300 }}
             prefix={<Search size={16} />}
