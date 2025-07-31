@@ -5,6 +5,5 @@
         public const string Completed = "Đã thanh toán";
         public const string Pending = "Chờ thanh toán";
         public const string Cancelled = "Đã hủy";
-        public const string Expired = "Hết hạn";
     }
 }

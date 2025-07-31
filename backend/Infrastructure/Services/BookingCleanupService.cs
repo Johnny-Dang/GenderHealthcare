@@ -1,6 +1,5 @@
 ﻿using backend.Application.Repositories;
 using backend.Application.Services;
-using backend.Domain.Constants;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -10,19 +9,19 @@ namespace backend.Infrastructure.Services
     public class BookingCleanupService : IBookingCleanupService
     {
         private readonly IBookingRepository _bookingRepository;
-        private readonly IBookingDetailRepository _bookingDetailRepository;
         private readonly ITestServiceSlotService _testServiceSlotService;
+        private readonly IBookingDetailRepository _bookingDetailRepository;
         private readonly ILogger<BookingCleanupService> _logger;
 
         public BookingCleanupService(
             IBookingRepository bookingRepository,
-            IBookingDetailRepository bookingDetailRepository,
             ITestServiceSlotService testServiceSlotService,
+            IBookingDetailRepository bookingDetailRepository,
             ILogger<BookingCleanupService> logger)
         {
             _bookingRepository = bookingRepository;
-            _bookingDetailRepository = bookingDetailRepository;
             _testServiceSlotService = testServiceSlotService;
+            _bookingDetailRepository = bookingDetailRepository;
             _logger = logger;
         }
 
@@ -30,12 +29,9 @@ namespace backend.Infrastructure.Services
         {
             try
             {
-                // Thời gian hết hạn (ví dụ: 30 phút)
                 var expiryTime = DateTime.UtcNow.AddMinutes(-30);
-
-                var unpaidBookings = await _bookingRepository.GetUnpaidBookingsBeforeTimeAsync(expiryTime);
                 
-                _logger.LogInformation($"Tìm thấy {unpaidBookings.Count} booking chưa thanh toán quá 30 phút");
+                var unpaidBookings = await _bookingRepository.GetUnpaidBookingsBeforeTimeAsync(expiryTime);
 
                 foreach (var booking in unpaidBookings)
                 {
@@ -46,11 +42,7 @@ namespace backend.Infrastructure.Services
                         await _testServiceSlotService.DecrementSlotQuantityAsync(detail.SlotId);
                     }
                     
-                    booking.Status = BookingStatus.Expired;
-                    booking.UpdateAt = DateTime.UtcNow;
-                    await _bookingRepository.UpdateAsync(booking);
-                    
-                    _logger.LogInformation($"Đã dọn dẹp booking {booking.BookingId}");
+                    await _bookingRepository.DeleteAsync(booking.BookingId);
                 }
             }
             catch (Exception ex)

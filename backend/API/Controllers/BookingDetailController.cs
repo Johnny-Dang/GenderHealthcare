@@ -80,7 +80,12 @@ namespace backend.API.Controllers
             var updatedBookingDetail = await _bookingDetailService.UpdateInfoOnlyAsync(bookingDetailId, request);
 
             if (updatedBookingDetail == null)
-                return NotFound("Không tìm thấy booking detail để cập nhật.");
+            {
+                if (request.SlotDate.HasValue && !string.IsNullOrEmpty(request.Shift))
+                    return BadRequest("Không thể cập nhật thông tin đặt lịch. Có thể slot đã đầy hoặc dữ liệu không hợp lệ.");
+                else
+                    return NotFound("Không tìm thấy booking detail để cập nhật.");
+            }
 
             return Ok(updatedBookingDetail);
         }
