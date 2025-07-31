@@ -164,11 +164,18 @@ RecurringJob.AddOrUpdate<SlotGenerationJob>(
     "0 0 * * 1" // Chạy mỗi thứ 2 lúc 0h
 );
 
-// job clean booking
+// job clean mấy cái booking 
 RecurringJob.AddOrUpdate<IBookingCleanupService>(
     "cleanup-unpaid-bookings",
     service => service.CleanupUnpaidBookingsAsync(),
     "*/5 * * * *"  // Chạy mỗi 5 phút
+);
+
+// job xử lý lịch hẹn bị lỡ
+RecurringJob.AddOrUpdate<IBookingCleanupService>(
+    "handle-missed-appointments",
+    service => service.HandleMissedAppointmentsAsync(),
+    "0 5 * * *"  // Chạy hàng ngày lúc 5 giờ sáng
 );
 
 app.Run();
