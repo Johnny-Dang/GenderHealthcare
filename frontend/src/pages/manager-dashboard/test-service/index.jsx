@@ -15,24 +15,10 @@ import {
   Select,
   Row,
   Col,
-  Upload,
   message,
   Switch
 } from 'antd'
-import {
-  Search,
-  PlusSquare,
-  Edit,
-  Trash2,
-  Image,
-  Package,
-  FilePlus,
-  DollarSign,
-  PieChart,
-  Stethoscope,
-  RefreshCw
-} from 'lucide-react'
-// Removed unused UploadOutlined import
+import { Search, PlusSquare, Edit, Package, DollarSign, PieChart, Stethoscope, RefreshCw } from 'lucide-react'
 import api from '../../../configs/axios'
 import CloudinaryUpload from '@/components/CloudinaryUpload'
 import ImageModal from '@/components/ImageModal'
@@ -54,32 +40,24 @@ const TestServiceManagement = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState('')
   const [switchEnabled, setSwitchEnabled] = useState(true)
 
-  // Fetch data from API
   const fetchServices = async () => {
     setLoading(true)
     try {
-      console.log('Fetching services from API...')
-
-      // Using configured api client from configs/axios.js
       const response = await api.get('/api/services/admin')
-      console.log('API Response:', response.data)
 
       if (response.data && Array.isArray(response.data)) {
-        console.log('Retrieved services:', response.data.length)
-
-        // Transform the API response to match our component's data structure
         const transformedServices = response.data.map((service) => ({
           id: service.serviceId,
           name: service.serviceName,
-          title: service.title || service.serviceName, // Use title if available, fallback to serviceName
+          title: service.title || service.serviceName,
           description: service.description,
           price: service.price,
           category: service.category,
           imageUrl: service.imageUrl || 'https://via.placeholder.com/200x200?text=No+Image',
-          status: service.isDeleted ? 'inactive' : 'active', // Map isDeleted to status
-          isDeleted: Boolean(service.isDeleted), // Ensure isDeleted is a boolean
-          duration: 30, // Default duration since API doesn't provide this
-          preparation: 'Liên hệ nhân viên để biết thêm chi tiết', // Default preparation
+          status: service.isDeleted ? 'inactive' : 'active',
+          isDeleted: Boolean(service.isDeleted),
+          duration: 30,
+          preparation: 'Liên hệ nhân viên để biết thêm chi tiết',
           createdAt: service.createdAt,
           updatedAt: service.updatedAt
         }))
@@ -92,15 +70,11 @@ const TestServiceManagement = () => {
           message.info('Hiện tại không có dịch vụ nào trong hệ thống')
         }
       } else {
-        console.error('Unexpected API response format or empty data:', response.data)
         setServices([])
         message.error('Dữ liệu API không đúng định dạng hoặc không có dịch vụ nào')
       }
-    } catch (error) {
-      console.error('Error fetching services:', error)
-      console.error('Error details:', error.response?.data)
+    } catch {
       setServices([])
-      message.error('Không thể kết nối tới API. Vui lòng kiểm tra kết nối hoặc thử lại sau.')
     } finally {
       setLoading(false)
     }
@@ -150,9 +124,8 @@ const TestServiceManagement = () => {
 
     try {
       if (editingService) {
-        // Update existing service - use only one API call with the admin endpoint
         const requestData = {
-          Id: editingService.id, // Add Id field to match backend validator requirements
+          Id: editingService.id,
           serviceName: values.name,
           title: values.title,
           description: values.description,
@@ -162,20 +135,8 @@ const TestServiceManagement = () => {
           isDeleted: isDeleted
         }
 
-        console.log('Updating service with data:', requestData)
-        console.log('Service ID:', editingService.id)
+        await api.put(`/api/services/${editingService.id}`, requestData)
 
-        // Single API call to update all properties including isDeleted
-        try {
-          const updateResponse = await api.put(`/api/services/${editingService.id}`, requestData)
-          console.log('Update response:', updateResponse.data)
-        } catch (err) {
-          console.error('Detailed update error:', err.response?.data)
-          console.error('Request that caused error:', requestData)
-          throw err // Re-throw to be caught by outer catch block
-        }
-
-        // Refresh data from server instead of updating local state
         await fetchServices()
         message.success('Cập nhật dịch vụ thành công')
       } else {
@@ -187,100 +148,20 @@ const TestServiceManagement = () => {
           price: values.price,
           category: values.category,
           imageUrl: values.imageUrl || 'https://via.placeholder.com/200x200?text=No+Image',
-          isDeleted: isDeleted // Include isDeleted in initial creation
+          isDeleted: isDeleted
         }
 
-        console.log('Creating new service:', requestData)
-        const response = await api.post('/api/services', requestData)
-        console.log('Create response:', response.data)
+        await api.post('/api/services', requestData)
 
-        // Refresh data from server
         await fetchServices()
         message.success('Thêm dịch vụ thành công')
       }
     } catch (error) {
-      console.error('Error submitting service:', error)
-      console.error('Error response status:', error.response?.status)
-      console.error('Error response data:', error.response?.data)
-
-      // More detailed error message
-      if (error.response?.status === 400) {
-        message.error(`Lỗi dữ liệu: ${error.response.data?.message || 'Dữ liệu không hợp lệ'}`)
-      } else if (error.response?.status === 401) {
-        message.error('Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại.')
-      } else if (error.response?.status === 403) {
-        message.error('Bạn không có quyền thực hiện thao tác này.')
-      } else if (error.response?.status === 404) {
-        message.error('Không tìm thấy dịch vụ này trên hệ thống.')
-      } else {
-        message.error(
-          editingService
-            ? 'Không thể cập nhật dịch vụ. Vui lòng thử lại sau.'
-            : 'Không thể thêm dịch vụ mới. Vui lòng thử lại sau.'
-        )
-      }
-      return // Don't close modal if error
-    }
-
-    setIsModalVisible(false)
-  }
-
-  const handleDelete = async (id) => {
-    // Find the service to show its name in the confirmation dialog
-    const serviceToDelete = services.find((s) => s.id === id)
-    if (!serviceToDelete) {
-      message.error('Không tìm thấy dịch vụ này')
+      console.error('Không tải được dịch vụ:', error)
       return
     }
 
-    Modal.confirm({
-      title: 'Xác nhận tạm ngừng dịch vụ',
-      content: `Bạn có chắc chắn muốn tạm ngừng dịch vụ "${serviceToDelete.name}" không?`,
-      okText: 'Tạm ngừng',
-      okType: 'danger',
-      cancelText: 'Huỷ',
-      async onOk() {
-        try {
-          console.log(`Setting isDeleted=true for service with ID: ${id}`)
-
-          // Make the API call to update isDeleted status instead of deleting
-          const requestData = {
-            Id: id, // Add Id field to match backend validator requirements
-            serviceName: serviceToDelete.name,
-            description: serviceToDelete.description,
-            price: serviceToDelete.price,
-            category: serviceToDelete.category,
-            imageUrl: serviceToDelete.imageUrl,
-            isDeleted: true
-          }
-
-          const updateResponse = await api.put(`/api/services/${id}`, requestData)
-          console.log('Update API response:', updateResponse)
-
-          // Refresh data from server
-          await fetchServices()
-          message.success(`Đã tạm ngừng dịch vụ "${serviceToDelete.name}" thành công`)
-        } catch (error) {
-          console.error('Error updating service status:', error)
-          console.error('Error details:', {
-            response: error.response?.data,
-            status: error.response?.status,
-            message: error.message
-          })
-
-          // Show more specific error message
-          if (error.response?.status === 404) {
-            message.error('Không tìm thấy dịch vụ này trên hệ thống')
-          } else if (error.response?.status === 403) {
-            message.error('Bạn không có quyền tạm ngừng dịch vụ này')
-          } else if (error.message.includes('Network Error')) {
-            message.error('Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại')
-          } else {
-            message.error('Không thể tạm ngừng dịch vụ. Vui lòng thử lại sau.')
-          }
-        }
-      }
-    })
+    setIsModalVisible(false)
   }
 
   const handleSearch = (value) => {
@@ -292,14 +173,10 @@ const TestServiceManagement = () => {
       const service = services.find((s) => s.id === id)
       if (!service) return
 
-      // Toggle isDeleted value
       const newIsDeleted = !service.isDeleted
 
-      console.log(`Toggling service ${id} status to isDeleted: ${newIsDeleted}`)
-
-      // Using admin API endpoint to toggle isDeleted status
       const requestData = {
-        Id: id, // Add Id field to match backend validator requirements
+        Id: id,
         serviceName: service.name,
         description: service.description,
         price: service.price,
@@ -315,8 +192,6 @@ const TestServiceManagement = () => {
       await fetchServices()
       message.success(`Dịch vụ đã được ${newIsDeleted ? 'tạm dừng' : 'kích hoạt'} thành công`)
     } catch (error) {
-      console.error('Error toggling service status:', error)
-      console.error('Error details:', error.response?.data)
       message.error('Không thể cập nhật trạng thái dịch vụ. Vui lòng thử lại sau.')
     }
   }
@@ -430,8 +305,6 @@ const TestServiceManagement = () => {
       )
     }
   ]
-
-  // Removed unused normFile function
 
   return (
     <div className='bg-gradient-to-br from-purple-50 via-white to-purple-50 p-6 rounded-lg shadow-sm min-h-screen'>

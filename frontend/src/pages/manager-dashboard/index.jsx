@@ -4,22 +4,7 @@ import FeedbackManagement from './feedback'
 import PaymentManagement from './payment'
 import StaffManagement from './staff'
 import TestServiceManagement from './test-service'
-import {
-  Layout,
-  Menu,
-  theme,
-  Avatar,
-  Badge,
-  Typography,
-  Button,
-  Breadcrumb,
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Spin,
-  Dropdown
-} from 'antd'
+import { Layout, Menu, Avatar, Typography, Button, Breadcrumb, Card, Row, Col, Statistic, Spin, Dropdown } from 'antd'
 import {
   MessageSquare,
   CreditCard,
@@ -27,12 +12,10 @@ import {
   Stethoscope,
   ChevronLeft,
   ChevronRight,
-  Bell,
   UserCircle,
   Heart,
   TrendingUp,
   Star,
-  Calendar,
   LogOut,
   Settings,
   ChevronDown
@@ -40,7 +23,6 @@ import {
 import api from '../../configs/axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/features/userSlice'
-import { toast } from 'react-toastify'
 
 const { Header, Content, Footer, Sider } = Layout
 const { Title, Text } = Typography
@@ -57,10 +39,10 @@ function getItem(label, key, icon, children) {
 
 const items = [
   getItem('Tổng quan', '', <TrendingUp size={18} />),
-  getItem('Quản lý Feedback', 'feedback', <MessageSquare size={18} />),
-  getItem('Quản lý Thanh toán', 'payment', <CreditCard size={18} />),
-  getItem('Quản lý Nhân viên', 'staff', <Users size={18} />),
-  getItem('Quản lý Dịch vụ', 'test-service', <Stethoscope size={18} />)
+  getItem('Quản Lý Feedback', 'feedback', <MessageSquare size={18} />),
+  getItem('Thống Kê Doanh Thu', 'payment', <CreditCard size={18} />),
+  getItem('Tra Cứu Nhân viên', 'staff', <Users size={18} />),
+  getItem('Quản Lý Dịch vụ', 'test-service', <Stethoscope size={18} />)
 ]
 
 const ManagerDashboard = () => {
@@ -85,10 +67,6 @@ const ManagerDashboard = () => {
   const [recentPayments, setRecentPayments] = useState([])
   const [loadingRecent, setLoadingRecent] = useState(true)
 
-  const {
-    token: { colorBgContainer, borderRadiusLG }
-  } = theme.useToken()
-
   const breadcrumbMap = {
     '/manager/dashboard': [{ title: 'Manager' }, { title: 'Tổng quan' }],
     '/manager/dashboard/feedback': [
@@ -97,11 +75,11 @@ const ManagerDashboard = () => {
     ],
     '/manager/dashboard/payment': [
       { title: <Link to='/manager/dashboard'>Manager</Link> },
-      { title: 'Quản lý Thanh toán' }
+      { title: 'Thống kê doanh thu' }
     ],
     '/manager/dashboard/staff': [
       { title: <Link to='/manager/dashboard'>Manager</Link> },
-      { title: 'Quản lý Nhân viên' }
+      { title: 'Tra Cứu Nhân viên' }
     ],
     '/manager/dashboard/test-service': [
       { title: <Link to='/manager/dashboard'>Manager</Link> },
@@ -114,6 +92,7 @@ const ManagerDashboard = () => {
     if (location.pathname === '/manager/dashboard' || location.pathname === '/manager/dashboard/') {
       fetchDashboardData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
 
   // Update breadcrumb based on current path
@@ -122,12 +101,12 @@ const ManagerDashboard = () => {
     const exactPath = Object.keys(breadcrumbMap).find((p) => p === path)
     const breadcrumb = breadcrumbMap[exactPath] || breadcrumbMap['/manager-dashboard']
     setBreadcrumbItems(breadcrumb)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location])
 
   // Kiểm tra quyền truy cập Manager
   useEffect(() => {
     if (!isManager) {
-      console.log('Not authorized as Manager, redirecting to home')
       navigate('/')
     }
   }, [isManager, navigate])
@@ -159,8 +138,7 @@ const ManagerDashboard = () => {
           feedback: { total, fiveStars, average, loading: false }
         }))
       }
-    } catch (error) {
-      console.error('Error fetching feedback stats:', error)
+    } catch {
       setDashboardStats((prev) => ({
         ...prev,
         feedback: { ...prev.feedback, loading: false }
@@ -181,8 +159,7 @@ const ManagerDashboard = () => {
           payment: { total, totalAmount, loading: false }
         }))
       }
-    } catch (error) {
-      console.error('Error fetching payment stats:', error)
+    } catch {
       setDashboardStats((prev) => ({
         ...prev,
         payment: { ...prev.payment, loading: false }
@@ -203,8 +180,7 @@ const ManagerDashboard = () => {
           staff: { total, departments, loading: false }
         }))
       }
-    } catch (error) {
-      console.error('Error fetching staff stats:', error)
+    } catch {
       setDashboardStats((prev) => ({
         ...prev,
         staff: { ...prev.staff, loading: false }
@@ -225,8 +201,7 @@ const ManagerDashboard = () => {
           services: { total, active, loading: false }
         }))
       }
-    } catch (error) {
-      console.error('Error fetching service stats:', error)
+    } catch {
       setDashboardStats((prev) => ({
         ...prev,
         services: { ...prev.services, loading: false }
@@ -278,8 +253,8 @@ const ManagerDashboard = () => {
                 } else if (details && typeof details === 'object') {
                   serviceName = details.serviceName || 'N/A'
                 }
-              } catch (err) {
-                console.error(err)
+              } catch {
+                // Ignore error, keep default serviceName
               }
 
               return {
@@ -293,8 +268,6 @@ const ManagerDashboard = () => {
         )
         setRecentPayments(sortedPayments)
       }
-    } catch (error) {
-      console.error('Error fetching recent data:', error)
     } finally {
       setLoadingRecent(false)
     }
@@ -471,7 +444,7 @@ const ManagerDashboard = () => {
                   />
                   <Meta
                     title={
-                      <span className='transition-all duration-300 group-hover:text-blue-500'>Quản lý Thanh toán</span>
+                      <span className='transition-all duration-300 group-hover:text-blue-500'>Thống Kê Doanh Thu</span>
                     }
                     description='Xem và quản lý thanh toán của dịch vụ'
                   />
@@ -487,7 +460,7 @@ const ManagerDashboard = () => {
                   <Users size={36} className='text-green-500 mb-4 transition-all duration-300 group-hover:scale-125' />
                   <Meta
                     title={
-                      <span className='transition-all duration-300 group-hover:text-green-500'>Quản lý Nhân viên</span>
+                      <span className='transition-all duration-300 group-hover:text-green-500'>Tra Cứu Nhân Viên</span>
                     }
                     description='Xem và quản lý thông tin nhân viên'
                   />
@@ -684,8 +657,8 @@ const ManagerDashboard = () => {
           }
         )
       }
-    } catch (error) {
-      console.log('Lỗi logout API:', error)
+    } catch {
+      // Ignore logout API error
     } finally {
       dispatch(logout())
       navigate('/')

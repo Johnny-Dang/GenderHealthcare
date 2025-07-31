@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Table, Card, Space, Button, Input, Typography, Avatar, Tag, Modal, Row, Col, Statistic, message } from 'antd'
-import { Search, Eye, User, Users, RefreshCw } from 'lucide-react'
+import { Eye, User, RefreshCw } from 'lucide-react'
 import api from '../../../configs/axios'
 import ImageModal from '../../../components/ImageModal'
 
@@ -20,21 +20,16 @@ const StaffManagement = () => {
   const fetchStaffInfo = async () => {
     setLoading(true)
     try {
-      console.log('Fetching staff information from API...')
       const response = await api.get('/api/StaffInfo')
-      console.log('API Response:', response.data)
 
       if (response.data && Array.isArray(response.data)) {
         setStaffList(response.data)
         message.success(`Đã tải ${response.data.length} thông tin nhân viên từ hệ thống`)
       } else {
-        console.error('Unexpected API response format:', response.data)
         setStaffList([])
         message.error('Dữ liệu API không đúng định dạng')
       }
     } catch (error) {
-      console.error('Error fetching staff information:', error)
-      console.error('Error details:', error.response?.data)
       setStaffList([])
       message.error('Không thể kết nối tới API. Vui lòng kiểm tra kết nối hoặc thử lại sau.')
     } finally {
@@ -154,7 +149,7 @@ const StaffManagement = () => {
     <div className='bg-gradient-to-br from-green-50 via-white to-green-50 p-6 rounded-lg shadow-sm min-h-screen'>
       <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-green-100 to-green-50 p-4 rounded-lg shadow-sm'>
         <Title level={4} className='transition-all duration-300 hover:text-green-600 hover:translate-x-1 mb-0'>
-          Quản lý Nhân viên
+          Tra Cứu Nhân viên
         </Title>
         <Space>
           <Button

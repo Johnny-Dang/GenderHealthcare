@@ -14,7 +14,7 @@ import {
   Modal,
   Tabs
 } from 'antd'
-import { Search, Trash2, Eye, MessageSquare, Star } from 'lucide-react'
+import { Trash2, Eye } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import api from '../../../configs/axios'
 import { useSelector } from 'react-redux'
@@ -153,7 +153,6 @@ const ManagerFeedbackManagement = () => {
       generateMonthlyRatingData(updated)
       message.success({ content: 'Xóa đánh giá thành công!', key: 'deleting', duration: 2 })
     } catch (error) {
-      console.error('Delete error:', error)
       message.error({ content: 'Xóa đánh giá thất bại! Vui lòng thử lại.', key: 'deleting', duration: 2 })
     }
   }

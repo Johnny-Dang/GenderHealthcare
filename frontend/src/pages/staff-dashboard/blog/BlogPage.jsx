@@ -3,7 +3,7 @@ import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, User, Loader, RefreshCw } from 'lucide-react'
+import { Calendar, User, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import api from '@/configs/axios'
 import { useToast } from '@/hooks/useToast'
@@ -30,14 +30,10 @@ const BlogPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('BlogPage: Starting fetchData...')
-        console.log('BlogPage: API URL:', import.meta.env.VITE_API_URL)
         setLoading(true)
 
         // Lấy danh sách bài viết đã xuất bản
-        console.log('BlogPage: Fetching blog posts...')
         const blogsResponse = await api.get('/api/Blog/published')
-        console.log('BlogPage: Blog posts response:', blogsResponse.data)
         const formattedPosts = blogsResponse.data.map((blog) => ({
           id: blog.blogId,
           slug: blog.slug,
@@ -51,29 +47,22 @@ const BlogPage = () => {
           category: blog.categoryName || 'Chưa phân loại',
           categoryId: blog.categoryId
         }))
-        console.log('BlogPage: Formatted posts:', formattedPosts)
         setBlogPosts(formattedPosts)
 
         // Lấy danh sách danh mục
         try {
-          console.log('BlogPage: Fetching categories...')
           const categoriesResponse = await api.get('/api/BlogCategory')
-          console.log('BlogPage: Categories response:', categoriesResponse.data)
           const categoryOptions = ['Tất cả', ...categoriesResponse.data.map((cat) => cat.name)]
           setCategories(categoryOptions)
         } catch (categoryError) {
           console.error('Error fetching categories:', categoryError)
-          // Không hiển thị lỗi nếu chỉ là không lấy được danh mục
         }
 
         setError(null)
-        console.log('BlogPage: fetchData completed successfully')
       } catch (error) {
         console.error('BlogPage: Error fetching blog posts:', error)
-        console.error('BlogPage: Error details:', error.response?.data || error.message)
         handleError('Không thể tải danh sách bài viết. Vui lòng thử lại sau.')
       } finally {
-        console.log('BlogPage: Setting loading to false')
         setLoading(false)
       }
     }
@@ -86,13 +75,12 @@ const BlogPage = () => {
     return selectedCategory === 'Tất cả' ? blogPosts : blogPosts.filter((post) => post.category === selectedCategory)
   }, [selectedCategory, blogPosts])
 
-  // Function to refresh blog posts với useCallback
+  // Function to refresh blog posts
   const refreshBlogPosts = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Lấy danh sách bài viết đã xuất bản
       const blogsResponse = await api.get('/api/Blog/published')
       const formattedPosts = blogsResponse.data.map((blog) => ({
         id: blog.blogId,
