@@ -10,7 +10,7 @@ import ServiceBookingForm from '@/components/ServiceBookingForm'
 import PersonalInfoForm from '@/components/PersonalInfoForm'
 import { useSelector } from 'react-redux'
 
-const Services = () => {
+const TestServices = () => {
   const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('Tất cả')
@@ -580,4 +580,4 @@ const Services = () => {
   )
 }
 
-export default Services
+export default TestServices

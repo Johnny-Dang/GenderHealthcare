@@ -4,19 +4,8 @@ import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor, ensureStoreStructure } from './redux/store'
 import { Spin } from 'antd'
-
-// Loading component cho PersistGate
-const PersistLoading = () => (
-  <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-    <Spin size='large' tip='Đang tải ứng dụng...' />
-  </div>
-)
-
-// Guard and Layouts
 import AuthGuard from './components/AuthGuard'
 import StaffLayout from './pages/staff-dashboard/StaffLayout'
-
-// Pages
 import HomePage from './pages/home'
 import LoginPage from './pages/login'
 import RegisterPage from './pages/register'
@@ -26,11 +15,9 @@ import BlogPage from './pages/staff-dashboard/blog/BlogPage'
 import BlogDetailPage from './pages/staff-dashboard/blog/BlogDetailPage'
 import CycleTrackingPage from './pages/cycle-tracking/CycleTrackingPage'
 import CycleTrackingResultPage from './pages/cycle-tracking/CycleTrackingResultPage'
-import TestServicePage from './pages/test-service'
 import BookingConsultant from './pages/booking-consultant'
 import ConsultantBookingSchedule from './pages/consultant/ConsultantBookingSchedule'
 import TestResultsPage from './pages/consultant/TestResultsPage'
-import CartPage from './pages/cart'
 import VnPayReturn from './pages/payment/VnPayReturn'
 import StaffDashboard from './pages/staff-dashboard/dashboard/StaffDashboard'
 import BlogManagement from './pages/staff-dashboard/blog/BlogManagement'
@@ -49,10 +36,16 @@ import ScrollToTop from './components/ScrollToTop'
 import PaymentHistory from './pages/customer-dashboard/PaymentHistory'
 import TestResultsHistory from './pages/customer-dashboard/TestResultsHistory'
 import ConsultationHistory from './pages/customer-dashboard/ConsultationHistory'
+import TestServices from './pages/customer-dashboard/TestServices'
+import CartPage from './pages/customer-dashboard/CartPage'
 
-/**
- * Application root with routing and Redux persistence
- */
+// Loading component cho PersistGate
+const PersistLoading = () => (
+  <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+    <Spin size='large' tip='Đang tải ứng dụng...' />
+  </div>
+)
+
 function App() {
   useEffect(() => {
     ensureStoreStructure()
@@ -70,7 +63,7 @@ function App() {
         { path: '/blog/:id', element: <BlogDetailPage /> },
         { path: '/cycle-tracking', element: <CycleTrackingPage /> },
         { path: '/cycle-tracking/result', element: <CycleTrackingResultPage /> },
-        { path: '/test-service', element: <TestServicePage /> },
+        { path: '/test-service', element: <TestServices /> },
         { path: '/booking-consultant', element: <BookingConsultant /> },
         { path: '/about', element: <AboutPage /> },
         // Authenticated
