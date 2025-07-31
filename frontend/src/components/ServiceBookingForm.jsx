@@ -32,6 +32,71 @@ export default function ServiceBookingForm({
   })
   const [loading, setLoading] = useState(false)
   const [availableSlots, setAvailableSlots] = useState([])
+  const [errors, setErrors] = useState({})
+
+  // Validation functions
+  const validateName = (name, fieldName) => {
+    if (!name.trim()) {
+      return `${fieldName} không được để trống`
+    }
+    if (name.trim().length < 2) {
+      return `${fieldName} phải có ít nhất 2 ký tự`
+    }
+    if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(name.trim())) {
+      return `${fieldName} chỉ được chứa chữ cái và khoảng trắng`
+    }
+    return ''
+  }
+
+  const validatePhone = (phone) => {
+    if (!phone.trim()) {
+      return 'Số điện thoại không được để trống'
+    }
+    const cleanPhone = phone.replace(/[\s\-()]/g, '')
+    if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
+      return 'Số điện thoại không hợp lệ '
+    }
+    return ''
+  }
+
+  const validateDateOfBirth = (dateOfBirth) => {
+    if (!dateOfBirth) {
+      return 'Ngày sinh không được để trống'
+    }
+    const selectedDate = new Date(dateOfBirth)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    if (selectedDate >= today) {
+      return 'Ngày sinh phải trước ngày hiện tại'
+    }
+
+    const age = today.getFullYear() - selectedDate.getFullYear()
+    if (age > 150) {
+      return 'Ngày sinh không hợp lệ'
+    }
+
+    return ''
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    const lastNameError = validateName(form.lastName, 'Họ')
+    if (lastNameError) newErrors.lastName = lastNameError
+
+    const firstNameError = validateName(form.firstName, 'Tên')
+    if (firstNameError) newErrors.firstName = firstNameError
+
+    const phoneError = validatePhone(form.phone)
+    if (phoneError) newErrors.phone = phoneError
+
+    const dobError = validateDateOfBirth(form.dateOfBirth)
+    if (dobError) newErrors.dateOfBirth = dobError
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   useEffect(() => {
     if (isEdit && bookingDetail) {
@@ -67,23 +132,55 @@ export default function ServiceBookingForm({
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+    const newValue = name === 'gender' ? value === 'true' : type === 'checkbox' ? checked : value
+
     setForm((prev) => ({
       ...prev,
-      [name]: name === 'gender' ? value === 'true' : type === 'checkbox' ? checked : value
+      [name]: newValue
     }))
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
+
+    // Real-time validation for phone number formatting
+    if (name === 'phone' && value) {
+      // Only allow numbers and some formatting characters
+      const cleanValue = value.replace(/[^\d\s\-()]/g, '')
+
+      if (cleanValue.length > 10) {
+        return
+      }
+      if (cleanValue !== value) {
+        setForm((prev) => ({
+          ...prev,
+          [name]: cleanValue
+        }))
+      }
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validate form before submitting
+    if (!validateForm()) {
+      return
+    }
+
     setLoading(true)
 
     try {
       if (isEdit) {
         const updateData = {
-          firstName: form.firstName,
-          lastName: form.lastName,
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
           dateOfBirth: form.dateOfBirth,
-          phone: form.phone,
+          phone: form.phone.replace(/[\s\-()]/g, ''), // Clean phone number
           gender: form.gender,
           ...(form.slotDate ? { slotDate: form.slotDate } : {}),
           ...(form.shift ? { shift: form.shift } : {})
@@ -102,7 +199,11 @@ export default function ServiceBookingForm({
           bookingId: currentBookingId,
           serviceId,
           ...(slotId ? { slotId } : {}),
-          ...form
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          dateOfBirth: form.dateOfBirth,
+          phone: form.phone.replace(/[\s\-()]/g, ''), // Clean phone number
+          gender: form.gender
         })
         toast.success('Thêm vào giỏ hàng thành công!')
         dispatch(incrementCart())
@@ -114,6 +215,20 @@ export default function ServiceBookingForm({
 
       if (onSuccess) onSuccess()
       onOpenChange(false)
+
+      // Reset form and errors
+      if (!isEdit) {
+        setForm({
+          firstName: '',
+          lastName: '',
+          dateOfBirth: '',
+          phone: '',
+          gender: true,
+          slotDate: '',
+          shift: ''
+        })
+        setErrors({})
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Thao tác thất bại!')
     } finally {
@@ -134,7 +249,7 @@ export default function ServiceBookingForm({
           <div className='flex gap-2'>
             <div className='w-1/2'>
               <label className='block font-medium mb-1' htmlFor='lastName'>
-                Họ
+                Họ <span className='text-red-500'>*</span>
               </label>
               <Input
                 id='lastName'
@@ -143,11 +258,13 @@ export default function ServiceBookingForm({
                 onChange={handleChange}
                 placeholder='Họ'
                 required
+                className={errors.lastName ? 'border-red-500' : ''}
               />
+              {errors.lastName && <p className='text-red-500 text-xs mt-1'>{errors.lastName}</p>}
             </div>
             <div className='w-1/2'>
               <label className='block font-medium mb-1' htmlFor='firstName'>
-                Tên
+                Tên <span className='text-red-500'>*</span>
               </label>
               <Input
                 id='firstName'
@@ -156,31 +273,43 @@ export default function ServiceBookingForm({
                 onChange={handleChange}
                 placeholder='Tên'
                 required
+                className={errors.firstName ? 'border-red-500' : ''}
               />
+              {errors.firstName && <p className='text-red-500 text-xs mt-1'>{errors.firstName}</p>}
             </div>
           </div>
-          <label className='block font-medium mb-1' htmlFor='dateOfBirth'>
-            Ngày tháng năm sinh
-          </label>
-          <Input
-            id='dateOfBirth'
-            name='dateOfBirth'
-            type='date'
-            value={form.dateOfBirth}
-            onChange={handleChange}
-            required
-          />
-          <label className='block font-medium mb-1' htmlFor='phone'>
-            Số điện thoại
-          </label>
-          <Input
-            id='phone'
-            name='phone'
-            value={form.phone}
-            onChange={handleChange}
-            placeholder='Số điện thoại'
-            required
-          />
+          <div>
+            <label className='block font-medium mb-1' htmlFor='dateOfBirth'>
+              Ngày tháng năm sinh <span className='text-red-500'>*</span>
+            </label>
+            <Input
+              id='dateOfBirth'
+              name='dateOfBirth'
+              type='date'
+              value={form.dateOfBirth}
+              onChange={handleChange}
+              required
+              max={new Date().toISOString().split('T')[0]} // Không cho chọn ngày tương lai
+              className={errors.dateOfBirth ? 'border-red-500' : ''}
+            />
+            {errors.dateOfBirth && <p className='text-red-500 text-xs mt-1'>{errors.dateOfBirth}</p>}
+          </div>
+          <div>
+            <label className='block font-medium mb-1' htmlFor='phone'>
+              Số điện thoại <span className='text-red-500'>*</span>
+            </label>
+            <Input
+              id='phone'
+              name='phone'
+              value={form.phone}
+              onChange={handleChange}
+              placeholder='Số điện thoại'
+              required
+              maxLength={10}
+              className={errors.phone ? 'border-red-500' : ''}
+            />
+            {errors.phone && <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>}
+          </div>
           <div className='flex items-center gap-4'>
             <label className='font-medium'>Giới tính:</label>
             <label className='flex items-center gap-1'>
