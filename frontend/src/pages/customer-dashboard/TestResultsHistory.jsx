@@ -337,15 +337,7 @@ const TestResultsHistory = () => {
                         <p className='text-xs text-gray-500'>#{truncateId(result.bookingDetailId, 8)}</p>
                       </div>
                     </div>
-                    <div className='flex items-center gap-2'>
-                      {getStatusBadge(result.status)}
-                      {isServiceReviewed(result) && (
-                        <Badge className='bg-blue-100 text-blue-800'>
-                          <Star className='h-3 w-3 mr-1' />
-                          Đã đánh giá
-                        </Badge>
-                      )}
-                    </div>
+                    <div className='flex items-center gap-2'>{getStatusBadge(result.status)}</div>
                   </div>
 
                   {/* Test Info */}
