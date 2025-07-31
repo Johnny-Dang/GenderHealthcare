@@ -11,6 +11,7 @@ import GoogleLoginButton from '../GoogleLoginButton'
 import { useDispatch } from 'react-redux'
 import api from '../../configs/axios'
 import { login } from '../../redux/features/userSlice'
+import { useCart } from '@/hooks/useCart'
 
 const Login = () => {
   const { showSuccess, showError } = useToast()
@@ -25,6 +26,7 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState('')
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const { fetchUnpaidBooking } = useCart()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -36,6 +38,9 @@ const Login = () => {
 
       if (response?.data?.accessToken && response?.data?.role) {
         dispatch(login(response.data))
+
+        // Fetch booking chưa thanh toán sau khi login
+        await fetchUnpaidBooking()
 
         switch (response.data.role) {
           case 'Admin':
