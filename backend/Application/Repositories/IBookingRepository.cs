@@ -15,6 +15,7 @@ namespace backend.Application.Repositories
         Task<List<Booking>> GetAllAsync();
         Task<IEnumerable<Booking>> GetByAccountIdAsync(Guid accountId);
         Task<IEnumerable<Booking>> GetByAccountIdWithDetailsAsync(Guid accountId);
+        Task<List<Booking>> GetUnpaidBookingsBeforeTimeAsync(DateTime cutoffTime);
         
         // Update
         Task<Booking> UpdateAsync(Booking booking);

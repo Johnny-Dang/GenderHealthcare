@@ -1,7 +1,10 @@
-﻿    namespace backend.Domain.Constants
+﻿namespace backend.Domain.Constants
+{
+    public static class BookingStatus
     {
-        public static class BookingStatus
-        {
-            public static string Completed = "Đã thanh toán";
-        }
+        public const string Completed = "Đã thanh toán";
+        public const string Pending = "Chờ thanh toán";
+        public const string Cancelled = "Đã hủy";
+        public const string Expired = "Hết hạn";
     }
+}

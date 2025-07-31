@@ -46,7 +46,6 @@ namespace backend.API.Controllers
         // PUT: api/blog/{id}
         [HttpPut("{id}")]
         [Authorize]
-
         public async Task<IActionResult> UpdateBlog(Guid id, [FromBody] UpdateBlogRequest request)
         {
             if (!ModelState.IsValid)

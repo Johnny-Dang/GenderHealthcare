@@ -24,7 +24,6 @@ namespace backend.Application.Repositories
         // Additional
         Task<bool> ExistsAsync(Guid slotId);
         Task<bool> HasAvailableCapacityAsync(Guid slotId);
-        Task<bool> IsSlotForServiceAsync(Guid slotId, Guid serviceId);
 
         // Find or create
         Task<TestServiceSlot> FindOrCreateSlotAsync(Guid serviceId, DateOnly date, string shift);
