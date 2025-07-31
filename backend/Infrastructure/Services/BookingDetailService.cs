@@ -79,16 +79,13 @@ namespace backend.Infrastructure.Services
 
             var createdDetail = await _bookingDetailRepository.CreateAsync(bookingDetail);
 
-            // Increment slot's current quantity
             var incrementResult = await _testServiceSlotService.IncrementSlotQuantityAsync(slotResult.Data.SlotId);
             if (!incrementResult.IsSuccess)
             {
-                // Rollback if can't increment
                 await _bookingDetailRepository.DeleteAsync(createdDetail.BookingDetailId);
                 return null;
             }
 
-            // Map to response
             return new BookingDetailResponse
             {
                 BookingDetailId = createdDetail.BookingDetailId,
@@ -114,10 +111,8 @@ namespace backend.Infrastructure.Services
             if (bookingDetail == null)
                 return false;
 
-            // Decrement the slot's current quantity
             await _testServiceSlotService.DecrementSlotQuantityAsync(bookingDetail.SlotId);
 
-            // Delete the booking detail
             return await _bookingDetailRepository.DeleteAsync(id);
         }
 
@@ -207,12 +202,41 @@ namespace backend.Infrastructure.Services
             if (existingDetail == null)
                 return null;
 
-            // Update personal information only
+            // Update personal information
             existingDetail.FirstName = request.FirstName;
             existingDetail.LastName = request.LastName;
             existingDetail.DateOfBirth = request.DateOfBirth;
             existingDetail.Phone = request.Phone;
             existingDetail.Gender = request.Gender;
+
+            if (request.SlotDate.HasValue && !string.IsNullOrEmpty(request.Shift))
+            {
+                var slots = await _testServiceSlotService.GetSlotsByServiceIdAndDateAsync(
+                    existingDetail.ServiceId,
+                    request.SlotDate.Value);
+
+                if (!slots.IsSuccess)
+                    return null;
+
+                var matchingSlot = slots.Data.FirstOrDefault(s => s.Shift == request.Shift);
+                if (matchingSlot == null)
+                    return null; 
+
+                var hasCapacityResult = await _testServiceSlotService.HasAvailableCapacityAsync(matchingSlot.SlotId);
+                if (!hasCapacityResult.IsSuccess || !hasCapacityResult.Data)
+                    return null;
+
+                await _testServiceSlotService.DecrementSlotQuantityAsync(existingDetail.SlotId);
+
+                var incrementResult = await _testServiceSlotService.IncrementSlotQuantityAsync(matchingSlot.SlotId);
+                if (!incrementResult.IsSuccess)
+                {
+                    await _testServiceSlotService.IncrementSlotQuantityAsync(existingDetail.SlotId);
+                    return null;
+                }
+
+                existingDetail.SlotId = matchingSlot.SlotId;
+            }
 
             var updatedDetail = await _bookingDetailRepository.UpdateAsync(existingDetail);
 
@@ -245,20 +269,16 @@ namespace backend.Infrastructure.Services
             if (updatedDetail == null)
                 return null;
 
-            // Get booking information
             var booking = await _bookingDetailRepository.GetBookingAsync(updatedDetail.BookingId);
             if (booking == null)
                 return null;
 
-            // Get slot information
             var slotResult = await _testServiceSlotService.GetSlotByIdAsync(updatedDetail.SlotId);
             if (!slotResult.IsSuccess)
                 return null;
 
-            // Send notification to user about status update
             if (booking.AccountId != Guid.Empty)
             {
-                // note cái này nên bỏ bên notification service
                 await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
                 {
                     RecipientId = booking.AccountId,
@@ -293,7 +313,6 @@ namespace backend.Infrastructure.Services
             if (bookingDetail == null)
                 return null;
 
-            // Chỉ cho upload nếu đã xác nhận
             if (bookingDetail.Status != BookingDetailStatus.Tested)
                 return null;
 
@@ -317,7 +336,6 @@ namespace backend.Infrastructure.Services
             bookingDetail.Status = BookingDetailStatus.ResultReady;
             await _bookingDetailRepository.UpdateAsync(bookingDetail);
 
-            // Gửi thông báo cho khách hàng
             await _notificationDomainService.NotifyTestResultReadyAsync(bookingDetailId);
 
             return fileUrl;
@@ -335,7 +353,6 @@ namespace backend.Infrastructure.Services
                 if (!slotResult.IsSuccess)
                     continue;
 
-                // Áp dụng lọc ngày cho trạng thái "Chưa xét nghiệm"
                 if ((string.IsNullOrEmpty(status) || status == BookingDetailStatus.Pending)
                     && slotResult.Data.SlotDate < today)
                     continue;
@@ -360,7 +377,6 @@ namespace backend.Infrastructure.Services
                 });
             }
 
-            // Sắp xếp theo ngày gần nhất
             return response.OrderBy(d => d.SlotDate).ToList();
         }
 
@@ -370,14 +386,12 @@ namespace backend.Infrastructure.Services
             if (bookingDetail == null)
                 return false;
 
-            // Chỉ xác nhận nếu trạng thái là "Chờ xét nghiệm"
             if (bookingDetail.Status.ToLower() != BookingDetailStatus.Pending.ToLower())
                 return false;
 
             bookingDetail.Status = BookingDetailStatus.Tested;
             await _bookingDetailRepository.UpdateAsync(bookingDetail);
 
-            // Gửi thông báo cho khách hàng
             await _notificationDomainService.NotifyBookingDetailConfirmedAsync(bookingDetailId);
 
             return true;
@@ -395,7 +409,6 @@ namespace backend.Infrastructure.Services
                 if (!slotResult.IsSuccess)
                     continue;
 
-                // Chỉ lọc ngày với trạng thái "Chưa xét nghiệm"
                 if (status == BookingDetailStatus.Pending && slotResult.Data.SlotDate < today)
                     continue;
 
@@ -419,7 +432,6 @@ namespace backend.Infrastructure.Services
                 });
             }
 
-            // Sắp xếp theo ngày gần nhất
             return response.OrderBy(d => d.SlotDate).ToList();
         }
 
@@ -452,21 +464,17 @@ namespace backend.Infrastructure.Services
         }
         public async Task SendBookingDetailEmailToCustomer(Guid bookingId)
         {
-            // Lấy booking và account
             var booking = await _bookingDetailRepository.GetBookingAsync(bookingId);
             if (booking == null || booking.Account == null) return;
 
             var bookingDetails = await _bookingDetailRepository.GetByBookingIdAsync(bookingId);
             if (bookingDetails == null || !bookingDetails.Any()) return;
 
-            // Lấy thông tin khách hàng
             var customer = booking.Account;
             var customerName = $"{customer.FirstName} {customer.LastName}".Trim();
             
-            // Tính tổng tiền
             var totalAmount = await _bookingDetailRepository.CalculateTotalAmountByBookingIdAsync(bookingId);
             
-            // Tạo nội dung email
             var bookingDetailRows = new StringBuilder();
             foreach (var detail in bookingDetails)
             {
@@ -474,7 +482,6 @@ namespace backend.Infrastructure.Services
                 if (!slotResult.IsSuccess)
                     continue;
 
-                // Map shift value to Vietnamese
                 string shiftDisplay = slotResult.Data.Shift switch
                 {
                     "AM" => "7:30 - 12:00",
@@ -578,7 +585,6 @@ namespace backend.Infrastructure.Services
 </html>
 ";
 
-            // Gửi email
             await _emailService.SendBookingDetailEmailAsync(
                 booking.Account.Email,
                 "Xác nhận lịch hẹn xét nghiệm - WellCare Health Center",

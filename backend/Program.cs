@@ -121,7 +121,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // domain React và Vite
+        policy.WithOrigins("http://localhost:3000", "https://gender-healthcare.vercel.app") // domain React và Vite
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
