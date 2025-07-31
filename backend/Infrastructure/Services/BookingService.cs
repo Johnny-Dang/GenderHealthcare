@@ -3,6 +3,7 @@ using backend.Application.Repositories;
 using backend.Application.Services;
 using backend.Domain.Entities;
 using AutoMapper;
+using backend.Domain.Constants;
 
 namespace backend.Infrastructure.Services
 {
@@ -26,7 +27,8 @@ namespace backend.Infrastructure.Services
                 {
                     BookingId = Guid.NewGuid(), // Explicitly generate a new GUID
                     AccountId = request.AccountId,
-                    CreateAt = DateTime.UtcNow
+                    CreateAt = DateTime.UtcNow,
+                    Status = BookingStatus.Pending
                 };
                 var createdBooking = await _bookingRepository.CreateAsync(booking);
 
