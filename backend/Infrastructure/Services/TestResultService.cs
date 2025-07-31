@@ -19,14 +19,12 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<TestResultResponse>> CreateTestResultAsync(CreateTestResultRequest request)
         {
-            // Validate booking detail exists
             var bookingDetail = await _repository.GetBookingDetailByIdAsync(request.BookingDetailId);
             if (bookingDetail == null)
             {
                 return Result<TestResultResponse>.Failure("Booking detail not found");
             }
 
-            // Create new test result
             var testResult = new TestResult
             {
                 ResultId = Guid.NewGuid(),
@@ -36,17 +34,14 @@ namespace backend.Infrastructure.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Save to database
             await _repository.CreateTestResultAsync(testResult);
 
-            // Return the created test result
             var response = await _repository.GetTestResultByIdAsync(testResult.ResultId);
             if (response == null)
             {
                 return Result<TestResultResponse>.Failure("Failed to retrieve created test result");
             }
 
-            // Sau khi lưu TestResult thành công
             await _bookingDetailRepository.UpdateStatusAsync(testResult.BookingDetailId, "Đã có kết quả");
 
             return Result<TestResultResponse>.Success(response);
@@ -80,7 +75,6 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<List<TestResultResponse>>> GetTestResultsByBookingDetailIdAsync(Guid bookingDetailId)
         {
-            // Validate booking detail exists
             var bookingDetail = await _repository.GetBookingDetailByIdAsync(bookingDetailId);
             if (bookingDetail == null)
             {
@@ -93,14 +87,12 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<TestResultResponse>> UpdateTestResultAsync(Guid resultId, UpdateTestResultRequest request)
         {
-            // Validate test result exists
             var testResult = await _repository.GetTestResultEntityByIdAsync(resultId);
             if (testResult == null)
             {
                 return Result<TestResultResponse>.Failure("Test result not found");
             }
 
-            // Update properties
             if (request.Result != null)
             {
                 testResult.Result = request.Result;
@@ -109,10 +101,8 @@ namespace backend.Infrastructure.Services
             testResult.Status = request.Status;
             testResult.UpdatedAt = DateTime.UtcNow;
 
-            // Save changes
             await _repository.UpdateTestResultAsync(testResult);
 
-            // Return updated result
             var updatedResult = await _repository.GetTestResultByIdAsync(resultId);
             if (updatedResult == null)
             {

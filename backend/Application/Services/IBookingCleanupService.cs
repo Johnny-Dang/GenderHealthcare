@@ -3,5 +3,6 @@
     public interface IBookingCleanupService
     {
         Task CleanupUnpaidBookingsAsync();
+        Task HandleMissedAppointmentsAsync();
     }
 }

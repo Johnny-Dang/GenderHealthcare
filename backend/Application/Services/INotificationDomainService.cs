@@ -7,5 +7,6 @@ namespace backend.Application.Services
         Task<Result<NotificationResponse>> CreateBookingNotificationAsync(Guid bookingId, Guid recipientId);
         Task NotifyTestResultReadyAsync(Guid bookingDetailId);
         Task NotifyBookingDetailConfirmedAsync(Guid bookingDetailId);
+        Task NotifyMissedAppointmentAsync(Guid bookingDetailId);
     }
 }
