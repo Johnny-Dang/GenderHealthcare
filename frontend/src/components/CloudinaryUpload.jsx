@@ -1,8 +1,8 @@
 import React from 'react'
 import { Upload } from 'lucide-react'
 
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'ml_default';
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo'
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'ml_default'
 
 const CloudinaryUpload = ({
   onUploadSuccess,
@@ -22,8 +22,8 @@ const CloudinaryUpload = ({
 
   const openWidget = () => {
     if (!window.cloudinary) {
-      alert('Cloudinary Widget chưa được load!');
-      return;
+      alert('Cloudinary Widget chưa được load!')
+      return
     }
     window.cloudinary.openUploadWidget(
       {
@@ -37,7 +37,7 @@ const CloudinaryUpload = ({
         resourceType: 'image',
         showSkipCropButton: false,
         showPoweredBy: false,
-        folder: folder,
+        folder: folder
       },
       (error, result) => {
         if (!error && result && result.event === 'success') {
@@ -51,17 +51,17 @@ const CloudinaryUpload = ({
   return (
     <div className={`flex flex-col items-start gap-2 ${className}`}>
       <button
-        type="button"
+        type='button'
         onClick={openWidget}
         className={`inline-flex items-center px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded shadow transition ${buttonClass}`}
       >
-        <Upload className="w-5 h-5 mr-2" />
+        <Upload className='w-5 h-5 mr-2' />
         {label}
       </button>
       {previewUrl && (
         <img
           src={previewUrl}
-          alt="Preview"
+          alt='Preview'
           className={`mt-2 rounded border ${previewClass}`}
           style={{ maxWidth: size, maxHeight: size }}
         />
@@ -70,4 +70,4 @@ const CloudinaryUpload = ({
   )
 }
 
-export default CloudinaryUpload 
+export default CloudinaryUpload

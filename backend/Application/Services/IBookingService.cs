@@ -13,7 +13,7 @@ namespace backend.Application.Services
         // Read
         Task<BookingResponse> GetByIdAsync(Guid id);
         Task<List<BookingResponse>> GetAllAsync();
-        Task<IEnumerable<BookingWithPaymentResponse>> GetByAccountIdAsync(Guid accountId);
+        Task<BookingWithPaymentResponse> GetByAccountIdAsync(Guid accountId);
         
         // Update
         Task<BookingResponse> UpdateAsync(UpdateBookingRequest request);
