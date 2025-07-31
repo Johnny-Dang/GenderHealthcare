@@ -55,7 +55,7 @@ export default function PersonalInfoForm({
     }
     const cleanPhone = phone.replace(/[\s\-()]/g, '')
     if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(cleanPhone)) {
-      return 'Số điện thoại không hợp lệ (VD: 0912345678)'
+      return 'Số điện thoại không hợp lệ'
     }
     return ''
   }

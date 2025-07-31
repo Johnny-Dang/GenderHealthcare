@@ -52,6 +52,7 @@ const TestServiceManagement = () => {
   const [imageUrl, setImageUrl] = useState('')
   const [imageModalVisible, setImageModalVisible] = useState(false)
   const [selectedImageUrl, setSelectedImageUrl] = useState('')
+  const [switchEnabled, setSwitchEnabled] = useState(true)
 
   // Fetch data from API
   const fetchServices = async () => {
@@ -112,18 +113,20 @@ const TestServiceManagement = () => {
   const showModal = (service = null) => {
     setEditingService(service)
     if (service) {
+      const isEnabled = !service.isDeleted
       form.setFieldsValue({
         name: service.name,
         title: service.title,
         description: service.description,
         price: service.price,
         category: service.category,
-        enabled: !service.isDeleted,
+        enabled: isEnabled,
         duration: service.duration,
         preparation: service.preparation,
         imageUrl: service.imageUrl
       })
       setImageUrl(service.imageUrl || '')
+      setSwitchEnabled(isEnabled)
     } else {
       form.resetFields()
       form.setFieldsValue({
@@ -131,6 +134,7 @@ const TestServiceManagement = () => {
         enabled: true
       })
       setImageUrl('')
+      setSwitchEnabled(true)
     }
     setIsModalVisible(true)
   }
@@ -548,7 +552,7 @@ const TestServiceManagement = () => {
         footer={null}
         width={1000}
         className='service-modal-modern'
-        bodyStyle={{ 
+        bodyStyle={{
           padding: 0,
           borderRadius: '16px',
           overflow: 'hidden'
@@ -562,9 +566,7 @@ const TestServiceManagement = () => {
                 <Package size={20} className='text-white' />
               </div>
               <div>
-                <h2 className='text-xl font-bold'>
-                  {editingService ? 'Chỉnh sửa' : 'Thêm mới'}
-                </h2>
+                <h2 className='text-xl font-bold'>{editingService ? 'Chỉnh sửa' : 'Thêm mới'}</h2>
                 <p className='text-purple-100 text-sm'>Dịch vụ y tế</p>
               </div>
             </div>
@@ -648,8 +650,8 @@ const TestServiceManagement = () => {
                       }
                       rules={[{ required: true, message: 'Vui lòng nhập tên dịch vụ!' }]}
                     >
-                      <Input 
-                        placeholder='Ví dụ: Xét nghiệm máu tổng quát' 
+                      <Input
+                        placeholder='Ví dụ: Xét nghiệm máu tổng quát'
                         className='h-12 rounded-xl border-gray-200 hover:border-purple-300 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 text-base'
                         size='large'
                       />
@@ -665,8 +667,8 @@ const TestServiceManagement = () => {
                       }
                       rules={[{ required: true, message: 'Vui lòng nhập tiêu đề chi tiết!' }]}
                     >
-                      <Input 
-                        placeholder='Ví dụ: Xét nghiệm máu tổng quát CBC' 
+                      <Input
+                        placeholder='Ví dụ: Xét nghiệm máu tổng quát CBC'
                         className='h-12 rounded-xl border-gray-200 hover:border-purple-300 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 text-base'
                         size='large'
                       />
@@ -685,31 +687,31 @@ const TestServiceManagement = () => {
                       }
                       rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
                     >
-                      <Select 
-                        placeholder='Chọn danh mục dịch vụ' 
+                      <Select
+                        placeholder='Chọn danh mục dịch vụ'
                         allowClear
                         className='h-12 rounded-xl'
                         size='large'
                         dropdownClassName='rounded-xl'
                       >
-                        {Array.from(new Set([...categories, 'Xét nghiệm', 'Khám tổng quát', 'Tư vấn', 'Điều trị', 'Chẩn đoán'])).map(
-                          (category) => (
-                            <Option key={category} value={category}>
-                              {category}
-                            </Option>
-                          )
-                        )}
+                        {Array.from(
+                          new Set([...categories, 'Xét nghiệm', 'Khám tổng quát', 'Tư vấn', 'Điều trị', 'Chẩn đoán'])
+                        ).map((category) => (
+                          <Option key={category} value={category}>
+                            {category}
+                          </Option>
+                        ))}
                       </Select>
                     </Form.Item>
                   </Col>
                   <Col span={12}>
-                    <Form.Item 
-                      name='price' 
+                    <Form.Item
+                      name='price'
                       label={
                         <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
                           Giá dịch vụ (VND) <span className='text-red-500'>*</span>
                         </span>
-                      } 
+                      }
                       rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}
                     >
                       <InputNumber
@@ -737,7 +739,7 @@ const TestServiceManagement = () => {
                     <p className='text-gray-500 text-sm'>Cung cấp thông tin chi tiết về dịch vụ</p>
                   </div>
                 </div>
-                
+
                 <Form.Item
                   name='description'
                   label={
@@ -747,9 +749,9 @@ const TestServiceManagement = () => {
                   }
                   rules={[{ required: true, message: 'Vui lòng nhập mô tả dịch vụ!' }]}
                 >
-                  <TextArea 
-                    rows={6} 
-                    placeholder='Mô tả chi tiết về dịch vụ, quy trình thực hiện, thời gian chờ kết quả, và những thông tin cần thiết khác...' 
+                  <TextArea
+                    rows={6}
+                    placeholder='Mô tả chi tiết về dịch vụ, quy trình thực hiện, thời gian chờ kết quả, và những thông tin cần thiết khác...'
                     className='rounded-xl border-gray-200 hover:border-blue-300 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 resize-none text-base'
                   />
                 </Form.Item>
@@ -766,43 +768,54 @@ const TestServiceManagement = () => {
                     <p className='text-gray-500 text-sm'>Cấu hình trạng thái và thêm hình ảnh</p>
                   </div>
                 </div>
-                
+
                 <Row gutter={[24, 24]}>
                   <Col span={12}>
-                    <div className='bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100'>
-                      <Form.Item 
-                        name='enabled' 
+                    <div className='bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200'>
+                      <Form.Item
+                        name='enabled'
                         label={
                           <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
                             Trạng thái dịch vụ
                           </span>
-                        } 
-                        valuePropName='checked' 
+                        }
+                        valuePropName='checked'
                         initialValue={true}
                         className='mb-0'
                       >
-                        <Switch 
-                          checkedChildren='Hoạt động' 
+                        <Switch
+                          checkedChildren='Hoạt động'
                           unCheckedChildren='Tạm dừng'
-                          className='bg-purple-500'
+                          className='transition-all duration-300 hover:scale-110 hover:shadow-md'
+                          style={{
+                            backgroundColor: switchEnabled ? '#7c3aed' : '#e5e7eb',
+                            borderColor: switchEnabled ? '#7c3aed' : '#d1d5db'
+                          }}
                           size='default'
+                          onChange={(checked) => setSwitchEnabled(checked)}
                         />
                       </Form.Item>
                       <p className='text-gray-500 text-xs mt-2'>
-                        Dịch vụ sẽ {editingService ? (editingService.isDeleted ? 'được kích hoạt' : 'bị tạm dừng') : 'được kích hoạt'} sau khi lưu
+                        Dịch vụ sẽ{' '}
+                        {editingService
+                          ? editingService.isDeleted
+                            ? 'được kích hoạt'
+                            : 'bị tạm dừng'
+                          : 'được kích hoạt'}{' '}
+                        sau khi lưu
                       </p>
                     </div>
                   </Col>
                 </Row>
 
                 <div className='mt-6'>
-                  <Form.Item 
+                  <Form.Item
                     label={
-                      <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide'>
+                      <span className='text-gray-700 font-semibold text-sm uppercase tracking-wide '>
                         Hình ảnh dịch vụ
                       </span>
-                    } 
-                    name='imageUrl' 
+                    }
+                    name='imageUrl'
                     className='mb-0'
                   >
                     <CloudinaryUpload
@@ -814,6 +827,7 @@ const TestServiceManagement = () => {
                       folder='testservices'
                       label='Chọn ảnh dịch vụ'
                       size={240}
+                      buttonClass='!bg-purple-500 hover:!bg-purple-600'
                     />
                   </Form.Item>
                 </div>
