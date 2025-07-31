@@ -21,17 +21,14 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<TestServiceSlotResponse>> CreateSlotAsync(CreateTestServiceSlotRequest request)
         {
-            // Validate service exists
             var service = await _serviceRepository.GetByIdAsync(request.ServiceId);
             if (service == null)
                 return Result<TestServiceSlotResponse>.Failure("Dịch vụ không tồn tại");
 
-            // Check if a slot with the same service, date and shift already exists
             var existingSlots = await _repository.GetByServiceIdAndDateAsync(request.ServiceId, request.SlotDate);
             if (existingSlots.Any(s => s.Shift == request.Shift))
                 return Result<TestServiceSlotResponse>.Failure($"Đã có slot {request.Shift} cho dịch vụ này vào ngày {request.SlotDate}");
 
-            // Create slot
             var slot = new TestServiceSlot
             {
                 ServiceId = request.ServiceId,
@@ -43,7 +40,6 @@ namespace backend.Infrastructure.Services
 
             var createdSlot = await _repository.CreateAsync(slot);
 
-            // Map to response
             var response = MapToResponse(createdSlot, service.ServiceName);
 
             return Result<TestServiceSlotResponse>.Success(response);
@@ -51,15 +47,12 @@ namespace backend.Infrastructure.Services
 
         public async Task<Result<TestServiceSlotResponse>> FindOrCreateSlotAsync(Guid serviceId, DateOnly date, string shift)
         {
-            // Validate service exists
             var service = await _serviceRepository.GetByIdAsync(serviceId);
             if (service == null)
                 return Result<TestServiceSlotResponse>.Failure("Dịch vụ không tồn tại");
 
-            // Find or create slot
             var slot = await _repository.FindOrCreateSlotAsync(serviceId, date, shift);
 
-            // Map to response
             var response = MapToResponse(slot, service.ServiceName);
 
             return Result<TestServiceSlotResponse>.Success(response);
@@ -130,10 +123,8 @@ namespace backend.Infrastructure.Services
             if (slot == null)
                 return Result<TestServiceSlotResponse>.Failure("Slot không tồn tại");
 
-            // Update fields
             if (request.MaxQuantity.HasValue)
             {
-                // Ensure max quantity is not less than current quantity
                 if (request.MaxQuantity < slot.CurrentQuantity)
                     return Result<TestServiceSlotResponse>.Failure($"Số lượng tối đa phải lớn hơn hoặc bằng số lượng đã đặt ({slot.CurrentQuantity})");
 

@@ -5,10 +5,8 @@ import api from '@/configs/axios'
 import { formatDistanceToNow, addHours } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import { useSelector } from 'react-redux'
-import { useToast } from '@/hooks/useToast'
 
 const NotificationBell = () => {
-  const { showError } = useToast()
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
@@ -16,7 +14,6 @@ const NotificationBell = () => {
   const [fetchError, setFetchError] = useState(null)
   const dropdownRef = useRef(null)
   const lastFetchRef = useRef(0)
-  const lastErrorShownRef = useRef(0) // Để tránh hiển thị lỗi quá nhiều lần
   const abortControllerRef = useRef(null)
 
   const userInfo = useSelector((state) => state.user?.userInfo)
@@ -29,12 +26,10 @@ const NotificationBell = () => {
       const now = Date.now()
       if (!forceRefresh && now - lastFetchRef.current < 30000) return
 
-      // Hủy request cũ nếu có
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
 
-      // Tạo abort controller mới
       abortControllerRef.current = new AbortController()
 
       try {
@@ -44,8 +39,8 @@ const NotificationBell = () => {
         const [notificationRes, countRes] = await Promise.all([
           api.get('/api/Notification', {
             signal: abortControllerRef.current.signal,
-            _noToast: true, // Không hiển thị toast lỗi tự động
-            timeout: 8000 // Timeout nhanh hơn để tránh chờ lâu
+            _noToast: true,
+            timeout: 8000
           }),
           api.get('/api/Notification/count', {
             signal: abortControllerRef.current.signal,
@@ -63,33 +58,21 @@ const NotificationBell = () => {
 
         const countData = countRes?.data
         setUnreadCount(typeof countData === 'number' ? countData : 0)
-
         lastFetchRef.current = now
       } catch (error) {
         if (error.name === 'AbortError' || error.name === 'CanceledError') {
-          // Request bị hủy, không làm gì
           return
         }
 
-        // Chỉ show error message nếu người dùng cố tình mở dropdown
         if (forceRefresh) {
           setFetchError('Không thể tải thông báo. Vui lòng thử lại sau.')
-
-          // Chỉ hiển thị toast nếu đã lâu không hiện
-          if (now - lastErrorShownRef.current > 10000) {
-            showError('Không thể tải thông báo. Máy chủ có thể đang bảo trì.')
-            lastErrorShownRef.current = now
-          }
         }
-
-        // Giữ nguyên dữ liệu cũ nếu có
-        // KHÔNG reset notifications và unreadCount
       } finally {
         setLoading(false)
         abortControllerRef.current = null
       }
     },
-    [userId, loading, showError]
+    [userId, loading]
   )
 
   const markAsRead = useCallback(
@@ -106,7 +89,7 @@ const NotificationBell = () => {
       try {
         await api.put(`/api/Notification/${notificationId}/read`)
       } catch (error) {
-        // Silent fail - UI đã update optimistically
+        // Silent fail
       }
     },
     [userId]
@@ -121,26 +104,23 @@ const NotificationBell = () => {
     try {
       await api.put('/api/Notification/mark-all-read')
     } catch (error) {
-      // Silent fail - UI đã update optimistically
+      // Silent fail
     }
   }, [userId, unreadCount])
 
-  // Thêm refresh khi mở dropdown
   const handleToggleDropdown = useCallback(() => {
     const newState = !isOpen
     setIsOpen(newState)
 
-    // Nếu mở dropdown, force refresh data
     if (newState) {
-      fetchNotifications(true) // true = force refresh
+      fetchNotifications(true)
     }
   }, [isOpen, fetchNotifications])
 
-  // Thêm button refresh thủ công
   const handleManualRefresh = useCallback(
     (e) => {
       e.stopPropagation()
-      fetchNotifications(true) // force refresh
+      fetchNotifications(true)
     },
     [fetchNotifications]
   )
@@ -249,7 +229,6 @@ const NotificationBell = () => {
           <div className='p-3 border-b border-gray-100 flex justify-between items-center'>
             <h3 className='font-semibold text-gray-800'>Thông báo</h3>
             <div className='flex items-center gap-2'>
-              {/* Thêm nút refresh */}
               <button
                 className='text-xs text-gray-500 hover:text-primary-600'
                 onClick={handleManualRefresh}
