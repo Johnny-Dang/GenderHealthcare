@@ -55,11 +55,11 @@ namespace backend.Infrastructure.Services
             return _mapper.Map<List<BookingResponse>>(bookings);
         }
         
-        public async Task<IEnumerable<BookingWithPaymentResponse>> GetByAccountIdAsync(Guid accountId)
+        public async Task<BookingWithPaymentResponse> GetByAccountIdAsync(Guid accountId)
         {
             var bookings = await _bookingRepository.GetByAccountIdAsync(accountId);
 
-            return _mapper.Map<List<BookingWithPaymentResponse>>(bookings);
+            return _mapper.Map<BookingWithPaymentResponse>(bookings);
         }
         
         public async Task<BookingResponse> UpdateAsync(UpdateBookingRequest request)
