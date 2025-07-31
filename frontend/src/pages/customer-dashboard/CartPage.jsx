@@ -30,6 +30,9 @@ export default function CartPage() {
   const [editData, setEditData] = useState(null)
   const [deleteCartModal, setDeleteCartModal] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteServiceModal, setDeleteServiceModal] = useState(false)
+  const [deleteServiceId, setDeleteServiceId] = useState(null)
+  const [deleteServiceLoading, setDeleteServiceLoading] = useState(false)
   const [paymentConfirmModal, setPaymentConfirmModal] = useState(false)
 
   // Function để format ca làm việc
@@ -69,9 +72,16 @@ export default function CartPage() {
   }, [cartShouldReload, dispatch])
 
   const handleDelete = async (bookingDetailId) => {
-    if (!window.confirm('Bạn có chắc muốn xoá dịch vụ này khỏi giỏ hàng?')) return
+    setDeleteServiceId(bookingDetailId)
+    setDeleteServiceModal(true)
+  }
+
+  const handleConfirmDeleteService = async () => {
+    if (!deleteServiceId) return
+
+    setDeleteServiceLoading(true)
     try {
-      await api.delete(`/api/booking-details/${bookingDetailId}`)
+      await api.delete(`/api/booking-details/${deleteServiceId}`)
       // Fetch lại dịch vụ sau khi xóa
       const res = await api.get(`/api/booking-details/booking/${bookingId}`)
       setServices(res.data)
@@ -84,8 +94,12 @@ export default function CartPage() {
       } else {
         showSuccess('Đã xóa dịch vụ khỏi giỏ hàng!')
       }
+      setDeleteServiceModal(false)
+      setDeleteServiceId(null)
     } catch {
       showError('Xoá thất bại!')
+    } finally {
+      setDeleteServiceLoading(false)
     }
   }
 
@@ -262,6 +276,51 @@ export default function CartPage() {
           onSlotUpdate={() => {}}
         />
       )}
+
+      {/* Delete Service Confirmation Modal */}
+      <Dialog open={deleteServiceModal} onOpenChange={setDeleteServiceModal}>
+        <DialogContent className='max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='flex items-center gap-2 text-red-600'>
+              <AlertTriangle className='w-5 h-5' />
+              Xác nhận xóa dịch vụ
+            </DialogTitle>
+            <DialogDescription className='text-gray-600 mt-2'>
+              Bạn có chắc chắn muốn xóa dịch vụ này khỏi giỏ hàng không? Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className='mt-6'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setDeleteServiceModal(false)
+                setDeleteServiceId(null)
+              }}
+              disabled={deleteServiceLoading}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={handleConfirmDeleteService}
+              disabled={deleteServiceLoading}
+              className='flex items-center gap-2'
+            >
+              {deleteServiceLoading ? (
+                <>
+                  <span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></span>
+                  Đang xóa...
+                </>
+              ) : (
+                <>
+                  <Trash2 className='w-4 h-4' />
+                  Xóa dịch vụ
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Cart Confirmation Modal */}
       <Dialog open={deleteCartModal} onOpenChange={setDeleteCartModal}>
