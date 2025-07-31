@@ -156,7 +156,7 @@ const Navigation = () => {
     { path: '/test-service', label: 'Dịch vụ xét nghiệm' },
     { path: '/booking-consultant', label: 'Đặt tư vấn' }, // Thêm đặt tư vấn vào đây
     { path: '/blog', label: 'Blog' },
-    { path: '/cycle-tracking', label: 'Theo dõi chu kỳ' }
+    { path: '/cycle-tracking', label: 'Công Cụ Tính Chu Kỳ' }
   ]
 
   // Tạo userMenuItems dựa trên role
