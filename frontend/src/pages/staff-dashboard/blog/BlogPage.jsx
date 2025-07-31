@@ -3,7 +3,8 @@ import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, User, RefreshCw } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Calendar, User, RefreshCw, Search, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import api from '@/configs/axios'
 import { useToast } from '@/hooks/useToast'
@@ -14,6 +15,7 @@ const BlogPage = () => {
   const [blogPosts, setBlogPosts] = useState([])
   const [categories, setCategories] = useState(['Tất cả'])
   const [selectedCategory, setSelectedCategory] = useState('Tất cả')
+  const [searchText, setSearchText] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -70,10 +72,28 @@ const BlogPage = () => {
     fetchData()
   }, [handleError])
 
-  // Filter posts by category với useMemo
+  // Filter posts by category and search text với useMemo
   const filteredPosts = useMemo(() => {
-    return selectedCategory === 'Tất cả' ? blogPosts : blogPosts.filter((post) => post.category === selectedCategory)
-  }, [selectedCategory, blogPosts])
+    let filtered = blogPosts
+
+    // Filter by category
+    if (selectedCategory !== 'Tất cả') {
+      filtered = filtered.filter((post) => post.category === selectedCategory)
+    }
+
+    // Filter by search text (title)
+    if (searchText.trim()) {
+      filtered = filtered.filter((post) => post.title.toLowerCase().includes(searchText.toLowerCase()))
+    }
+
+    return filtered
+  }, [selectedCategory, blogPosts, searchText])
+
+  // Function to clear search and filters
+  const clearFilters = useCallback(() => {
+    setSearchText('')
+    setSelectedCategory('Tất cả')
+  }, [])
 
   // Function to refresh blog posts
   const refreshBlogPosts = useCallback(async () => {
@@ -125,6 +145,21 @@ const BlogPage = () => {
       {/* Categories */}
       <section className='py-6 border-b border-gray-100'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          {/* Search Bar */}
+          <div className='mb-4 max-w-md mx-auto'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
+              <Input
+                type='text'
+                placeholder='Tìm kiếm bài viết theo tiêu đề...'
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className='pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+              />
+            </div>
+          </div>
+
+          {/* Category Filters */}
           <div className='flex flex-wrap gap-3 justify-center'>
             {categories.map((category) => (
               <Button
@@ -141,6 +176,12 @@ const BlogPage = () => {
               <RefreshCw className='h-4 w-4 mr-1' />
               Làm mới
             </Button>
+            {(searchText || selectedCategory !== 'Tất cả') && (
+              <Button variant='outline' size='sm' onClick={clearFilters} className='ml-2'>
+                <X className='h-4 w-4 mr-1' />
+                Xóa bộ lọc
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -159,7 +200,19 @@ const BlogPage = () => {
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className='text-center p-12 bg-gray-50 rounded-lg'>
-              <p className='text-gray-600'>Không có bài viết nào trong mục này.</p>
+              <p className='text-gray-600'>
+                {searchText
+                  ? `Không tìm thấy bài viết nào có tiêu đề chứa "${searchText}".`
+                  : selectedCategory !== 'Tất cả'
+                    ? `Không có bài viết nào trong danh mục "${selectedCategory}".`
+                    : 'Không có bài viết nào.'}
+              </p>
+              {(searchText || selectedCategory !== 'Tất cả') && (
+                <Button onClick={clearFilters} variant='outline' className='mt-4'>
+                  <X className='h-4 w-4 mr-1' />
+                  Xóa bộ lọc
+                </Button>
+              )}
             </div>
           ) : (
             <div className='grid lg:grid-cols-3 md:grid-cols-2 gap-6 animate-fade-in'>
