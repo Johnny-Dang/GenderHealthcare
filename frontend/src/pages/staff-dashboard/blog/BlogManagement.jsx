@@ -155,13 +155,7 @@ const BlogManagement = () => {
 
   const handleApiError = useCallback(
     (error, actionMessage) => {
-      console.error(`Error ${actionMessage}:`, error)
-
-      let errorDetails = error.message
-      if (error.response && error.response.data) {
-        errorDetails = error.response.data.message || errorDetails
-      }
-
+      const errorDetails = error.response?.data?.message || error.message
       toast({
         title: 'Lỗi',
         description: `Không thể ${actionMessage}: ${errorDetails}`,
@@ -171,22 +165,17 @@ const BlogManagement = () => {
     [toast]
   )
 
-  // Use useMemo to filter blog posts based on selectedCategoryName
+  // Filter posts by category
   const filteredBlogPosts = useMemo(() => {
-    if (!selectedCategoryName) {
-      return blogPosts
-    }
-    // Filter by categoryName instead of categoryId
-    return blogPosts.filter((post) => post.categoryName === selectedCategoryName)
+    return selectedCategoryName ? blogPosts.filter((post) => post.categoryName === selectedCategoryName) : blogPosts
   }, [blogPosts, selectedCategoryName])
 
-  // Hàm lấy danh sách blogs đã xuất bản từ API
+  // Lấy danh sách blogs từ API
   const fetchPublishedBlogs = useCallback(async () => {
     try {
       setIsFetchingBlogs(true)
       const response = await api.get('/api/Blog/published')
 
-      // Transform the API response to match our blogPosts structure
       const formattedPosts = response.data.map((blog) => ({
         id: blog.blogId,
         title: blog.title,
@@ -208,15 +197,14 @@ const BlogManagement = () => {
     }
   }, [user, handleApiError])
 
-  // Hàm lấy danh sách categories từ API
+  // Lấy danh sách categories từ API
   const fetchCategories = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await api.get('/api/BlogCategory')
       setCategories(response.data)
 
-      // Nếu có danh mục, set categoryId mặc định là danh mục đầu tiên
-      if (response.data && response.data.length > 0) {
+      if (response.data?.length > 0) {
         setFormData((prev) => ({
           ...prev,
           categoryId: response.data[0].categoryId
@@ -336,11 +324,10 @@ const BlogManagement = () => {
       })
 
       // Nếu đang chỉnh sửa bài viết bị xóa, reset form
-      if (editingPost && editingPost.id === blogToDelete.id) {
+      if (editingPost?.id === blogToDelete.id) {
         resetForm()
       }
 
-      // Đóng modal xác nhận
       closeDeleteBlogConfirm()
     } catch (error) {
       handleApiError(error, 'xóa bài viết')
@@ -372,7 +359,6 @@ const BlogManagement = () => {
       return
     }
 
-    // Tìm category tương ứng để lấy tên
     const selectedCategory = categories.find((cat) => String(cat.categoryId) === String(categoryId))
 
     if (selectedCategory) {
@@ -407,11 +393,9 @@ const BlogManagement = () => {
         description: newCategory.description
       })
 
-      // Thêm danh mục mới vào danh sách
       const createdCategory = response.data
       setCategories((prev) => [...prev, createdCategory])
 
-      // Chọn danh mục mới làm category hiện tại cho form
       setFormData((prev) => ({
         ...prev,
         categoryId: createdCategory.categoryId
@@ -422,7 +406,6 @@ const BlogManagement = () => {
         description: 'Đã tạo danh mục mới'
       })
 
-      // Reset form và đóng modal
       setNewCategory({ name: '', description: '' })
       setShowCategoryModal(false)
     } catch (error) {
@@ -434,7 +417,7 @@ const BlogManagement = () => {
 
   // Hàm cập nhật danh mục
   async function handleUpdateCategory() {
-    if (!editingCategory || !editingCategory.name.trim()) {
+    if (!editingCategory?.name.trim()) {
       toast({
         title: 'Lỗi',
         description: 'Vui lòng nhập tên danh mục',
@@ -451,7 +434,6 @@ const BlogManagement = () => {
         description: editingCategory.description
       })
 
-      // Cập nhật danh mục trong danh sách
       const updatedCategory = response.data
       setCategories((prev) =>
         prev.map((cat) => (cat.categoryId === updatedCategory.categoryId ? updatedCategory : cat))
@@ -462,7 +444,6 @@ const BlogManagement = () => {
         description: 'Đã cập nhật danh mục'
       })
 
-      // Đóng modal
       setEditingCategory(null)
       setShowEditCategoryModal(false)
     } catch (error) {
@@ -478,7 +459,6 @@ const BlogManagement = () => {
 
     setIsLoading(true)
     try {
-      // Kiểm tra xem danh mục có bài viết nào không
       const hasBlogPosts = blogPosts.some((post) => post.categoryId === categoryToDelete.categoryId)
 
       if (hasBlogPosts) {
@@ -494,15 +474,12 @@ const BlogManagement = () => {
 
       await api.delete(`/api/BlogCategory/${categoryToDelete.categoryId}`)
 
-      // Xóa danh mục khỏi danh sách
       setCategories((prev) => prev.filter((cat) => cat.categoryId !== categoryToDelete.categoryId))
 
-      // Nếu đang chọn danh mục bị xóa thì reset bộ lọc
       if (selectedCategoryId === categoryToDelete.categoryId) {
         clearFilter()
       }
 
-      // Nếu form đang chọn danh mục bị xóa thì chọn danh mục đầu tiên hoặc để trống
       if (formData.categoryId === categoryToDelete.categoryId) {
         setFormData((prev) => ({
           ...prev,
@@ -518,7 +495,6 @@ const BlogManagement = () => {
         description: 'Đã xóa danh mục'
       })
 
-      // Đóng modal xác nhận
       setCategoryToDelete(null)
       setShowDeleteCategoryConfirm(false)
     } catch (error) {

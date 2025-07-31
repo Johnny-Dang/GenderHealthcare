@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Table,
   Card,
@@ -11,12 +11,10 @@ import {
   DatePicker,
   Tabs,
   Select,
-  Row,
-  Col,
   message,
   Modal
 } from 'antd'
-import { Search, Download, FileText, Eye, TrendingUp, CreditCard, DollarSign, Calendar, RefreshCw } from 'lucide-react'
+import { Search, Download, Eye, TrendingUp, CreditCard, DollarSign, Calendar, RefreshCw } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import api from '../../../configs/axios'
 
@@ -36,12 +34,10 @@ const PaymentManagement = () => {
   const [monthlyRevenueData, setMonthlyRevenueData] = useState([])
 
   // Fetch payment data from API
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     setLoading(true)
     try {
-      console.log('Fetching payments from API...')
       const response = await api.get('/api/payments/with-booking-info')
-      console.log('API Response:', response.data)
 
       if (response.data && Array.isArray(response.data)) {
         const transformedPayments = response.data.map((payment) => {
@@ -66,26 +62,22 @@ const PaymentManagement = () => {
 
         message.success(`Đã tải ${transformedPayments.length} thanh toán từ hệ thống`)
       } else {
-        console.error('Unexpected API response format:', response.data)
         setPayments([])
         setMonthlyRevenueData([])
         message.error('Dữ liệu API không đúng định dạng')
       }
-    } catch (error) {
-      console.error('Error fetching payments:', error)
-      console.error('Error details:', error.response?.data)
+    } catch {
       setPayments([])
       setMonthlyRevenueData([])
       message.error('Không thể kết nối tới API. Vui lòng kiểm tra kết nối hoặc thử lại sau.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchPayments()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchPayments])
 
   // Tạo dữ liệu biểu đồ từ dữ liệu thanh toán thực tế
   const generateMonthlyRevenueData = (paymentData) => {
@@ -131,7 +123,6 @@ const PaymentManagement = () => {
   }
 
   const handleDateRangeChange = (dates) => {
-    console.log('Date range selected:', dates)
     setDateRange(dates)
   }
 
@@ -141,15 +132,12 @@ const PaymentManagement = () => {
 
   const showPaymentDetail = async (payment) => {
     try {
-      // Lấy chi tiết thanh toán từ API
       const detailResponse = await api.get(`/api/payments/transaction/${payment.id}`)
-
       setSelectedPayment({
         ...payment,
         details: detailResponse.data
       })
-    } catch (error) {
-      console.error('Error fetching payment details:', error)
+    } catch {
       setSelectedPayment(payment)
     }
     setDetailModalVisible(true)
@@ -188,41 +176,23 @@ const PaymentManagement = () => {
 
   // Lọc thanh toán dựa trên các tiêu chí
   const filteredPayments = payments.filter((payment) => {
-    // Nếu tìm kiếm chính xác mã thanh toán, trả về ngay lập tức
     if (payment.id && searchText && payment.id === searchText) {
       return true
     }
 
-    // Lọc theo text tìm kiếm
     const matchesSearch =
       (payment.id && payment.id.toLowerCase().includes(searchText.toLowerCase())) ||
       (payment.bookingId && payment.bookingId.toString().toLowerCase().includes(searchText.toLowerCase()))
-    /* Comment tạm tìm kiếm theo khách hàng và dịch vụ
-      ||
-      (payment.customerName && payment.customerName.toLowerCase().includes(searchText.toLowerCase())) ||
-      (payment.serviceName && payment.serviceName.toLowerCase().includes(searchText.toLowerCase()))
-      */
 
-    // Lọc theo trạng thái
     const matchesStatus = filterStatus === 'all' || payment.status === filterStatus
 
-    // Lọc theo khoảng thời gian
     let matchesDateRange = true
     if (dateRange && dateRange[0] && dateRange[1]) {
       if (!payment.date) return false
 
-      // Convert strings to Date objects for comparison
       const paymentDate = new Date(payment.date)
-      // Extract just the date part from dateRange Moment objects
       const startDate = dateRange[0].startOf('day').toDate()
       const endDate = dateRange[1].endOf('day').toDate()
-
-      console.log('Comparing dates:', {
-        paymentDate,
-        startDate,
-        endDate,
-        match: paymentDate >= startDate && paymentDate <= endDate
-      })
 
       matchesDateRange = paymentDate >= startDate && paymentDate <= endDate
     }
@@ -289,7 +259,7 @@ const PaymentManagement = () => {
     <div className='bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6 rounded-lg shadow-sm min-h-screen'>
       <div className='flex justify-between items-center mb-6 bg-gradient-to-r from-blue-100 to-blue-50 p-4 rounded-lg shadow-sm'>
         <Title level={4} className='transition-all duration-300 hover:text-blue-600 hover:translate-x-1 mb-0'>
-          Quản lý Thanh toán
+          Thống Kê Doanh Thu
         </Title>
         <Space>
           <Button icon={<RefreshCw size={16} />} onClick={fetchPayments}>

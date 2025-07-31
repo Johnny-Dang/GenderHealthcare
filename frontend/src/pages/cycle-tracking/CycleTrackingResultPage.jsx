@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
@@ -12,9 +12,7 @@ import {
   HeartHandshake,
   Shield,
   ShieldCheck,
-  X,
-  Download,
-  Printer
+  X
 } from 'lucide-react'
 import Navigation from '../../components/Navigation'
 import Footer from '../../components/Footer'
@@ -66,7 +64,6 @@ export default function CycleTrackingPageResult() {
   const navigate = useNavigate()
   const [cycleData, setCycleData] = useState(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [calendarDays, setCalendarDays] = useState([])
   const [cycleInfo, setCycleInfo] = useState({
     periodDays: [],
     ovulationDay: null,
@@ -77,14 +74,6 @@ export default function CycleTrackingPageResult() {
   })
   const [selectedDay, setSelectedDay] = useState(null)
   const [showDayDetails, setShowDayDetails] = useState(false)
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [exportSuccess, setExportSuccess] = useState(false)
-
-  // Add ref for export section
-  const exportContentRef = useRef(null)
-
-  // Add state to track if we've calculated future months
   const [calculatedMonths, setCalculatedMonths] = useState(1)
 
   // Load cycle data from session storage
@@ -414,54 +403,6 @@ export default function CycleTrackingPageResult() {
     }
   }
 
-  // Simplify export function
-  const handleExport = async (type = 'pdf') => {
-    setIsGenerating(true)
-
-    try {
-      // Simulate PDF generation delay
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // In a real implementation, you would use a library like jspdf, html2canvas, or react-pdf
-      if (type === 'pdf') {
-        const fileName = `CycleTracking_${new Date().toISOString().split('T')[0]}.pdf`
-        console.log(`Exporting PDF: ${fileName}`)
-      } else if (type === 'print') {
-        console.log('Printing document')
-      }
-
-      // Simulate successful download
-      setExportSuccess(true)
-      setTimeout(() => setExportSuccess(false), 3000)
-    } catch (error) {
-      console.error('Error generating export:', error)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  // Format cycle data for export
-  const formatCycleDataForExport = () => {
-    if (!cycleData) return ''
-
-    const formattedDate = new Date(cycleData.lastPeriodDate).toLocaleDateString('vi-VN')
-    const ovulationDate = new Date(cycleInfo.ovulationDay).toLocaleDateString('vi-VN')
-
-    return `
-      Thông tin chu kỳ kinh nguyệt
-      
-      Kỳ kinh gần nhất: ${formattedDate}
-      Độ dài chu kỳ: ${cycleData.cycleLength} ngày
-      Số ngày hành kinh: ${cycleData.periodDuration} ngày
-      Ngày rụng trứng: ${ovulationDate}
-      
-      Dự báo chu kỳ tới:
-      ${cycleForecasts
-        .map((cycle, i) => `Chu kỳ ${i + 1}: ${cycle.periodStart} - ${cycle.periodEnd}, Rụng trứng: ${cycle.ovulation}`)
-        .join('\n')}
-    `
-  }
-
   // Calculate the month difference from the start date
   const getMonthDifference = (date) => {
     if (!cycleData || !cycleData.lastPeriodDate) return 0
@@ -500,7 +441,7 @@ export default function CycleTrackingPageResult() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10'>
           <div className='text-center mb-12 animate-fade-in-down'>
             <h1 className='text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 animate-gradient-x'>
-              Kết quả theo dõi chu kỳ
+              Kết quả chu kỳ kinh nguyệt
             </h1>
             <p className='text-lg text-gray-600 max-w-3xl mx-auto'>
               Hiển thị chi tiết chu kỳ kinh nguyệt và các ngày quan trọng của bạn
@@ -895,166 +836,6 @@ export default function CycleTrackingPageResult() {
           </div>
         </div>
       )}
-
-      {/* Export Modal */}
-      {showExportModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in backdrop-blur-sm'>
-          <div
-            className='bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 animate-scale-in'
-            style={{ maxWidth: '90vw' }}
-          >
-            <div className='flex justify-between items-start mb-4'>
-              <h3 className='text-2xl font-semibold'>Xuất dữ liệu chu kỳ</h3>
-              <button
-                onClick={() => setShowExportModal(false)}
-                className='text-gray-500 hover:text-gray-700 transition-colors rounded-full hover:bg-gray-100 p-1'
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className='space-y-4'>
-              <div className='p-4 bg-purple-50 rounded-lg'>
-                <h4 className='font-medium text-purple-700 mb-2 flex items-center'>
-                  <Download className='w-5 h-5 mr-2' />
-                  Xuất dữ liệu chu kỳ
-                </h4>
-                <p className='text-gray-700 text-sm'>
-                  Tệp PDF sẽ bao gồm thông tin chi tiết về chu kỳ kinh nguyệt, ngày rụng trứng, và dự báo chu kỳ tới của
-                  bạn.
-                </p>
-              </div>
-
-              <div className='space-y-3'>
-                <div className='flex items-center space-x-2'>
-                  <input
-                    type='radio'
-                    id='include-all'
-                    name='include'
-                    defaultChecked
-                    className='w-4 h-4 text-pink-600'
-                  />
-                  <label htmlFor='include-all' className='text-sm text-gray-700'>
-                    Bao gồm tất cả thông tin chu kỳ
-                  </label>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <input type='radio' id='include-basic' name='include' className='w-4 h-4 text-pink-600' />
-                  <label htmlFor='include-basic' className='text-sm text-gray-700'>
-                    Chỉ bao gồm thông tin cơ bản
-                  </label>
-                </div>
-              </div>
-
-              <div className='flex gap-2 mt-2'>
-                <Button
-                  onClick={() => handleExport('pdf')}
-                  disabled={isGenerating}
-                  className='bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white flex-1 flex items-center justify-center gap-2'
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                      <span>Đang tạo...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className='h-4 w-4' />
-                      <span>Tải xuống PDF</span>
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={() => handleExport('print')}
-                  disabled={isGenerating}
-                  className='bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white flex items-center justify-center gap-2'
-                >
-                  <Printer className='h-4 w-4' />
-                  <span>In</span>
-                </Button>
-              </div>
-
-              {exportSuccess && (
-                <div className='mt-3 p-3 bg-green-50 text-green-700 rounded-md flex items-center'>
-                  <div className='w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2'>
-                    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-                      <path
-                        d='M20 6L9 17L4 12'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                      />
-                    </svg>
-                  </div>
-                  <span className='text-sm'>Tệp PDF đã được tải xuống thành công!</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hidden content for PDF export */}
-      <div className='hidden'>
-        <div ref={exportContentRef} className='p-8 bg-white'>
-          <h1 className='text-2xl font-bold text-center mb-6'>Báo cáo chu kỳ kinh nguyệt</h1>
-
-          <div className='mb-6'>
-            <h2 className='text-xl font-semibold mb-3'>Thông tin cá nhân</h2>
-            <div className='border-b pb-1 mb-1 flex'>
-              <span className='font-medium w-1/2'>Ngày tạo báo cáo:</span>
-              <span>{new Date().toLocaleDateString('vi-VN')}</span>
-            </div>
-          </div>
-
-          <div className='mb-6'>
-            <h2 className='text-xl font-semibold mb-3'>Thông tin chu kỳ</h2>
-            <div className='border-b pb-1 mb-1 flex'>
-              <span className='font-medium w-1/2'>Chu kỳ gần nhất:</span>
-              <span>{new Date(cycleData.lastPeriodDate).toLocaleDateString('vi-VN')}</span>
-            </div>
-            <div className='border-b pb-1 mb-1 flex'>
-              <span className='font-medium w-1/2'>Độ dài chu kỳ:</span>
-              <span>{cycleData.cycleLength} ngày</span>
-            </div>
-            <div className='border-b pb-1 mb-1 flex'>
-              <span className='font-medium w-1/2'>Số ngày hành kinh:</span>
-              <span>{cycleData.periodDuration} ngày</span>
-            </div>
-            <div className='border-b pb-1 mb-1 flex'>
-              <span className='font-medium w-1/2'>Loại chu kỳ:</span>
-              <span>{cycleData.cycleType === 'regular' ? 'Đều đặn' : 'Không đều'}</span>
-            </div>
-          </div>
-
-          <div className='mb-6'>
-            <h2 className='text-xl font-semibold mb-3'>Dự báo chu kỳ tới</h2>
-            {cycleForecasts.map((cycle, index) => (
-              <div key={index} className='mb-4 border p-3 rounded'>
-                <div className='font-medium'>Chu kỳ {index + 1}</div>
-                <div className='text-sm mt-1'>
-                  <div className='flex justify-between mt-1'>
-                    <span>Kỳ kinh:</span>
-                    <span>
-                      {cycle.periodStart} - {cycle.periodEnd}
-                    </span>
-                  </div>
-                  <div className='flex justify-between mt-1'>
-                    <span>Rụng trứng:</span>
-                    <span>{cycle.ovulation}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className='mt-8 text-center text-sm text-gray-500'>
-            <p>Báo cáo này được tạo bởi ứng dụng GenderHealthcare</p>
-            <p>Lưu ý: Dự đoán được tính toán dựa trên thông tin bạn cung cấp và có thể không chính xác 100%</p>
-          </div>
-        </div>
-      </div>
 
       <Footer />
       <style>{`

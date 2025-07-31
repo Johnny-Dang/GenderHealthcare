@@ -96,11 +96,11 @@ export default function CycleTrackingPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
           <div className='text-center mb-12 animate-fade-in-down'>
             <h1 className='text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600'>
-              Theo dõi chu kỳ kinh nguyệt
+              Công cụ tính chu kỳ kinh nguyệt
             </h1>
             <p className='text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed'>
-              Theo dõi chu kỳ giúp bạn hiểu rõ cơ thể, dự đoán ngày hành kinh, ngày rụng trứng và giai đoạn có khả năng
-              thụ thai cao.
+              Công cụ này giúp bạn hiểu rõ cơ thể, dự đoán ngày hành kinh, ngày rụng trứng và giai đoạn có khả năng thụ
+              thai cao.
             </p>
           </div>
 
