@@ -26,9 +26,12 @@ export default function ServiceBookingForm({
     lastName: '',
     dateOfBirth: '',
     phone: '',
-    gender: true
+    gender: true,
+    slotDate: '',
+    shift: ''
   })
   const [loading, setLoading] = useState(false)
+  const [availableSlots, setAvailableSlots] = useState([])
 
   useEffect(() => {
     if (isEdit && bookingDetail) {
@@ -37,10 +40,30 @@ export default function ServiceBookingForm({
         lastName: bookingDetail.lastName || '',
         dateOfBirth: bookingDetail.dateOfBirth ? new Date(bookingDetail.dateOfBirth).toISOString().split('T')[0] : '',
         phone: bookingDetail.phone || '',
-        gender: bookingDetail.gender ?? true
+        gender: bookingDetail.gender ?? true,
+        slotDate: bookingDetail.slotDate ? new Date(bookingDetail.slotDate).toISOString().split('T')[0] : '',
+        shift: bookingDetail.slotShift || ''
       })
     }
   }, [isEdit, bookingDetail])
+
+  // Fetch available slots when slot date changes
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (form.slotDate && isEdit && serviceId) {
+        try {
+          const response = await axios.get(`/api/TestServiceSlot/service/${serviceId}/date/${form.slotDate}`)
+          setAvailableSlots(response.data || [])
+        } catch (error) {
+          console.error('Error fetching slots:', error)
+          setAvailableSlots([])
+        }
+      } else {
+        setAvailableSlots([])
+      }
+    }
+    fetchSlots()
+  }, [form.slotDate, isEdit, serviceId])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -56,14 +79,19 @@ export default function ServiceBookingForm({
 
     try {
       if (isEdit) {
-        // Chế độ chỉnh sửa
-        await axios.put(`/api/booking-details/${bookingDetail.bookingDetailId}`, {
-          bookingDetailId: bookingDetail.bookingDetailId,
-          ...form
-        })
+        const updateData = {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          dateOfBirth: form.dateOfBirth,
+          phone: form.phone,
+          gender: form.gender,
+          ...(form.slotDate ? { slotDate: form.slotDate } : {}),
+          ...(form.shift ? { shift: form.shift } : {})
+        }
+
+        await axios.put(`/api/booking-details/${bookingDetail.bookingDetailId}`, updateData)
         toast.success('Cập nhật dịch vụ thành công!')
       } else {
-        // Chế độ thêm mới
         let currentBookingId = bookingId
         if (!currentBookingId) {
           const res = await axios.post('/api/bookings', { accountId })
@@ -80,15 +108,14 @@ export default function ServiceBookingForm({
         dispatch(incrementCart())
       }
 
-      // Gọi callback để cập nhật thông tin slot
       if (onSlotUpdate) {
         onSlotUpdate()
       }
 
       if (onSuccess) onSuccess()
       onOpenChange(false)
-    } catch (err) {
-      toast.error('Thao tác thất bại!')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Thao tác thất bại!')
     } finally {
       setLoading(false)
     }
@@ -179,6 +206,55 @@ export default function ServiceBookingForm({
               Nữ
             </label>
           </div>
+
+          {/* Chỉ hiển thị các trường ngày đặt và ca đặt khi đang chỉnh sửa */}
+          {isEdit && (
+            <>
+              <div>
+                <label className='block font-medium mb-1' htmlFor='slotDate'>
+                  Ngày đặt lịch
+                </label>
+                <Input
+                  id='slotDate'
+                  name='slotDate'
+                  type='date'
+                  value={form.slotDate}
+                  onChange={handleChange}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              {form.slotDate && (
+                <div>
+                  <label className='block font-medium mb-1' htmlFor='shift'>
+                    Ca đặt lịch
+                  </label>
+                  <select
+                    id='shift'
+                    name='shift'
+                    value={form.shift || ''}
+                    onChange={handleChange}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  >
+                    <option value=''>Chọn ca đặt lịch</option>
+                    {availableSlots.length > 0 ? (
+                      availableSlots.map((slot) => (
+                        <option key={slot.slotId} value={slot.shift}>
+                          {slot.shift === 'AM' ? 'Sáng (7h30 - 12h)' : 'Chiều (13h30 - 17h30)'}
+                          {slot.maxBookings && ` - Còn ${slot.maxBookings - slot.currentBookings} chỗ`}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value='AM'>Sáng (7h30 - 12h)</option>
+                        <option value='PM'>Chiều (13h30 - 17h30)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+              )}
+            </>
+          )}
           <DialogFooter>
             <Button type='submit' className='w-full' disabled={loading}>
               {loading ? 'Đang xử lý...' : isEdit ? 'Lưu Thay Đổi' : 'Thêm Vào Giỏ Hàng'}
